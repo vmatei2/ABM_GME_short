@@ -8,7 +8,6 @@ def get_price_history(ticker, start_date, end_date):
     :param ticker:
     :return:
     """
-
     # getting the historical data
     price_history = ticker.history(start=start_date, end=end_date)
     return price_history
@@ -19,7 +18,6 @@ def plot_closing_price_and_volume(data_frame):
     closing_plot = data_frame.Close.plot(legend=True)
     volume_plot = data_frame.Volume.plot(kind='area', secondary_y=True,
                                           alpha=0.6, legend=True)
-
     closing_plot.margins(0, 0)
     closing_plot.yaxis.set_tick_params(labelsize=18)
     closing_plot.xaxis.set_tick_params(labelsize=18)
