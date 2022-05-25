@@ -35,7 +35,8 @@ class SimulationClass:
     def run_simulation(self):
         for i in range(self.tau):
             agent_on_social_media = random.choice(self.social_media_agents)
-            if isinstance(agent_on_social_media, RegularRedditTrader): # checking here if the agent is an instance of a regular reddit trader instead of an influential one, which does not update his commitment at all
+            if isinstance(agent_on_social_media, RegularRedditTrader): # checking here if the agent is an instance of
+                # a regular reddit trader instead of an influential one, which does not update his commitment at all
                 agent_on_social_media.update_commitment(agents=self.social_media_agents, miu=2)
 
 if __name__ == '__main__':
