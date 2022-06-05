@@ -33,6 +33,63 @@ def plot_closing_price_and_volume(data_frame):
     plt.show()
 
 
+def barplot_percentages_on_top(df, title, column, xlabel):
+    fig, ax = plt.subplots(figsize=(10, 10))
+    total_rows = int(len(df))
+    sns.countplot(x=column, data=df)
+    plt.title(title, fontsize=18)
+    plt.ylabel("Count", fontsize=14)
+    plt.xlabel(xlabel, fontsize=14)
+    plt.xticks(fontsize=14)
+    plt.yticks(fontsize=14)
+    for p in ax.patches:
+        percentage = '{:.2f}'.format(100 * p.get_height() / total_rows)
+        x = p.get_x() + p.get_width() / 2
+        y = p.get_height()
+        ax.annotate(percentage, (x, y), ha='center', va='center', fontsize=11, xytext=(0, 5),
+                    textcoords='offset points')
+    plt.show()
+
+
+def line_plot(xvalues, yvalues, title, xlabel, ylabel):
+    plt.figure(figsize=(14, 14))
+    plt.plot(xvalues, yvalues)
+    ax = plt.gca()
+    plt.title(title, fontsize=20)
+    plt.xlabel(xlabel, fontsize=15)
+    plt.ylabel(ylabel, fontsize=15)
+    plt.ylim(0, 1000)
+
+    plt.xticks(rotation=40, fontsize=10)
+    plt.yticks(fontsize=12)
+    plt.grid()
+
+    temp = ax.xaxis.get_ticklabels()
+
+    # deciding the frequency with which we show the labels on the plot
+    every_nth_showed = 400
+    temp = list(set(temp) - set(temp[::every_nth_showed]))
+    for label in temp:
+        label.set_visible(False)
+    i = 0
+
+    for x, y in zip(xvalues, yvalues):
+        # annotating the plot on every 3rd entry - spaces out a bit more
+        if i % every_nth_showed == 0 or i in [1, 4, 7, 11, 17]:
+            if i == 0:
+                # the user with the most posts skews the plot too much and power-law distribution can not be observed,
+                # hence we limit 0 - 1000 and show the first value outside the plot
+                y_position = 999
+            else:
+                y_position = y
+            label = y
+            plt.annotate(label, (x, y_position), textcoords="offset points",
+                         xytext=(0, 10),
+                         ha='center', fontsize=12)
+        i += 1
+
+    plt.show()
+
 if __name__ == '__main__':
     sns.set_style("darkgrid")
     gme_ticker = "GME"

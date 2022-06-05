@@ -1,7 +1,7 @@
 import pandas as pd
 from psaw import PushshiftAPI
 import datetime as dt
-
+from plotting_helpers import barplot_percentages_on_top, line_plot
 import matplotlib.pyplot as plt
 import seaborn as sns
 
@@ -39,6 +39,7 @@ def convert_utc_todatetime(df):
     df['datetime'] = pd.to_datetime(df['datetime'])
     return df
 
+
 if __name__ == '__main__':
     # api = PushshiftAPI()
 
@@ -58,11 +59,23 @@ if __name__ == '__main__':
     # # convert time stamp to date time for easier plotting
     # df_posts['datetime'] = pd.to_datetime(df_posts['datetime'])
     # stop = 0
-
+    sns.set_style('darkgrid')
     comments_filepath = "../kaggleData/archive/wallstreetbets_comments.csv"
     posts_filepath = "../kaggleData/archive/wallstreetbets_posts.csv"
     cleaned_posts_data_path = "../kaggleData/cleaned_posts_data.csv"
     # wsb_comment_data = pd.read_csv(comments_filepath)
     wsb_posts_data = pd.read_csv(cleaned_posts_data_path)
     wsb_posts_data = convert_utc_todatetime(wsb_posts_data)
+
+    one_post_per_author_df = wsb_posts_data.groupby('author').first()
+    value_counts_author_premium = one_post_per_author_df['author_premium'].value_counts()
+
+    author_values = wsb_posts_data['author'].value_counts(dropna=False).keys().tolist()
+    author_counts = wsb_posts_data['author'].value_counts(dropna=False).tolist()
+    author_values = author_values[:10000]
+    author_counts = author_counts[:10000]
+    author_value_counts_dict = dict(zip(author_values, author_counts))
+    barplot_percentages_on_top(one_post_per_author_df, "Number of post authors with premium accounts during analysed period",
+                               'author_premium', 'Has premium account')
+    line_plot(author_values, author_counts, "Posts per author", "Usernames", "Count")
     stop = 0
