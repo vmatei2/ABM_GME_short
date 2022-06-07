@@ -1,6 +1,8 @@
+import pandas as pd
 import yfinance as yf
 import matplotlib.pyplot as plt
 import seaborn as sns
+
 
 def get_price_history(ticker, start_date, end_date):
     """
@@ -17,7 +19,7 @@ def plot_closing_price_and_volume(data_frame):
     plt.figure(figsize=(12, 10))
     closing_plot = data_frame.Close.plot(legend=True)
     volume_plot = data_frame.Volume.plot(kind='area', secondary_y=True,
-                                          alpha=0.6, legend=True)
+                                         alpha=0.6, legend=True)
     closing_plot.margins(0, 0)
     closing_plot.yaxis.set_tick_params(labelsize=18)
     closing_plot.xaxis.set_tick_params(labelsize=18)
@@ -92,7 +94,6 @@ def line_plot(xvalues, yvalues, title, xlabel, ylabel):
 
 
 def plot_all_commitments(all_commitments_each_round):
-
     plt.figure(figsize=(10, 10))
     x = []
     for i in range(len(all_commitments_each_round)):
@@ -103,6 +104,7 @@ def plot_all_commitments(all_commitments_each_round):
     plt.title("Evolution of all agent commitments")
     plt.show()
 
+
 def plot_average_commitment(commitment_history):
     plt.figure(figsize=(10, 10))
     plt.plot(commitment_history)
@@ -110,6 +112,16 @@ def plot_average_commitment(commitment_history):
     plt.ylabel("Average Commitment")
     plt.title("Average Commitment History Evolution")
     plt.show()
+
+
+def plot_commitment_into_groups(commitment_this_round):
+    columns = ["Number of agents in group", "Trading day", "Commitment group"]
+    commitment_df = pd.DataFrame(commitment_this_round, columns=columns)
+    plt.figure(figsize=(10, 10))
+    sns.barplot(x="Trading day", y="Number of agents in group", hue="Commitment group", data=commitment_df)
+    plt.show()
+    stop = 0
+
 
 if __name__ == '__main__':
     sns.set_style("darkgrid")

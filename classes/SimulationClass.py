@@ -2,11 +2,13 @@ import random
 
 import networkx as nx
 import numpy as np
+import seaborn as sns
+from helpers.calculations_helpers import split_commitment_into_groups
 from helpers.network_helpers import get_sorted_degree_values, gather_commitment_values
 from helpers.network_helpers import calculate_average_commitment
 from classes.InfluentialRedditTrader import InfluentialRedditUser
 from classes.RegularRedditTrader import RegularRedditTrader
-from helpers.plotting_helpers import plot_all_commitments, plot_average_commitment
+from helpers.plotting_helpers import plot_all_commitments, plot_average_commitment, plot_commitment_into_groups
 
 
 class SimulationClass:
@@ -58,6 +60,7 @@ class SimulationClass:
         trading_day = 0
         average_commitment_history = []
         all_commitments_each_round = []
+        df_data = []
         for i in range(self.tau):
             agent_on_social_media = random.choice(
                 self.social_media_agents)  # randomly picking an agent to update commitment
@@ -68,24 +71,34 @@ class SimulationClass:
             # below check ensures that we are at a trading day step and that's when we update the market + add new
             # users in the network
             if i % np.int(self.N_agents / 2) == 0:
-                trading_day += 1
+
                 #  here we update the number of agents in the network, and the number of agents to be added will be a
                 #  a function of the percentage change in commitment value
                 average_network_commitment = calculate_average_commitment(self.social_media_agents)
                 average_commitment_history.append(average_network_commitment)
-                all_commitments_each_round.append(gather_commitment_values(self.social_media_agents))
+                commitment_this_round = gather_commitment_values(self.social_media_agents)
+                all_commitments_each_round.append(commitment_this_round)
                 if len(average_commitment_history) > 1:
                     # in this case we have more than one previous average commitment, hence we can calculate the
                     # percentage change
                     previous_average_commitment = average_commitment_history[-2]
                     percentage_change_in_commitment = 100 * (
                                 average_network_commitment - previous_average_commitment) / previous_average_commitment
+                if trading_day % 20 == 0:
+                    zero_to_40_list, forty_to_65_list, sixtyfive_to_one_list = split_commitment_into_groups(commitment_this_round, trading_day)
+                    df_data.append(zero_to_40_list)
+                    df_data.append(forty_to_65_list)
+                    df_data.append(sixtyfive_to_one_list)
+                trading_day += 1
+
         plot_all_commitments(all_commitments_each_round)
         plot_average_commitment(average_commitment_history)
+        plot_commitment_into_groups(df_data)
         print(trading_day)
 
 
 if __name__ == '__main__':
+    sns.set_style("darkgrid")
     simulation = SimulationClass(time_steps=100, N_agents=10000, m=4, market_first_price=20)
     simulation.run_simulation()
 
