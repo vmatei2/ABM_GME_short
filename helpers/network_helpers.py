@@ -17,3 +17,8 @@ def calculate_average_commitment(agents):
     return average_commitment
 
 
+def gather_commitment_values(agents):
+    commitments = []
+    for id, agent in agents.items():
+        commitments.append(agent.commitment)
+    return commitments

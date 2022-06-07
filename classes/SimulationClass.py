@@ -2,10 +2,11 @@ import random
 
 import networkx as nx
 import numpy as np
-from helpers.network_helpers import get_sorted_degree_values
+from helpers.network_helpers import get_sorted_degree_values, gather_commitment_values
 from helpers.network_helpers import calculate_average_commitment
 from classes.InfluentialRedditTrader import InfluentialRedditUser
 from classes.RegularRedditTrader import RegularRedditTrader
+from helpers.plotting_helpers import plot_all_commitments, plot_average_commitment
 
 
 class SimulationClass:
@@ -14,12 +15,14 @@ class SimulationClass:
         self.m = m  # number of edges to attach from a new node to existing nodes
         self.time_steps = time_steps
         self.market_first_price = market_first_price
-        self.tau = int((N_agents/2) * time_steps)  # parameter for updating the opinion profile of the population
-        self.social_media_agents = self.create_initial_network() # the initial network of social media agents, we already have a few central nodes
-                                                        # network is set to increase in size and add new agents throughout the simulation
+        self.tau = int((N_agents / 2) * time_steps)  # parameter for updating the opinion profile of the population
+        self.social_media_agents, self.average_degree = self.create_initial_network()  # the initial network of social media agents,
+        # we already have a few central nodes network is set to increase in size and add new agents throughout the
+        # simulation
 
     def create_initial_network(self):
         barabasi_albert_network = nx.barabasi_albert_graph(n=self.N_agents, m=self.m, seed=2)
+        average_degree = nx.average_neighbor_degree(barabasi_albert_network)
         sorted_node_degree_pairs = get_sorted_degree_values(barabasi_albert_network)
         social_media_agents = {}
         for i, node_id_degree_pair in enumerate(sorted_node_degree_pairs):
@@ -31,8 +34,7 @@ class SimulationClass:
             else:
                 agent = RegularRedditTrader(id=node_id, neighbours_ids=node_neighbours)
             social_media_agents[node_id] = agent
-        return social_media_agents
-
+        return social_media_agents, average_degree
 
     def barabasi_albert_graph(self, N, m):
         # 1. Start with a clique of m+1 nodes
@@ -54,12 +56,14 @@ class SimulationClass:
 
     def run_simulation(self):
         trading_day = 0
-        commitment_history = []
+        average_commitment_history = []
+        all_commitments_each_round = []
         for i in range(self.tau):
-            agent_on_social_media = random.choice(self.social_media_agents)  # randomly picking an agent to update commitment
-            if isinstance(agent_on_social_media, RegularRedditTrader): # checking here if the agent is an instance of
+            agent_on_social_media = random.choice(
+                self.social_media_agents)  # randomly picking an agent to update commitment
+            if isinstance(agent_on_social_media, RegularRedditTrader):  # checking here if the agent is an instance of
                 # a regular reddit trader instead of an influential one, which does not update his commitment at all
-                agent_on_social_media.update_commitment(agents=self.social_media_agents, miu=2)
+                agent_on_social_media.update_commitment(agents=self.social_media_agents, miu=0.15, average_network_degree=self.average_degree)
             # the above is the updating of the commitment throughout the network, done in a more granular way the
             # below check ensures that we are at a trading day step and that's when we update the market + add new
             # users in the network
@@ -68,14 +72,18 @@ class SimulationClass:
                 #  here we update the number of agents in the network, and the number of agents to be added will be a
                 #  a function of the percentage change in commitment value
                 average_network_commitment = calculate_average_commitment(self.social_media_agents)
-                commitment_history.append(average_network_commitment)
-                if len(commitment_history) > 1:
-                    # in this case we have more than one previous average commitment, hence we can calculate the percentage change
-                    previous_average_commitment = commitment_history[-2]
-                    percentage_change_in_commitment = 100 * (average_network_commitment - previous_average_commitment) / previous_average_commitment
-
-
+                average_commitment_history.append(average_network_commitment)
+                all_commitments_each_round.append(gather_commitment_values(self.social_media_agents))
+                if len(average_commitment_history) > 1:
+                    # in this case we have more than one previous average commitment, hence we can calculate the
+                    # percentage change
+                    previous_average_commitment = average_commitment_history[-2]
+                    percentage_change_in_commitment = 100 * (
+                                average_network_commitment - previous_average_commitment) / previous_average_commitment
+        plot_all_commitments(all_commitments_each_round)
+        plot_average_commitment(average_commitment_history)
         print(trading_day)
+
 
 if __name__ == '__main__':
     simulation = SimulationClass(time_steps=100, N_agents=10000, m=4, market_first_price=20)

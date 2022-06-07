@@ -90,6 +90,27 @@ def line_plot(xvalues, yvalues, title, xlabel, ylabel):
 
     plt.show()
 
+
+def plot_all_commitments(all_commitments_each_round):
+
+    plt.figure(figsize=(10, 10))
+    x = []
+    for i in range(len(all_commitments_each_round)):
+        x.append(i)
+    plt.plot(x, all_commitments_each_round)
+    plt.xlabel("Trading Day")
+    plt.ylabel("Commitment Values")
+    plt.title("Evolution of all agent commitments")
+    plt.show()
+
+def plot_average_commitment(commitment_history):
+    plt.figure(figsize=(10, 10))
+    plt.plot(commitment_history)
+    plt.xlabel("Trading Day")
+    plt.ylabel("Average Commitment")
+    plt.title("Average Commitment History Evolution")
+    plt.show()
+
 if __name__ == '__main__':
     sns.set_style("darkgrid")
     gme_ticker = "GME"
