@@ -8,7 +8,8 @@ from helpers.network_helpers import get_sorted_degree_values, gather_commitment_
 from helpers.network_helpers import calculate_average_commitment
 from classes.InfluentialRedditTrader import InfluentialRedditUser
 from classes.RegularRedditTrader import RegularRedditTrader
-from helpers.plotting_helpers import plot_all_commitments, plot_average_commitment, plot_commitment_into_groups
+from helpers.plotting_helpers import plot_all_commitments, plot_commitment_into_groups, \
+    simple_line_plot
 
 
 class SimulationClass:
@@ -24,7 +25,6 @@ class SimulationClass:
 
     def create_initial_network(self):
         barabasi_albert_network = nx.barabasi_albert_graph(n=self.N_agents, m=self.m, seed=2)
-        average_degree = nx.average_neighbor_degree(barabasi_albert_network)
         sorted_node_degree_pairs = get_sorted_degree_values(barabasi_albert_network)
         social_media_agents = {}
         for i, node_id_degree_pair in enumerate(sorted_node_degree_pairs):
@@ -36,6 +36,9 @@ class SimulationClass:
             else:
                 agent = RegularRedditTrader(id=node_id, neighbours_ids=node_neighbours)
             social_media_agents[node_id] = agent
+        degree_values = [v for k, v in sorted_node_degree_pairs]
+        average_degree = sum(degree_values) / barabasi_albert_network.number_of_nodes()
+        average_degree = round(average_degree)
         return social_media_agents, average_degree
 
     def barabasi_albert_graph(self, N, m):
@@ -60,13 +63,14 @@ class SimulationClass:
         trading_day = 0
         average_commitment_history = []
         all_commitments_each_round = []
+        commitment_changes = []
         df_data = []
         for i in range(self.tau):
             agent_on_social_media = random.choice(
                 self.social_media_agents)  # randomly picking an agent to update commitment
             if isinstance(agent_on_social_media, RegularRedditTrader):  # checking here if the agent is an instance of
                 # a regular reddit trader instead of an influential one, which does not update his commitment at all
-                agent_on_social_media.update_commitment(agents=self.social_media_agents, miu=0.15, average_network_degree=self.average_degree)
+                agent_on_social_media.update_commitment(agents=self.social_media_agents, miu=0.13, average_network_degree=self.average_degree)
             # the above is the updating of the commitment throughout the network, done in a more granular way the
             # below check ensures that we are at a trading day step and that's when we update the market + add new
             # users in the network
@@ -79,11 +83,31 @@ class SimulationClass:
                 commitment_this_round = gather_commitment_values(self.social_media_agents)
                 all_commitments_each_round.append(commitment_this_round)
                 if len(average_commitment_history) > 1:
+                    if trading_day % 7 == 0:
                     # in this case we have more than one previous average commitment, hence we can calculate the
                     # percentage change
-                    previous_average_commitment = average_commitment_history[-2]
-                    percentage_change_in_commitment = 100 * (
+                        previous_average_commitment = average_commitment_history[-7]
+                        percentage_change_in_commitment = (
                                 average_network_commitment - previous_average_commitment) / previous_average_commitment
+                        commitment_changes.append(percentage_change_in_commitment)
+                        number_of_agents_to_be_added = int(percentage_change_in_commitment * self.N_agents)
+                        for i in range(number_of_agents_to_be_added):
+                            #  adding new agents to the network
+                            new_neighbours = []
+                            possible_neighbors = list(self.social_media_agents.keys())
+                            for _ in range(self.average_degree):
+                                # select different nodes, at random weighted by their degree, up to the average degree of the initial network
+                                degrees = [len(agent.neighbours_ids) for id, agent in self.social_media_agents.items()]
+                                j = random.choices(possible_neighbors, degrees)[0]
+                                if j not in new_neighbours:
+                                    new_neighbours.append(j)
+                                stop = 0
+                            new_id = round(random.uniform(10001, 100000))
+                            if new_id not in self.social_media_agents:
+                                new_agent = RegularRedditTrader(id=new_id, neighbours_ids=new_neighbours, commitment=average_network_commitment)
+                                self.social_media_agents[new_id] = new_agent
+                                stop = 0
+
                 if trading_day % 20 == 0:
                     zero_to_40_list, forty_to_65_list, sixtyfive_to_one_list = split_commitment_into_groups(commitment_this_round, trading_day)
                     df_data.append(zero_to_40_list)
@@ -91,8 +115,11 @@ class SimulationClass:
                     df_data.append(sixtyfive_to_one_list)
                 trading_day += 1
 
+
         plot_all_commitments(all_commitments_each_round)
-        plot_average_commitment(average_commitment_history)
+        simple_line_plot(average_commitment_history, "Trading Day", "Average Commitment", "Average Commitment Evolution")
+        simple_line_plot(commitment_changes, "Trading Week", "Change in commitment", "Percentage Changes in Average "
+                                                                                    "Commitment")
         plot_commitment_into_groups(df_data)
         print(trading_day)
 

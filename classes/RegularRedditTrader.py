@@ -5,8 +5,9 @@ import numpy as np
 
 
 class RegularRedditTrader(RedditTrader):
-    def __init__(self, id, neighbours_ids):
-        commitment = random.uniform(0.2, 0.5)  # normal random distribution with mean = 0 and std deviation = 1
+    def __init__(self, id, neighbours_ids, commitment=None):
+        if commitment is None:
+            commitment = random.uniform(0.2, 0.5)  # normal random distribution with mean = 0 and std deviation = 1
         demand = 0  # an agent's demand in the stock
         self.d = random.uniform(0.3, 0.5)  # threshold for difference in commitment to be too high - or confidence
         # interval value - random choice rather than set values as all agents will be slightly different,
@@ -43,4 +44,3 @@ class RegularRedditTrader(RedditTrader):
             # otherwise, let's update this agent's opinion (being influenced)
             updated_commitment = average_neighbour_commitment + miu * abs(self.commitment - neighbour.commitment)
             self.commitment = min(updated_commitment, 1)
-            print(self.commitment)

@@ -105,12 +105,12 @@ def plot_all_commitments(all_commitments_each_round):
     plt.show()
 
 
-def plot_average_commitment(commitment_history):
+def simple_line_plot(values_to_be_plotted, xlabel, ylabel, title):
     plt.figure(figsize=(10, 10))
-    plt.plot(commitment_history)
-    plt.xlabel("Trading Day")
-    plt.ylabel("Average Commitment")
-    plt.title("Average Commitment History Evolution")
+    plt.plot(values_to_be_plotted)
+    plt.xlabel(xlabel)
+    plt.ylabel(ylabel)
+    plt.title(title)
     plt.show()
 
 
