@@ -4,12 +4,13 @@ import networkx as nx
 import numpy as np
 import seaborn as sns
 from helpers.calculations_helpers import split_commitment_into_groups
-from helpers.network_helpers import get_sorted_degree_values, gather_commitment_values
+from helpers.network_helpers import get_sorted_degree_values, gather_commitment_values, \
+    create_network_from_agent_dictionary
 from helpers.network_helpers import calculate_average_commitment
 from classes.InfluentialRedditTrader import InfluentialRedditUser
 from classes.RegularRedditTrader import RegularRedditTrader
 from helpers.plotting_helpers import plot_all_commitments, plot_commitment_into_groups, \
-    simple_line_plot
+    simple_line_plot, visualise_network
 
 
 class SimulationClass:
@@ -102,13 +103,11 @@ class SimulationClass:
                                 j = random.choices(possible_neighbors, degrees)[0]
                                 if j not in new_neighbours:
                                     new_neighbours.append(j)
-                                stop = 0
-                            new_id = round(random.uniform(10001, 100000))
+                            new_id = round(random.uniform(10001, 1000000))
                             if new_id not in self.social_media_agents:
+                                # ensuring the random id chosen has not already been added to the agent dictionary
                                 new_agent = RegularRedditTrader(id=new_id, neighbours_ids=new_neighbours, commitment=average_network_commitment)
                                 self.social_media_agents[new_id] = new_agent
-                                stop = 0
-
                 if trading_day % 20 == 0:
                     zero_to_40_list, forty_to_65_list, sixtyfive_to_one_list = split_commitment_into_groups(commitment_this_round, trading_day)
                     df_data.append(zero_to_40_list)
@@ -122,13 +121,15 @@ class SimulationClass:
         simple_line_plot(average_commitment_history, "Trading Day", "Average Commitment", "Average Commitment Evolution")
         simple_line_plot(commitment_changes, "Trading Week", "Change in commitment", "Percentage Changes in Average "
                                                                                     "Commitment")
+        agent_network = create_network_from_agent_dictionary(self.social_media_agents)
+        visualise_network(agent_network)
         plot_commitment_into_groups(df_data)
         print(trading_day)
 
 
 if __name__ == '__main__':
     sns.set_style("darkgrid")
-    simulation = SimulationClass(time_steps=100, N_agents=10000, m=4, market_first_price=20)
+    simulation = SimulationClass(time_steps=6, N_agents=10000, m=4, market_first_price=20)
     simulation.run_simulation()
 
     stop = 0

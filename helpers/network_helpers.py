@@ -1,3 +1,6 @@
+import networkx as nx
+
+
 def get_sorted_degree_values(G):
     """
     Returns the descending node-degree pairs from a network G
@@ -22,3 +25,12 @@ def gather_commitment_values(agents):
     for id, agent in agents.items():
         commitments.append(agent.commitment)
     return commitments
+
+
+def create_network_from_agent_dictionary(social_media_agents):
+    G = nx.Graph()
+    G.add_nodes_from(social_media_agents.keys())
+
+    for k, v in social_media_agents.items():
+        G.add_edges_from([(k, t) for t in v.neighbours_ids])
+    return G

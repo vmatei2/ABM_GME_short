@@ -1,3 +1,4 @@
+import networkx as nx
 import pandas as pd
 import yfinance as yf
 import matplotlib.pyplot as plt
@@ -124,6 +125,21 @@ def plot_commitment_into_groups(commitment_this_round):
         ax.bar_label(container,fontsize=15)
     plt.show()
     stop = 0
+
+
+####  NETWORK PLOTTING HELPERS
+
+
+def visualise_network(G):
+
+    d = nx.degree(G)
+
+    plt.figure(figsize=(12, 10))
+    degree_values = [v for k, v in d]
+
+
+    nx.draw(G, nodelist=G.nodes(), node_size=[v*10 for v in degree_values])
+    plt.show()
 
 
 if __name__ == '__main__':

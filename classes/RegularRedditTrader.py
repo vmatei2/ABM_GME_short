@@ -24,7 +24,7 @@ class RegularRedditTrader(RedditTrader):
         neighbours and compare that to the d value - makes more sense as our agents will base their commitment updates on what is
         happening in the total surrounding environment, not just one randomly chosen neighbour
 
-        :param neighbours: the neighbours whose opinion matters
+        :param neighbours: the neighbours whose opinion matter
         :param d: the threshold where the difference in
         commitment is too high for this agent to update its own commitment (confidence level)
         :param miu: scaling
