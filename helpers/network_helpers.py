@@ -27,10 +27,15 @@ def gather_commitment_values(agents):
     return commitments
 
 
-def create_network_from_agent_dictionary(social_media_agents):
+def create_network_from_agent_dictionary(social_media_agents, threshold):
     G = nx.Graph()
-    G.add_nodes_from(social_media_agents.keys())
-
-    for k, v in social_media_agents.items():
-        G.add_edges_from([(k, t) for t in v.neighbours_ids])
+    agents_to_keep = {}
+    for key, agent in social_media_agents.items():
+        if agent.commitment >= threshold:
+            agents_to_keep[key] = agent
+    G.add_nodes_from(agents_to_keep.keys())
+    for k, v in agents_to_keep.items():
+        #  only adding an edge if the neighbour also has a commitment higher than the threshold
+        G.add_edges_from([(k, t) for t in v.neighbours_ids
+                          if social_media_agents[t].commitment >= threshold])
     return G

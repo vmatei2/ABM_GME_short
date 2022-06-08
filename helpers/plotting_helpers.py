@@ -130,15 +130,14 @@ def plot_commitment_into_groups(commitment_this_round):
 ####  NETWORK PLOTTING HELPERS
 
 
-def visualise_network(G):
+def visualise_network(G, threshold, title):
 
     d = nx.degree(G)
 
     plt.figure(figsize=(12, 10))
     degree_values = [v for k, v in d]
-
-
-    nx.draw(G, nodelist=G.nodes(), node_size=[v*10 for v in degree_values])
+    nx.draw_networkx(G, pos=nx.spring_layout(G), nodelist=G.nodes(), node_size=[v*10 for v in degree_values], with_labels=False)
+    plt.title("Network of users with average commitment > " + str(threshold) + " week " + str(title))
     plt.show()
 
 

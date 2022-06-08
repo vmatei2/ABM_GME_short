@@ -62,17 +62,23 @@ class SimulationClass:
 
     def run_simulation(self):
         trading_day = 0
+        week = 0
+        threshold = 0.65
+        agent_network_evolution_dict = {}
         average_commitment_history = []
         all_commitments_each_round = []
         commitment_changes = []
         df_data = []
+        network_at_trading_day_zero = create_network_from_agent_dictionary(self.social_media_agents, threshold)
         for i in range(self.tau):
             agents_on_social_media_keys = list(self.social_media_agents.keys())
             random_agent_key = random.choice(agents_on_social_media_keys)
-            agent_on_social_media = self.social_media_agents[random_agent_key] # randomly picking an agent to update commitment
+            agent_on_social_media = self.social_media_agents[
+                random_agent_key]  # randomly picking an agent to update commitment
             if isinstance(agent_on_social_media, RegularRedditTrader):  # checking here if the agent is an instance of
                 # a regular reddit trader instead of an influential one, which does not update his commitment at all
-                agent_on_social_media.update_commitment(agents=self.social_media_agents, miu=0.13, average_network_degree=self.average_degree)
+                agent_on_social_media.update_commitment(agents=self.social_media_agents, miu=0.13,
+                                                        average_network_degree=self.average_degree)
             # the above is the updating of the commitment throughout the network, done in a more granular way the
             # below check ensures that we are at a trading day step and that's when we update the market + add new
             # users in the network
@@ -86,11 +92,11 @@ class SimulationClass:
                 all_commitments_each_round.append(commitment_this_round)
                 if len(average_commitment_history) > 1:
                     if trading_day % 7 == 0:
-                    # in this case we have more than one previous average commitment, hence we can calculate the
-                    # percentage change
+                        # in this case we have more than one previous average commitment, hence we can calculate the
+                        # percentage change
                         previous_average_commitment = average_commitment_history[-7]
                         percentage_change_in_commitment = (
-                                average_network_commitment - previous_average_commitment) / previous_average_commitment
+                                                                  average_network_commitment - previous_average_commitment) / previous_average_commitment
                         commitment_changes.append(percentage_change_in_commitment)
                         number_of_agents_to_be_added = int(percentage_change_in_commitment * self.N_agents)
                         for i in range(number_of_agents_to_be_added):
@@ -106,30 +112,36 @@ class SimulationClass:
                             new_id = round(random.uniform(10001, 1000000))
                             if new_id not in self.social_media_agents:
                                 # ensuring the random id chosen has not already been added to the agent dictionary
-                                new_agent = RegularRedditTrader(id=new_id, neighbours_ids=new_neighbours, commitment=average_network_commitment)
+                                new_agent = RegularRedditTrader(id=new_id, neighbours_ids=new_neighbours,
+                                                                commitment=average_network_commitment)
                                 self.social_media_agents[new_id] = new_agent
                 if trading_day % 20 == 0:
-                    zero_to_40_list, forty_to_65_list, sixtyfive_to_one_list = split_commitment_into_groups(commitment_this_round, trading_day)
+                    zero_to_40_list, forty_to_65_list, sixtyfive_to_one_list = split_commitment_into_groups(
+                        commitment_this_round, trading_day)
                     df_data.append(zero_to_40_list)
                     df_data.append(forty_to_65_list)
                     df_data.append(sixtyfive_to_one_list)
+                    agent_network = create_network_from_agent_dictionary(self.social_media_agents, threshold=threshold)
+                    agent_network_evolution_dict[week] = agent_network
                 trading_day += 1
+                week += 1
                 print("Finished Trading Day ", trading_day)
 
-
         plot_all_commitments(all_commitments_each_round)
-        simple_line_plot(average_commitment_history, "Trading Day", "Average Commitment", "Average Commitment Evolution")
+        for week, network in agent_network_evolution_dict.items():
+            visualise_network(network, threshold, week)
+        simple_line_plot(average_commitment_history, "Trading Day", "Average Commitment",
+                         "Average Commitment Evolution")
         simple_line_plot(commitment_changes, "Trading Week", "Change in commitment", "Percentage Changes in Average "
-                                                                                    "Commitment")
-        agent_network = create_network_from_agent_dictionary(self.social_media_agents)
-        visualise_network(agent_network)
+                                                                                     "Commitment")
+
         plot_commitment_into_groups(df_data)
         print(trading_day)
 
 
 if __name__ == '__main__':
     sns.set_style("darkgrid")
-    simulation = SimulationClass(time_steps=6, N_agents=10000, m=4, market_first_price=20)
+    simulation = SimulationClass(time_steps=100, N_agents=10000, m=4, market_first_price=20)
     simulation.run_simulation()
 
     stop = 0
