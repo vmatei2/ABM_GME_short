@@ -4,6 +4,8 @@ import yfinance as yf
 import matplotlib.pyplot as plt
 import seaborn as sns
 
+from helpers.calculations_helpers import extract_values_counts_as_lists
+
 
 def get_price_history(ticker, start_date, end_date):
     """
@@ -54,23 +56,24 @@ def barplot_percentages_on_top(df, title, column, xlabel):
     plt.show()
 
 
-def line_plot(xvalues, yvalues, title, xlabel, ylabel):
+def line_plot(xvalues, yvalues, title, xlabel, ylabel, every_nth_showed, ylim=None, ):
     plt.figure(figsize=(14, 14))
     plt.plot(xvalues, yvalues)
     ax = plt.gca()
     plt.title(title, fontsize=20)
     plt.xlabel(xlabel, fontsize=15)
     plt.ylabel(ylabel, fontsize=15)
-    plt.ylim(0, 1000)
-
+    if ylim is not None:
+        minimum = ylim[0]
+        maximum = ylim[1]
+        plt.ylim(minimum, maximum)
     plt.xticks(rotation=40, fontsize=10)
     plt.yticks(fontsize=12)
-    plt.grid()
+    plt.grid(True)
 
     temp = ax.xaxis.get_ticklabels()
-
     # deciding the frequency with which we show the labels on the plot
-    every_nth_showed = 400
+    every_nth_showed = every_nth_showed
     temp = list(set(temp) - set(temp[::every_nth_showed]))
     for label in temp:
         label.set_visible(False)
@@ -90,7 +93,6 @@ def line_plot(xvalues, yvalues, title, xlabel, ylabel):
                          xytext=(0, 10),
                          ha='center', fontsize=12)
         i += 1
-
     plt.show()
 
 
@@ -146,7 +148,27 @@ if __name__ == '__main__':
     sns.set_style("darkgrid")
     gme_ticker = "GME"
     gme = yf.Ticker(gme_ticker)
-    gme_price_history = get_price_history(gme, "2020-12-01", "2021-02-24")
+    gme_price_history = get_price_history(gme, "2020-12-08", "2021-02-04")
     plot_closing_price_and_volume(gme_price_history)
     gme_institutional_holders = gme.institutional_holders
+    gme_dates = gme_price_history.index
+    gme_dates_as_string = []
+    for date in gme_dates:
+        date = date.strftime("%Y-%m-%d")
+        gme_dates_as_string.append(date)
+
+    cleaned_posts_path = "../kaggleData/cleaned_posts_data_dt_index"
+    wsb_posts_data = pd.read_csv(cleaned_posts_path, infer_datetime_format=True)
+
+
+    date_value, date_counts = extract_values_counts_as_lists(wsb_posts_data, 'datetime', False)
+
+    date_post_counts_matching_gme = []
+    for i, date in enumerate(date_value):
+        if date in gme_dates_as_string:
+            date_post_counts_matching_gme.append(date_counts[i])
+
+
+    gme_price_history['number_of_posts'] = date_post_counts_matching_gme
+
     print(gme_institutional_holders)

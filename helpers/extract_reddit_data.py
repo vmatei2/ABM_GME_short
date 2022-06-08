@@ -3,6 +3,7 @@ from psaw import PushshiftAPI
 import datetime as dt
 from plotting_helpers import barplot_percentages_on_top, line_plot
 import matplotlib.pyplot as plt
+from calculations_helpers import extract_values_counts_as_lists
 import seaborn as sns
 
 
@@ -37,6 +38,8 @@ def convert_utc_todatetime(df):
     df = df.sort_values(by='datetime')
     # convert time stamps to date time for easier plotting
     df['datetime'] = pd.to_datetime(df['datetime']).dt.date
+    df = df.set_index(pd.DatetimeIndex(df['datetime']))
+    df.to_csv("../kaggleData/cleaned_posts_data_dt_index", index=False)
     return df
 
 
@@ -70,14 +73,16 @@ if __name__ == '__main__':
     one_post_per_author_df = wsb_posts_data.groupby('author').first()
     value_counts_author_premium = one_post_per_author_df['author_premium'].value_counts()
 
-    date_value_counts = wsb_posts_data['datetime'].value_counts(sort=False)
-
-    author_values = wsb_posts_data['author'].value_counts(dropna=False).keys().tolist()
-    author_counts = wsb_posts_data['author'].value_counts(dropna=False).tolist()
+    author_values, author_counts = extract_values_counts_as_lists(wsb_posts_data, 'author')
     author_values = author_values[:10000]
     author_counts = author_counts[:10000]
+
+    date_value, date_counts = extract_values_counts_as_lists(wsb_posts_data, 'datetime', False)
     author_value_counts_dict = dict(zip(author_values, author_counts))
+
     barplot_percentages_on_top(one_post_per_author_df, "Number of post authors with premium accounts during analysed period",
                                'author_premium', 'Has premium account')
-    line_plot(author_values, author_counts, "Posts per author", "Usernames", "Count")
+
+    line_plot(author_values, author_counts, "Posts per author", "Usernames", "Count", 400, [0, 1000])
+    line_plot(date_value, date_counts, "Posts per day", "Date", "Count", 5)
     stop = 0
