@@ -9,7 +9,7 @@ class RegularRedditTrader(RedditTrader):
         if commitment is None:
             commitment = random.uniform(0.2, 0.5)  # normal random distribution with mean = 0 and std deviation = 1
         demand = 0  # an agent's demand in the stock
-        self.d = random.uniform(0.3, 0.5)  # threshold for difference in commitment to be too high - or confidence
+        self.d = random.uniform(0.25, 0.5)  # threshold for difference in commitment to be too high - or confidence
         # interval value - random choice rather than set values as all agents will be slightly different,
         # hence we want thought processes to be heterogeneous
         super().__init__(id, neighbours_ids, demand, commitment)

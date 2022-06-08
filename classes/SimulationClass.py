@@ -127,8 +127,8 @@ class SimulationClass:
                 print("Finished Trading Day ", trading_day)
 
         plot_all_commitments(all_commitments_each_round)
-        for week, network in agent_network_evolution_dict.items():
-            visualise_network(network, threshold, week)
+        # for week, network in agent_network_evolution_dict.items():
+        #     visualise_network(network, threshold, week)
         simple_line_plot(average_commitment_history, "Trading Day", "Average Commitment",
                          "Average Commitment Evolution")
         simple_line_plot(commitment_changes, "Trading Week", "Change in commitment", "Percentage Changes in Average "
