@@ -36,7 +36,7 @@ def convert_utc_todatetime(df):
     df = df.drop('created_utc', axis=1)
     df = df.sort_values(by='datetime')
     # convert time stamps to date time for easier plotting
-    df['datetime'] = pd.to_datetime(df['datetime'])
+    df['datetime'] = pd.to_datetime(df['datetime']).dt.date
     return df
 
 
@@ -69,6 +69,8 @@ if __name__ == '__main__':
 
     one_post_per_author_df = wsb_posts_data.groupby('author').first()
     value_counts_author_premium = one_post_per_author_df['author_premium'].value_counts()
+
+    date_value_counts = wsb_posts_data['datetime'].value_counts(sort=False)
 
     author_values = wsb_posts_data['author'].value_counts(dropna=False).keys().tolist()
     author_counts = wsb_posts_data['author'].value_counts(dropna=False).tolist()

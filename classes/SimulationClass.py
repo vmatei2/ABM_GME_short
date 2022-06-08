@@ -1,5 +1,4 @@
 import random
-
 import networkx as nx
 import numpy as np
 import seaborn as sns
@@ -123,8 +122,8 @@ class SimulationClass:
                     df_data.append(sixtyfive_to_one_list)
                     agent_network = create_network_from_agent_dictionary(self.social_media_agents, threshold=threshold)
                     agent_network_evolution_dict[week] = agent_network
+                    week += 1
                 trading_day += 1
-                week += 1
                 print("Finished Trading Day ", trading_day)
 
         plot_all_commitments(all_commitments_each_round)
@@ -141,7 +140,7 @@ class SimulationClass:
 
 if __name__ == '__main__':
     sns.set_style("darkgrid")
-    simulation = SimulationClass(time_steps=100, N_agents=10000, m=4, market_first_price=20)
+    simulation = SimulationClass(time_steps=50, N_agents=10000, m=4, market_first_price=20)
     simulation.run_simulation()
 
     stop = 0
