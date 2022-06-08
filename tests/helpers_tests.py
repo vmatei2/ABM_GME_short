@@ -1,7 +1,10 @@
 import unittest
+
+import pandas as pd
+
 from classes.RedditTrader import RedditTrader
 from helpers.network_helpers import calculate_average_commitment, create_network_from_agent_dictionary
-from helpers.calculations_helpers import split_commitment_into_groups
+from helpers.calculations_helpers import split_commitment_into_groups, extract_values_counts_as_lists
 
 
 class TestHelpers(unittest.TestCase):
@@ -36,6 +39,18 @@ class TestHelpers(unittest.TestCase):
         actual_graph_node_length = len(actual_graph.nodes())
         self.assertEqual(expected_graph_node_length, actual_graph_node_length,
                          "Number of nodes is not as expected")
+
+    def test_extract_values_counts_as_list(self):
+        mock_dict = {
+            "mock_points": [0, 1, 0, 0, 2, 4, 5],
+            "another_mock_column" : ['vlad', 'tim', 'marcus', 'stefan', 'stefan', 'tim', 'tim']
+        }
+        mock_df = pd.DataFrame.from_dict(mock_dict)
+        values, counts = extract_values_counts_as_lists(mock_df, 'another_mock_column')
+        expected_first_value = 'tim'  # because it appears 3 times and by default the function sorts
+        actual_first_value = values[0]
+        self.assertEqual(expected_first_value, actual_first_value)
+
 
 if __name__ == '__main__':
     unittest.main()
