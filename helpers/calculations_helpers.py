@@ -1,3 +1,5 @@
+import numpy as np
+
 def calculate_subscriber_monthly_growth(numbers):
     growth_percentages = []
     for i in range(len(numbers)):
@@ -26,6 +28,12 @@ def extract_values_counts_as_lists(df, column, sort=True):
     counts = df[column].value_counts(dropna=False, sort=sort).tolist()
     return values, counts
 
+
+def rescale_array(original_array):
+    max = np.max(original_array)
+    min = np.min(original_array)
+    scaled_array = np.array([(x-min) / (max-min) for x in original_array])
+    return scaled_array
 
 if __name__ == '__main__':
     subscribers_numbers = [1580000, 1700000, 2060000, 8060000, 9620000, 10500000]

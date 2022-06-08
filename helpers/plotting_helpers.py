@@ -4,7 +4,7 @@ import yfinance as yf
 import matplotlib.pyplot as plt
 import seaborn as sns
 
-from helpers.calculations_helpers import extract_values_counts_as_lists
+from helpers.calculations_helpers import extract_values_counts_as_lists, rescale_array
 
 
 def get_price_history(ticker, start_date, end_date):
@@ -18,24 +18,37 @@ def get_price_history(ticker, start_date, end_date):
     return price_history
 
 
-def plot_closing_price_and_volume(data_frame):
+def plot_two_df_columns_together(data_frame, first_column, second_column, third_column=None, kind=None, rescale=False):
     plt.figure(figsize=(12, 10))
-    closing_plot = data_frame.Close.plot(legend=True)
-    volume_plot = data_frame.Volume.plot(kind='area', secondary_y=True,
-                                         alpha=0.6, legend=True)
-    closing_plot.margins(0, 0)
-    closing_plot.yaxis.set_tick_params(labelsize=18)
-    closing_plot.xaxis.set_tick_params(labelsize=18)
-    volume_plot.yaxis.set_tick_params(labelsize=18)
-    closing_plot.set_ylabel("Closing price", fontsize=20)
-    closing_plot.set_xlabel("Date", fontsize=20)
-    volume_plot.set_ylabel("Volume (Shares traded)", fontsize=20)
-    volume_plot.margins(0, 0)
+    if rescale:
+        data_frame[first_column] = rescale_array(data_frame[first_column])
+        data_frame[second_column] = rescale_array(data_frame[second_column])
+        if third_column is not None:
+            data_frame[third_column] = rescale_array(data_frame[third_column])
+    first_plot = data_frame[first_column].plot(legend=True)
+    if kind == None:
+        second_plot = data_frame[second_column].plot(secondary_y=True, alpha=0.6, legend=True)
+    else:
+        second_plot = data_frame[second_column].plot(kind='area', secondary_y=True,
+                                                 alpha=0.6, legend=True)
+
+    if third_column is not None:
+        third_plot = data_frame[third_column].plot(legend=True)
+    first_plot.margins(0, 0)
+    first_plot.yaxis.set_tick_params(labelsize=18)
+    first_plot.xaxis.set_tick_params(labelsize=18)
+    second_plot.yaxis.set_tick_params(labelsize=18)
+    first_plot.set_ylabel("Closing price", fontsize=20)
+    first_plot.set_xlabel("Date", fontsize=20)
+    second_plot.set_ylabel("Volume (Shares traded)", fontsize=20)
+    second_plot.margins(0, 0)
     plt.grid(True)
     plt.title("GameStop price and volume during short squeeze event", fontsize=20)
     # For some reason the file still thinks it's in ABM_GME_Short.wiki so need to move out to save in images
     plt.savefig("../images/price_volume_gme")
     plt.show()
+
+
 
 
 def barplot_percentages_on_top(df, title, column, xlabel):
@@ -149,7 +162,7 @@ if __name__ == '__main__':
     gme_ticker = "GME"
     gme = yf.Ticker(gme_ticker)
     gme_price_history = get_price_history(gme, "2020-12-08", "2021-02-04")
-    plot_closing_price_and_volume(gme_price_history)
+    plot_two_df_columns_together(gme_price_history, "Close", "Volume", "Open", "area")
     gme_institutional_holders = gme.institutional_holders
     gme_dates = gme_price_history.index
     gme_dates_as_string = []
@@ -172,3 +185,5 @@ if __name__ == '__main__':
     gme_price_history['number_of_posts'] = date_post_counts_matching_gme
 
     print(gme_institutional_holders)
+
+    plot_two_df_columns_together(gme_price_history, "Close", "Volume", "number_of_posts", kind="area", rescale=True)
