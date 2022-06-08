@@ -66,8 +66,9 @@ class SimulationClass:
         commitment_changes = []
         df_data = []
         for i in range(self.tau):
-            agent_on_social_media = random.choice(
-                self.social_media_agents)  # randomly picking an agent to update commitment
+            agents_on_social_media_keys = list(self.social_media_agents.keys())
+            random_agent_key = random.choice(agents_on_social_media_keys)
+            agent_on_social_media = self.social_media_agents[random_agent_key] # randomly picking an agent to update commitment
             if isinstance(agent_on_social_media, RegularRedditTrader):  # checking here if the agent is an instance of
                 # a regular reddit trader instead of an influential one, which does not update his commitment at all
                 agent_on_social_media.update_commitment(agents=self.social_media_agents, miu=0.13, average_network_degree=self.average_degree)
@@ -114,6 +115,7 @@ class SimulationClass:
                     df_data.append(forty_to_65_list)
                     df_data.append(sixtyfive_to_one_list)
                 trading_day += 1
+                print("Finished Trading Day ", trading_day)
 
 
         plot_all_commitments(all_commitments_each_round)

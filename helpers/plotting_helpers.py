@@ -98,6 +98,7 @@ def plot_all_commitments(all_commitments_each_round):
     x = []
     for i in range(len(all_commitments_each_round)):
         x.append(i)
+        all_commitments_each_round[i] = all_commitments_each_round[i][:10000]
     plt.plot(x, all_commitments_each_round)
     plt.xlabel("Trading Day")
     plt.ylabel("Commitment Values")
@@ -118,7 +119,9 @@ def plot_commitment_into_groups(commitment_this_round):
     columns = ["Number of agents in group", "Trading day", "Commitment group"]
     commitment_df = pd.DataFrame(commitment_this_round, columns=columns)
     plt.figure(figsize=(10, 10))
-    sns.barplot(x="Trading day", y="Number of agents in group", hue="Commitment group", data=commitment_df)
+    ax = sns.barplot(x="Trading day", y="Number of agents in group", hue="Commitment group", data=commitment_df)
+    for container in ax.containers:
+        ax.bar_label(container,fontsize=15)
     plt.show()
     stop = 0
 
