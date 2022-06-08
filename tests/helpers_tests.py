@@ -1,6 +1,6 @@
 import unittest
 from classes.RedditTrader import RedditTrader
-from helpers.network_helpers import calculate_average_commitment
+from helpers.network_helpers import calculate_average_commitment, create_network_from_agent_dictionary
 from helpers.calculations_helpers import split_commitment_into_groups
 
 
@@ -23,6 +23,19 @@ class TestHelpers(unittest.TestCase):
         expected_zero_to_40 = [3, 1, "0-0.4"]
         self.assertEqual(expected_zero_to_40, actual_zero_to_40, "not equal")
 
+
+    def test_create_network_from_agent_dictionary(self):
+        mock_agent_dict = {}
+        threshold = 2
+        commitments = [1, 2, 4, 0.5, 5]
+        for i in range(5):
+            agent = RedditTrader(i, [], 0, commitments[i])
+            mock_agent_dict[i] = agent
+        expected_graph_node_length = 3
+        actual_graph = create_network_from_agent_dictionary(mock_agent_dict, threshold)
+        actual_graph_node_length = len(actual_graph.nodes())
+        self.assertEqual(expected_graph_node_length, actual_graph_node_length,
+                         "Number of nodes is not as expected")
 
 if __name__ == '__main__':
     unittest.main()
