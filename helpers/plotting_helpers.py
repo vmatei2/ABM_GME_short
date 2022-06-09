@@ -1,10 +1,12 @@
 import networkx as nx
+import numpy as np
 import pandas as pd
 import yfinance as yf
 import matplotlib.pyplot as plt
 import seaborn as sns
-import graph_tool as gt
+import graph_tool.all as gt
 from helpers.calculations_helpers import extract_values_counts_as_lists, rescale_array
+from helpers.network_helpers import nx2gt
 
 
 def get_price_history(ticker, start_date, end_date):
@@ -145,10 +147,22 @@ def plot_commitment_into_groups(commitment_this_round):
 ####  NETWORK PLOTTING HELPERS
 
 
-def visualise_network(G, threshold, title):
+def visualise_network(G, threshold, title, use_graph_tool=True):
 
+    fig = plt.figure(figsize=(12, 10))
+    if use_graph_tool:
+        graph = nx2gt(G)
+        deg = graph.degree_property_map("total") # undirected graph so we are only working with total degrees
+        deg.a = 4 * (np.sqrt(deg.a) * 0.5 + 0.4)
+        pos = gt.sfdp_layout(graph)
+        control = graph.new_edge_property("vector<double>")
+        for e in graph.edges():
+            d = np.sqrt(sum((pos[e.source()].a - pos[e.target()].a) **2)) / 5  # for curvy edges
+            control[e] = [0.3, d, 0.7, d]
+        gt.graph_draw(graph, mplfig=fig, pos=pos, vertex_size=deg, vertex_fill_color=deg, vorder=deg, edge_control_points=control)
+        plt.savefig("../images/network week " + str(title))
+        return
     d = nx.degree(G)
-    plt.figure(figsize=(12, 10))
     degree_values = [v for k, v in d]
     nx.draw_networkx(G, pos=nx.spring_layout(G, k=0.99), nodelist=G.nodes(), node_size=[v*10 for v in degree_values], with_labels=False,
                      node_color='lightgreen', alpha=0.6)

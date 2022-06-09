@@ -1,6 +1,7 @@
 import random
 import networkx as nx
 import numpy as np
+import matplotlib.pyplot as plt
 import seaborn as sns
 from helpers.calculations_helpers import split_commitment_into_groups
 from helpers.network_helpers import get_sorted_degree_values, gather_commitment_values, \
@@ -68,7 +69,6 @@ class SimulationClass:
         all_commitments_each_round = []
         commitment_changes = []
         df_data = []
-        network_at_trading_day_zero = create_network_from_agent_dictionary(self.social_media_agents, threshold)
         for i in range(self.tau):
             agents_on_social_media_keys = list(self.social_media_agents.keys())
             random_agent_key = random.choice(agents_on_social_media_keys)
@@ -127,8 +127,8 @@ class SimulationClass:
                 print("Finished Trading Day ", trading_day)
 
         plot_all_commitments(all_commitments_each_round)
-        # for week, network in agent_network_evolution_dict.items():
-        #     visualise_network(network, threshold, week)
+        for week, network in agent_network_evolution_dict.items():
+             visualise_network(network, threshold, week)
         simple_line_plot(average_commitment_history, "Trading Day", "Average Commitment",
                          "Average Commitment Evolution")
         simple_line_plot(commitment_changes, "Trading Week", "Change in commitment", "Percentage Changes in Average "
@@ -140,7 +140,8 @@ class SimulationClass:
 
 if __name__ == '__main__':
     sns.set_style("darkgrid")
-    simulation = SimulationClass(time_steps=100, N_agents=10000, m=4, market_first_price=20)
+    plt.switch_backend("cairo")
+    simulation = SimulationClass(time_steps=7, N_agents=10000, m=4, market_first_price=20)
     simulation.run_simulation()
 
     stop = 0
