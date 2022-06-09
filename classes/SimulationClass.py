@@ -60,6 +60,27 @@ class SimulationClass:
 
         return G
 
+
+    def halt_trading(self, commitment_threshold, new_commitment):
+        for agent_id, agent in self.social_media_agents.items():
+            if agent.commitment <= commitment_threshold:
+                agent.commitment = new_commitment
+
+
+    def plot_agent_network_evolution(self, agent_network_evolution_dict, threshold):
+        rows = int(len(agent_network_evolution_dict) / 2)
+        fig, axs = plt.subplots(rows + 1, 2, figsize=(20, 20))
+        i = 0
+        for week, network in agent_network_evolution_dict.items():
+            if week % 2 == 0:
+                column = 0
+            else:
+                column = 1
+            visualise_network(network, threshold, week, axs[i, column])
+            if week % 2 != 0:
+                i += 1  # only increase row number after visualising the network
+        plt.show()
+
     def run_simulation(self):
         trading_day = 0
         week = 0
@@ -90,9 +111,9 @@ class SimulationClass:
                 commitment_this_round = gather_commitment_values(self.social_media_agents)
                 all_commitments_each_round.append(commitment_this_round)
                 if len(average_commitment_history) > 1:
+                    # in this case we have more than one previous average commitment, hence we can calculate the
+                    # percentage change
                     if trading_day % 7 == 0:
-                        # in this case we have more than one previous average commitment, hence we can calculate the
-                        # percentage change
                         previous_average_commitment = average_commitment_history[-7]
                         percentage_change_in_commitment = (
                                                                   average_network_commitment - previous_average_commitment) / previous_average_commitment
@@ -125,23 +146,24 @@ class SimulationClass:
                     week += 1
                 trading_day += 1
                 print("Finished Trading Day ", trading_day)
+                if trading_day == 60:
+                    self.halt_trading(0.65, 0.27)
+                    print("Trading halted")
 
         plot_all_commitments(all_commitments_each_round)
-        for week, network in agent_network_evolution_dict.items():
-             visualise_network(network, threshold, week)
+
+        self.plot_agent_network_evolution(agent_network_evolution_dict, threshold)
+
         simple_line_plot(average_commitment_history, "Trading Day", "Average Commitment",
                          "Average Commitment Evolution")
         simple_line_plot(commitment_changes, "Trading Week", "Change in commitment", "Percentage Changes in Average "
                                                                                      "Commitment")
 
         plot_commitment_into_groups(df_data)
-        print(trading_day)
+
 
 
 if __name__ == '__main__':
     sns.set_style("darkgrid")
-    plt.switch_backend("cairo")
-    simulation = SimulationClass(time_steps=7, N_agents=10000, m=4, market_first_price=20)
+    simulation = SimulationClass(time_steps=100, N_agents=10000, m=4, market_first_price=20)
     simulation.run_simulation()
-
-    stop = 0
