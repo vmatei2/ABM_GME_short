@@ -81,7 +81,7 @@ class SimulationClass:
                 i += 1  # only increase row number after visualising the network
         plt.show()
 
-    def run_simulation(self):
+    def run_simulation(self, halt_trading):
         trading_day = 0
         week = 0
         threshold = 0.65
@@ -146,7 +146,7 @@ class SimulationClass:
                     week += 1
                 trading_day += 1
                 print("Finished Trading Day ", trading_day)
-                if trading_day == 60:
+                if trading_day == 60 and halt_trading:
                     self.halt_trading(0.65, 0.27)
                     print("Trading halted")
 
@@ -166,4 +166,4 @@ class SimulationClass:
 if __name__ == '__main__':
     sns.set_style("darkgrid")
     simulation = SimulationClass(time_steps=100, N_agents=10000, m=4, market_first_price=20)
-    simulation.run_simulation()
+    simulation.run_simulation(halt_trading=True)
