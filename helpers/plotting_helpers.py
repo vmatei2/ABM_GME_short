@@ -111,12 +111,12 @@ def line_plot(xvalues, yvalues, title, xlabel, ylabel, every_nth_showed, ylim=No
     plt.show()
 
 
-def plot_all_commitments(all_commitments_each_round):
+def plot_all_commitments(all_commitments_each_round, number_of_agents):
     plt.figure(figsize=(10, 10))
     x = []
     for i in range(len(all_commitments_each_round)):
         x.append(i)
-        all_commitments_each_round[i] = all_commitments_each_round[i][:10000]
+        all_commitments_each_round[i] = all_commitments_each_round[i][:number_of_agents]
     plt.plot(x, all_commitments_each_round)
     plt.xlabel("Trading Day")
     plt.ylabel("Commitment Values")
