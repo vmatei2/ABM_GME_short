@@ -13,6 +13,15 @@ from helpers.plotting_helpers import plot_all_commitments, plot_commitment_into_
     simple_line_plot, visualise_network
 
 
+def store_commitment_values_split_into_groups(commitment_this_round, trading_day, df_data):
+    zero_to_40_list, forty_to_65_list, sixtyfive_to_one_list = split_commitment_into_groups(
+        commitment_this_round, trading_day)
+    df_data.append(zero_to_40_list)
+    df_data.append(forty_to_65_list)
+    df_data.append(sixtyfive_to_one_list)
+    return df_data
+
+
 class SimulationClass:
     def __init__(self, time_steps, N_agents, m, market_first_price):
         self.N_agents = N_agents  # number of participating agents in the simulation
@@ -112,13 +121,13 @@ class SimulationClass:
 
     def run_simulation(self, halt_trading):
         trading_day = 0
-        week = 0
+        step = 0  # we are splitting the 100 days into 20 days steps
         threshold = 0.65
         agent_network_evolution_dict = {}
         average_commitment_history = []
         all_commitments_each_round = []
         commitment_changes = []
-        df_data = []
+        df_data = []  # used in plotting the commitments on separate bar charts and different values
         for i in range(self.tau):
             self.update_agent_commitment()
             if i % np.int(self.N_agents / 2) == 0:
@@ -133,7 +142,7 @@ class SimulationClass:
                     # in this case we have more than one previous average commitment, hence we can calculate the
                     # percentage change
                     if trading_day % 7 == 0:
-                        # add new agents at the end of each week
+                        # add new agents at the end of each step
                         previous_average_commitment = average_commitment_history[-7]
                         percentage_change_in_commitment = (
                                                                   average_network_commitment - previous_average_commitment) / previous_average_commitment
@@ -142,20 +151,17 @@ class SimulationClass:
                         for i in range(number_of_agents_to_be_added):
                             self.add_new_agents_to_network(average_network_commitment)
                 if trading_day % 20 == 0:
-                    zero_to_40_list, forty_to_65_list, sixtyfive_to_one_list = split_commitment_into_groups(
-                        commitment_this_round, trading_day)
-                    df_data.append(zero_to_40_list)
-                    df_data.append(forty_to_65_list)
-                    df_data.append(sixtyfive_to_one_list)
+                    df_data = store_commitment_values_split_into_groups(commitment_this_round, trading_day, df_data)
                     agent_network = create_network_from_agent_dictionary(self.social_media_agents, threshold=threshold)
-                    agent_network_evolution_dict[week] = agent_network
-                    week += 1
+                    agent_network_evolution_dict[step] = agent_network
+                    step += 1
                 trading_day += 1
                 print("Finished Trading Day ", trading_day)
                 if trading_day == 60 and halt_trading:
-                    self.halt_trading(0.65, 0.27)
+                    self.halt_trading(commitment_threshold=0.65, new_commitment=0.27)
                     print("Trading halted")
 
+        ### PLOTTING FUNCTIONS
         plot_all_commitments(all_commitments_each_round, self.N_agents)
 
         self.plot_agent_network_evolution(agent_network_evolution_dict, threshold)
