@@ -127,16 +127,18 @@ def log_log_plot(author_values, xlabel, ylabel, title):
     plt.show()
 
 
-def plot_all_commitments(all_commitments_each_round, number_of_agents):
+def plot_all_commitments(all_commitments_each_round, number_of_agents, average_commitment_history):
     plt.figure(figsize=(10, 10))
     x = []
     for i in range(len(all_commitments_each_round)):
         x.append(i)
         all_commitments_each_round[i] = all_commitments_each_round[i][:number_of_agents]
     plt.plot(x, all_commitments_each_round)
+    plt.plot(average_commitment_history, 'bo', label='Average commitment across the network')
     plt.xlabel("Trading Day")
     plt.ylabel("Commitment Values")
     plt.title("Evolution of all agent commitments")
+    plt.legend()
     plt.show()
 
 
