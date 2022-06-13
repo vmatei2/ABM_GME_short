@@ -1,3 +1,5 @@
+import collections
+
 import networkx as nx
 import numpy as np
 import pandas as pd
@@ -108,6 +110,20 @@ def line_plot(xvalues, yvalues, title, xlabel, ylabel, every_nth_showed, ylim=No
                          xytext=(0, 10),
                          ha='center', fontsize=12)
         i += 1
+    plt.show()
+
+
+def log_log_plot(author_values, xlabel, ylabel, title):
+    print("In the log log function")
+    hist = dict(collections.Counter(author_values))
+    print("Calculated author_hist vector")
+    plt.figure(figsize=(10, 10))
+    plt.grid(True)
+    plt.loglog(hist.keys(), hist.values(), 'ro-')
+
+    plt.xlabel(xlabel, fontsize=13)
+    plt.ylabel(ylabel, fontsize=12)
+    plt.title(title, fontsize=14)
     plt.show()
 
 

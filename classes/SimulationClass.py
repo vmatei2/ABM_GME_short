@@ -176,5 +176,5 @@ class SimulationClass:
 
 if __name__ == '__main__':
     sns.set_style("darkgrid")
-    simulation = SimulationClass(time_steps=100, N_agents=1000, m=4, market_first_price=20)
-    simulation.run_simulation(halt_trading=False)
+    simulation = SimulationClass(time_steps=100, N_agents=10000, m=4, market_first_price=20)
+    simulation.run_simulation(halt_trading=True)
