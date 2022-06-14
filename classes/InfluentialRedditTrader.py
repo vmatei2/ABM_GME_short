@@ -9,3 +9,8 @@ class InfluentialRedditUser(RedditTrader):
         self.price_scaling_factor = random.uniform(500, 1000)  # very large scaling factor, reflective of the agent's
         # belief that the stock is going to the moon
         self.fundamental_price = market_first_price * self.price_scaling_factor  # the agent's fundamental_price view
+
+    def make_decision(self, average_network_commitment, threshold):
+        if average_network_commitment >= threshold:
+            self.demand += 100  # option buying
+        return

@@ -1,10 +1,8 @@
 class MarketEnvironment:
-    def __init__(self, initial_price, reddit_traders, institutional_investors, market_makers):
+    def __init__(self, initial_price, name):
+        self.name = name
         self.initial_price = initial_price
         self.current_price = initial_price
-        self.reddit_traders = reddit_traders
-        self.institutional_investors = institutional_investors
-        self.market_makers = market_makers
         self.excess_demand = {}
         self.noise_term = 0
         self.price_history = []
@@ -29,7 +27,7 @@ class MarketEnvironment:
         """
         pass
 
-    def update_excess_demand(self):
+    def update_excess_demand(self, retail_traders, institutional_investors):
         """
         Updating the excess demand coming from retail trader and instituional investors
         :return:

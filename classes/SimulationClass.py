@@ -9,6 +9,8 @@ from helpers.network_helpers import get_sorted_degree_values, gather_commitment_
 from helpers.network_helpers import calculate_average_commitment
 from classes.InfluentialRedditTrader import InfluentialRedditUser
 from classes.RegularRedditTrader import RegularRedditTrader
+from classes.InstitutionalInvestor import InstitutionalInvestor
+from classes.MarketEnvironment import MarketEnvironment
 from helpers.plotting_helpers import plot_all_commitments, plot_commitment_into_groups, \
     simple_line_plot, visualise_network
 
@@ -23,15 +25,16 @@ def store_commitment_values_split_into_groups(commitment_this_round, trading_day
 
 
 class SimulationClass:
-    def __init__(self, time_steps, N_agents, m, market_first_price, market_environment):
-        self.N_agents = N_agents  # number of participating agents in the simulation
+    def __init__(self, time_steps, N_agents, N_institutional_investors, m, market_environment):
+        self.N_agents = N_agents  # number of participating retail traders in the simulation
+        self.N_institutional_investors = N_institutional_investors
         self.m = m  # number of edges to attach from a new node to existing nodes
         self.time_steps = time_steps
-        self.market_first_price = market_first_price
         self.tau = int((N_agents / 2) * time_steps)  # parameter for updating the opinion profile of the population
         self.social_media_agents, self.average_degree = self.create_initial_network()  # the initial network of social media agents,
         # we already have a few central nodes network is set to increase in size and add new agents throughout the
         # simulation
+        self.institutional_investors = self.create_insitutional_investors()
         self.market_environment = market_environment
 
     def create_initial_network(self):
@@ -43,7 +46,7 @@ class SimulationClass:
             node_neighbours = list(barabasi_albert_network.neighbors(node_id))
             if i < 5:  # defining 5 largest nodes as being the influential ones in the network
                 agent = InfluentialRedditUser(id=node_id, neighbours_ids=node_neighbours,
-                                              market_first_price=self.market_first_price)
+                                              market_first_price=self.market_environment.initial_price)
             else:
                 agent = RegularRedditTrader(id=node_id, neighbours_ids=node_neighbours)
             social_media_agents[node_id] = agent
@@ -75,7 +78,14 @@ class SimulationClass:
             if agent.commitment <= commitment_threshold:
                 agent.commitment = new_commitment
 
-    def plot_agent_network_evolution(self, agent_network_evolution_dict, threshold):
+    def create_insitutional_investors(self):
+        institutional_investors = {}
+        for i in range(self.institutional_investors):
+            institutional_investors[i] = InstitutionalInvestor(i, demand=-2, fundamental_price=0)
+        return institutional_investors
+
+    @staticmethod
+    def plot_agent_network_evolution(agent_network_evolution_dict, threshold):
         rows = int(len(agent_network_evolution_dict) / 2)
         fig, axs = plt.subplots(rows + 1, 2, figsize=(20, 20))
         i = 0
@@ -177,5 +187,7 @@ class SimulationClass:
 
 if __name__ == '__main__':
     sns.set_style("darkgrid")
-    simulation = SimulationClass(time_steps=100, N_agents=10000, m=4, market_first_price=20)
+    market_environment = MarketEnvironment(initial_price=15, name="GME Market Environment")
+    simulation = SimulationClass(time_steps=100, N_agents=10000, N_institutional_investors=100, m=4,
+                                 market_environment=market_environment)
     simulation.run_simulation(halt_trading=False)
