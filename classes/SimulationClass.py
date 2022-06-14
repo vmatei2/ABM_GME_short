@@ -23,7 +23,7 @@ def store_commitment_values_split_into_groups(commitment_this_round, trading_day
 
 
 class SimulationClass:
-    def __init__(self, time_steps, N_agents, m, market_first_price):
+    def __init__(self, time_steps, N_agents, m, market_first_price, market_environment):
         self.N_agents = N_agents  # number of participating agents in the simulation
         self.m = m  # number of edges to attach from a new node to existing nodes
         self.time_steps = time_steps
@@ -32,6 +32,7 @@ class SimulationClass:
         self.social_media_agents, self.average_degree = self.create_initial_network()  # the initial network of social media agents,
         # we already have a few central nodes network is set to increase in size and add new agents throughout the
         # simulation
+        self.market_environment = market_environment
 
     def create_initial_network(self):
         barabasi_albert_network = nx.barabasi_albert_graph(n=self.N_agents, m=self.m, seed=2)
