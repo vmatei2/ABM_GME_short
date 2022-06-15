@@ -14,6 +14,7 @@ class RegularRedditTrader(RedditTrader):
         # hence we want thought processes to be heterogeneous
         self.b = random.uniform(1,
                                 10)  # a parameter which gives the strength of the force calcuated as simply (current price - moving_average)
+        self.expected_price = 0
         self.risk_aversion = np.random.normal(0, 1, 1)  # mean, std deviation and size of the array to be returned
         super().__init__(id, neighbours_ids, demand, commitment)
 
@@ -49,15 +50,22 @@ class RegularRedditTrader(RedditTrader):
             self.commitment = min(updated_commitment, 1)
 
     def make_decision(self, average_network_commitment, current_price, current_trading_day, price_history, white_noise):
-        pass
+        self.compute_price_expectation_chartist(current_price, current_trading_day, price_history, white_noise)
+        if average_network_commitment > 0.7:
+            self.demand += 100
+        if current_price > self.expected_price:
+            return
+        else:
+            self.demand += 1
 
-    def compute_price_expectation_chartist(self, current_price, current_trading_day, price_history):
-        rolling_average = self.compute_rolling_average(price_history)
-        expected_price = current_price + (self.b / (current_trading_day - 1)) * (current_price - rolling_average)
+    def compute_price_expectation_chartist(self, current_price, current_trading_day, price_history, white_noise):
+        rolling_average = self.compute_rolling_average(price_history, rolling_average_window_length=15)
+        expected_price = current_price + (self.b / (current_trading_day - 1)) * (current_price - rolling_average) + self.b * white_noise
+        self.expected_price = expected_price
 
-    def compute_rolling_average(self, price_history):
+    def compute_rolling_average(self, price_history, rolling_average_window_length):
         total_prices = 0
-        for i in range(len(price_history)):
+        for i in range(rolling_average_window_length):
             total_prices += price_history[i]
         rolling_average = total_prices / len(price_history)
         return rolling_average

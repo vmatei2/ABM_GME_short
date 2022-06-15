@@ -3,6 +3,8 @@ import networkx as nx
 import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
+import yfinance as yf
+
 from helpers.calculations_helpers import split_commitment_into_groups
 from helpers.network_helpers import get_sorted_degree_values, gather_commitment_values, \
     create_network_from_agent_dictionary
@@ -12,7 +14,7 @@ from classes.RegularRedditTrader import RegularRedditTrader
 from classes.InstitutionalInvestor import InstitutionalInvestor
 from classes.MarketEnvironment import MarketEnvironment
 from helpers.plotting_helpers import plot_all_commitments, plot_commitment_into_groups, \
-    simple_line_plot, visualise_network
+    simple_line_plot, visualise_network, get_price_history
 
 
 def store_commitment_values_split_into_groups(commitment_this_round, trading_day, df_data):
@@ -31,11 +33,12 @@ class SimulationClass:
         self.m = m  # number of edges to attach from a new node to existing nodes
         self.time_steps = time_steps
         self.tau = int((N_agents / 2) * time_steps)  # parameter for updating the opinion profile of the population
+        self.market_environment = market_environment
         self.social_media_agents, self.average_degree = self.create_initial_network()  # the initial network of social media agents,
         # we already have a few central nodes network is set to increase in size and add new agents throughout the
         # simulation
         self.institutional_investors = self.create_insitutional_investors()
-        self.market_environment = market_environment
+
 
     def create_initial_network(self):
         barabasi_albert_network = nx.barabasi_albert_graph(n=self.N_agents, m=self.m, seed=2)
@@ -80,7 +83,7 @@ class SimulationClass:
 
     def create_insitutional_investors(self):
         institutional_investors = {}
-        for i in range(self.institutional_investors):
+        for i in range(self.N_institutional_investors):
             institutional_investors[i] = InstitutionalInvestor(i, demand=-2, fundamental_price=0)
         return institutional_investors
 
@@ -166,6 +169,11 @@ class SimulationClass:
                     agent_network = create_network_from_agent_dictionary(self.social_media_agents, threshold=threshold)
                     agent_network_evolution_dict[step] = agent_network
                     step += 1
+                participating_agents = market_environment.select_participating_agents(average_network_commitment, self.social_media_agents)
+                for agent_id in participating_agents:
+                    self.social_media_agents[agent_id].make_decision(average_network_commitment, market_environment.current_price, trading_day,
+                                                                     market_environment.price_history, 0.003)
+                market_environment.update_market()
                 trading_day += 1
                 print("Finished Trading Day ", trading_day)
                 if trading_day == 60 and halt_trading:
@@ -187,7 +195,13 @@ class SimulationClass:
 
 if __name__ == '__main__':
     sns.set_style("darkgrid")
-    market_environment = MarketEnvironment(initial_price=15, name="GME Market Environment")
+
+    gme_ticker = "GME"
+    gme = yf.Ticker(gme_ticker)
+    gme_price_history = get_price_history(gme, "2020-11-15", "2020-12-08")
+    gme_price_history = gme_price_history["Close"].to_list()
+
+    market_environment = MarketEnvironment(initial_price=16.35, name="GME Market Environment", price_history=gme_price_history)
     simulation = SimulationClass(time_steps=100, N_agents=10000, N_institutional_investors=100, m=4,
                                  market_environment=market_environment)
     simulation.run_simulation(halt_trading=False)
