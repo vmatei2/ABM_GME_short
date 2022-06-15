@@ -171,9 +171,13 @@ class SimulationClass:
                     step += 1
                 participating_agents = market_environment.select_participating_agents(average_network_commitment, self.social_media_agents)
                 for agent_id in participating_agents:
-                    self.social_media_agents[agent_id].make_decision(average_network_commitment, market_environment.current_price, trading_day,
+                    selected_agent = self.social_media_agents[agent_id]
+                    if isinstance(selected_agent, InfluentialRedditUser):
+                        selected_agent.make_decision(average_network_commitment, threshold)
+                    else:
+                        selected_agent.make_decision(average_network_commitment, market_environment.current_price, trading_day,
                                                                      market_environment.price_history, 0.003)
-                market_environment.update_market()
+                market_environment.update_market(self.social_media_agents, self.institutional_investors)
                 trading_day += 1
                 print("Finished Trading Day ", trading_day)
                 if trading_day == 60 and halt_trading:
@@ -202,6 +206,6 @@ if __name__ == '__main__':
     gme_price_history = gme_price_history["Close"].to_list()
 
     market_environment = MarketEnvironment(initial_price=16.35, name="GME Market Environment", price_history=gme_price_history)
-    simulation = SimulationClass(time_steps=100, N_agents=10000, N_institutional_investors=100, m=4,
+    simulation = SimulationClass(time_steps=100, N_agents=10000, N_institutional_investors=300, m=4,
                                  market_environment=market_environment)
     simulation.run_simulation(halt_trading=False)

@@ -12,8 +12,7 @@ class RegularRedditTrader(RedditTrader):
         self.d = random.uniform(0.25, 0.5)  # threshold for difference in commitment to be too high - or confidence
         # interval value - random choice rather than set values as all agents will be slightly different,
         # hence we want thought processes to be heterogeneous
-        self.b = random.uniform(1,
-                                10)  # a parameter which gives the strength of the force calcuated as simply (current price - moving_average)
+        self.b = random.uniform(-1, 1)  # a parameter which gives the strength of the force calcuated as simply (current price - moving_average)
         self.expected_price = 0
         self.risk_aversion = np.random.normal(0, 1, 1)  # mean, std deviation and size of the array to be returned
         super().__init__(id, neighbours_ids, demand, commitment)
@@ -59,8 +58,17 @@ class RegularRedditTrader(RedditTrader):
             self.demand += 1
 
     def compute_price_expectation_chartist(self, current_price, current_trading_day, price_history, white_noise):
+        """
+        Chartists agent detect a trend through looking at the distance between the price and its smoothed profile (given by moving average in this case)
+        :param current_price:
+        :param current_trading_day:
+        :param price_history:
+        :param white_noise:
+        :return:
+        """
         rolling_average = self.compute_rolling_average(price_history, rolling_average_window_length=15)
-        expected_price = current_price + (self.b / (current_trading_day - 1)) * (current_price - rolling_average) + self.b * white_noise
+        added_noise = self.b * white_noise
+        expected_price = current_price + self.b * (current_price - rolling_average) + added_noise
         self.expected_price = expected_price
 
     def compute_rolling_average(self, price_history, rolling_average_window_length):

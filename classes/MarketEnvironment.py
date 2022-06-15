@@ -9,13 +9,13 @@ class MarketEnvironment:
         self.initial_price = initial_price
         self.current_price = initial_price
         self.excess_demand = {}
-        self.noise_term = 0
+        self.tau = 100  # noise term for updating market price
         self.price_history = price_history
 
-    def update_market(self):
+    def update_market(self, retail_traders, institutional_investors):
         self.price_history.append(self.current_price)
-        self.update_excess_demand()
-        updated_price = self.current_price + self.noise_term * self.excess_demand
+        self.update_excess_demand(retail_traders, institutional_investors)
+        updated_price = self.current_price + self.tau * self.excess_demand
         print("Previous Price: ", self.current_price)
         self.current_price = updated_price
         print("Updated Price: ", self.current_price)
@@ -52,4 +52,6 @@ class MarketEnvironment:
             excess_demand += retail_trader.demand
         for id, hedge_fund in institutional_investors.items():
             excess_demand += hedge_fund.demand
-        self.excess_demand = excess_demand
+        number_of_agents = len(retail_traders) + len(institutional_investors)
+        normalized_excess_demand = excess_demand / number_of_agents
+        self.excess_demand = normalized_excess_demand
