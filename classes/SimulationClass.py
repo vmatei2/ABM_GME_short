@@ -133,6 +133,19 @@ class SimulationClass:
                                             commitment=average_network_commitment)
             self.social_media_agents[new_id] = new_agent
 
+    def market_interactions(self, average_network_commitment, threshold, trading_day):
+        participating_agents = self.market_environment.select_participating_agents(average_network_commitment,
+                                                                              self.social_media_agents)
+        print("Number of agents involved in this trading day: ", len(participating_agents))
+        for agent_id in participating_agents:
+            selected_agent = self.social_media_agents[agent_id]
+            if isinstance(selected_agent, InfluentialRedditUser):
+                selected_agent.make_decision(average_network_commitment, threshold)
+            else:
+                selected_agent.make_decision(average_network_commitment, market_environment.current_price, trading_day,
+                                             market_environment.price_history, 0.003)
+        market_environment.update_market(self.social_media_agents, self.institutional_investors)
+
     def run_simulation(self, halt_trading):
         trading_day = 0
         step = 0  # we are splitting the 100 days into 20 days steps
@@ -169,21 +182,15 @@ class SimulationClass:
                     agent_network = create_network_from_agent_dictionary(self.social_media_agents, threshold=threshold)
                     agent_network_evolution_dict[step] = agent_network
                     step += 1
-                participating_agents = market_environment.select_participating_agents(average_network_commitment, self.social_media_agents)
-                for agent_id in participating_agents:
-                    selected_agent = self.social_media_agents[agent_id]
-                    if isinstance(selected_agent, InfluentialRedditUser):
-                        selected_agent.make_decision(average_network_commitment, threshold)
-                    else:
-                        selected_agent.make_decision(average_network_commitment, market_environment.current_price, trading_day,
-                                                                     market_environment.price_history, 0.003)
-                market_environment.update_market(self.social_media_agents, self.institutional_investors)
+                self.market_interactions(average_network_commitment, threshold, trading_day)
                 trading_day += 1
+                print("Average Network Commitment: ", average_network_commitment)
                 print("Finished Trading Day ", trading_day)
+
                 if trading_day == 60 and halt_trading:
                     self.halt_trading(commitment_threshold=0.65, new_commitment=0.27)
                     print("Trading halted")
-
+                print()
         ### PLOTTING FUNCTIONS
         plot_all_commitments(all_commitments_each_round, self.N_agents, average_commitment_history)
 
@@ -196,6 +203,7 @@ class SimulationClass:
 
         plot_commitment_into_groups(df_data)
 
+        market_environment.plot_price_history()
 
 if __name__ == '__main__':
     sns.set_style("darkgrid")

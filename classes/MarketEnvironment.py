@@ -39,7 +39,7 @@ class MarketEnvironment:
             probabilities_dict[id] = all_agent_probabilities[i]
             i += 1
         commitment_scaler = 0.002
-        noise_term = random.uniform(0.01, 0.015)
+        noise_term = 0.012  #random.uniform(0.01, 0.015)
         threshold = average_commitment_value * commitment_scaler + noise_term
         # the line below loops over all probabilities and selects the ids of agents simply based on the thresholdf
         participating_agent_ids = [id for id, value in probabilities_dict.items() if value < threshold]

@@ -52,10 +52,12 @@ class RegularRedditTrader(RedditTrader):
         self.compute_price_expectation_chartist(current_price, current_trading_day, price_history, white_noise)
         if average_network_commitment > 0.7:
             self.demand += 100
-        if current_price > self.expected_price:
-            return
-        else:
-            self.demand += 1
+        elif self.commitment > 0.75:
+            self.demand += 100
+        elif current_price > self.expected_price:
+            self.demand = 0
+        elif self.expected_price > current_price and self.commitment > 0.5:
+            self.demand += random.uniform(0.01, 1)
 
     def compute_price_expectation_chartist(self, current_price, current_trading_day, price_history, white_noise):
         """
