@@ -29,18 +29,21 @@ class MarketEnvironment:
 
     def select_participating_agents(self, average_commitment_value, retail_agents):
         """
-        Selecting particpating agents, based on volume calcuation taking into account the average commitment value across the network
+        Selecting participating agents, based on volume calculation taking into account the average commitment value across the network
         :return:
         """
+        probabilities_dict = {}
         all_agent_probabilities = np.random.uniform(0, 1, len(retail_agents))  # array of probabilities for each agent
+        i = 0
+        for id, agent in retail_agents.items():
+            probabilities_dict[id] = all_agent_probabilities[i]
+            i += 1
         commitment_scaler = 0.002
         noise_term = random.uniform(0.01, 0.015)
         threshold = average_commitment_value * commitment_scaler + noise_term
         # the line below loops over all probabilities and selects the ids of agents simply based on the thresholdf
-        participating_agent_ids = [i for i, j in enumerate(all_agent_probabilities) if j < threshold]
+        participating_agent_ids = [id for id, value in probabilities_dict.items() if value < threshold]
         return participating_agent_ids
-
-
 
     def update_excess_demand(self, retail_traders, institutional_investors):
         """
