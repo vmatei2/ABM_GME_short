@@ -135,6 +135,9 @@ class SimulationClass:
             self.social_media_agents[new_id] = new_agent
 
     def market_interactions(self, average_network_commitment, threshold, trading_day):
+        if self.market_environment.date.weekday() in [5, 6]: # Saturday or Sunday:
+            self.market_environment.update_day()
+            return
         participating_agents = self.market_environment.select_participating_agents(average_network_commitment,
                                                                               self.social_media_agents)
         print("Number of agents involved in this trading day: ", len(participating_agents))
