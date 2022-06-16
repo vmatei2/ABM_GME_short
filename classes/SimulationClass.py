@@ -40,7 +40,6 @@ class SimulationClass:
         # simulation
         self.institutional_investors = self.create_insitutional_investors()
 
-
     def create_initial_network(self):
         barabasi_albert_network = nx.barabasi_albert_graph(n=self.N_agents, m=self.m, seed=2)
         sorted_node_degree_pairs = get_sorted_degree_values(barabasi_albert_network)
@@ -135,11 +134,11 @@ class SimulationClass:
             self.social_media_agents[new_id] = new_agent
 
     def market_interactions(self, average_network_commitment, threshold, trading_day):
-        if self.market_environment.date.weekday() in [5, 6]: # Saturday or Sunday:
+        if self.market_environment.date.weekday() in [5, 6]:  # Saturday or Sunday:
             self.market_environment.update_day()
             return
         participating_agents = self.market_environment.select_participating_agents(average_network_commitment,
-                                                                              self.social_media_agents)
+                                                                                   self.social_media_agents)
         print("Number of agents involved in this trading day: ", len(participating_agents))
         for agent_id in participating_agents:
             selected_agent = self.social_media_agents[agent_id]
@@ -196,7 +195,8 @@ class SimulationClass:
                     print("Trading halted")
                 print()
         ### PLOTTING FUNCTIONS
-        plot_all_commitments(all_commitments_each_round, self.N_agents, average_commitment_history, "Evolution of all agent commitments")
+        plot_all_commitments(all_commitments_each_round, self.N_agents, average_commitment_history,
+                             "Evolution of all agent commitments")
 
         self.plot_agent_network_evolution(agent_network_evolution_dict, threshold)
 
@@ -209,6 +209,7 @@ class SimulationClass:
 
         market_environment.plot_price_history()
 
+
 if __name__ == '__main__':
     sns.set_style("darkgrid")
 
@@ -218,7 +219,8 @@ if __name__ == '__main__':
     gme_price_history = gme_price_history["Close"].to_list()
 
     start_date = datetime.datetime(2020, 12, 8)
-    market_environment = MarketEnvironment(initial_price=16.35, name="GME Market Environment", price_history=gme_price_history, start_date=start_date)
+    market_environment = MarketEnvironment(initial_price=16.35, name="GME Market Environment",
+                                           price_history=gme_price_history, start_date=start_date)
     simulation = SimulationClass(time_steps=100, N_agents=10000, N_institutional_investors=300, m=4,
                                  market_environment=market_environment)
     simulation.run_simulation(halt_trading=False)

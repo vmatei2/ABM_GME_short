@@ -21,11 +21,11 @@ class MarketEnvironment:
         updated_price = self.current_price + self.tau * self.excess_demand
         print("Previous Price: ", self.current_price)
         self.current_price = updated_price
-        self.update_day()
         # if new_date.weekday() == 5:  # this means that it is a Friday
         #     new_date = new_date + datetime.timedelta(days=2)
-        print("Date is: ", self.date)
         print("Updated Price: ", self.current_price)
+        print("Date is: ", self.date)
+        self.update_day()
 
     def update_day(self):
         self.date = self.date + datetime.timedelta(days=1)
