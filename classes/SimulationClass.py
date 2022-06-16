@@ -1,3 +1,4 @@
+import datetime
 import random
 import networkx as nx
 import numpy as np
@@ -169,14 +170,14 @@ class SimulationClass:
                     # in this case we have more than one previous average commitment, hence we can calculate the
                     # percentage change
                     if trading_day % 7 == 0:
-                        # add new agents at the end of each step
+                        # add new agents at the end of each weekly step
                         previous_average_commitment = average_commitment_history[-7]
                         percentage_change_in_commitment = (
                                                                   average_network_commitment - previous_average_commitment) / previous_average_commitment
                         commitment_changes.append(percentage_change_in_commitment)
                         number_of_agents_to_be_added = int(percentage_change_in_commitment * self.N_agents)
-                        for i in range(number_of_agents_to_be_added):
-                            self.add_new_agents_to_network(average_network_commitment)
+                        # for i in range(number_of_agents_to_be_added):
+                        #     self.add_new_agents_to_network(average_network_commitment)
                 if trading_day % 20 == 0:
                     df_data = store_commitment_values_split_into_groups(commitment_this_round, trading_day, df_data)
                     agent_network = create_network_from_agent_dictionary(self.social_media_agents, threshold=threshold)
@@ -213,7 +214,8 @@ if __name__ == '__main__':
     gme_price_history = get_price_history(gme, "2020-11-15", "2020-12-08")
     gme_price_history = gme_price_history["Close"].to_list()
 
-    market_environment = MarketEnvironment(initial_price=16.35, name="GME Market Environment", price_history=gme_price_history)
+    start_date = datetime.datetime(2020, 12, 8)
+    market_environment = MarketEnvironment(initial_price=16.35, name="GME Market Environment", price_history=gme_price_history, start_date=start_date)
     simulation = SimulationClass(time_steps=100, N_agents=10000, N_institutional_investors=300, m=4,
                                  market_environment=market_environment)
     simulation.run_simulation(halt_trading=False)

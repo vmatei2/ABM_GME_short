@@ -1,16 +1,19 @@
+import datetime
 import random
 
+import matplotlib.pyplot as plt
 import numpy as np
-
+import datetime
 
 class MarketEnvironment:
-    def __init__(self, initial_price, name, price_history):
+    def __init__(self, initial_price, name, price_history, start_date):
         self.name = name
         self.initial_price = initial_price
         self.current_price = initial_price
         self.excess_demand = {}
         self.tau = 100  # noise term for updating market price
         self.price_history = price_history
+        self.date = start_date
 
     def update_market(self, retail_traders, institutional_investors):
         self.price_history.append(self.current_price)
@@ -18,14 +21,20 @@ class MarketEnvironment:
         updated_price = self.current_price + self.tau * self.excess_demand
         print("Previous Price: ", self.current_price)
         self.current_price = updated_price
+        new_date = self.date + datetime.timedelta(days=1)
+        if new_date.weekday() == 5:  # this means that it is a Friday
+            new_date = new_date + datetime.timedelta(days=2)
+        self.date = new_date
+        print("Date is: ", self.date)
         print("Updated Price: ", self.current_price)
 
-    def plot_price_history(self):
+    def plot_price_history(self, title):
         """
         Function to observe the price evolution
         :return:
         """
-        pass
+        plt.figure(figsize=(10, 10))
+        plt.plot(self.price_history)
 
     def select_participating_agents(self, average_commitment_value, retail_agents):
         """
