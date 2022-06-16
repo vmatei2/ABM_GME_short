@@ -22,7 +22,8 @@ def get_price_history(ticker, start_date, end_date):
     return price_history
 
 
-def plot_two_df_columns_together(data_frame, first_column, second_column, third_column=None, kind=None, rescale=False, title=""):
+def plot_two_df_columns_together(data_frame, first_column, second_column, third_column=None, kind=None, rescale=False,
+                                 title=""):
     plt.figure(figsize=(12, 10))
     if rescale:
         data_frame[first_column] = rescale_array(data_frame[first_column])
@@ -34,7 +35,7 @@ def plot_two_df_columns_together(data_frame, first_column, second_column, third_
         second_plot = data_frame[second_column].plot(secondary_y=True, alpha=0.6, legend=True)
     else:
         second_plot = data_frame[second_column].plot(kind='area', secondary_y=True,
-                                                 alpha=0.6, legend=True)
+                                                     alpha=0.6, legend=True)
 
     if third_column is not None:
         third_plot = data_frame[third_column].plot(legend=True)
@@ -51,8 +52,6 @@ def plot_two_df_columns_together(data_frame, first_column, second_column, third_
     # For some reason the file still thinks it's in ABM_GME_Short.wiki so need to move out to save in images
     plt.savefig("../images/" + title)
     plt.show()
-
-
 
 
 def barplot_percentages_on_top(df, title, column, xlabel):
@@ -73,7 +72,7 @@ def barplot_percentages_on_top(df, title, column, xlabel):
     plt.show()
 
 
-def line_plot(xvalues, yvalues, title, xlabel, ylabel, every_nth_showed, ylim=None, ):
+def line_plot(xvalues, yvalues, title, xlabel, ylabel, every_nth_showed, ylim=None):
     plt.figure(figsize=(14, 14))
     plt.plot(xvalues, yvalues)
     ax = plt.gca()
@@ -159,7 +158,7 @@ def plot_commitment_into_groups(commitment_this_round, title):
     plt.figure(figsize=(10, 10))
     ax = sns.barplot(x="Trading day", y="Number of agents in group", hue="Commitment group", data=commitment_df)
     for container in ax.containers:
-        ax.bar_label(container,fontsize=15)
+        ax.bar_label(container, fontsize=15)
     plt.title(title, fontsize=20)
     plt.savefig("../images/" + title)
     plt.show()
@@ -169,27 +168,38 @@ def plot_commitment_into_groups(commitment_this_round, title):
 
 
 def visualise_network(G, threshold, title, axs, use_graph_tool=False):
-
     fig = plt.figure(figsize=(12, 10))
     if use_graph_tool:
         graph = nx2gt(G)
-        deg = graph.degree_property_map("total") # undirected graph so we are only working with total degrees
+        deg = graph.degree_property_map("total")  # undirected graph so we are only working with total degrees
         deg.a = 4 * (np.sqrt(deg.a) * 0.5 + 0.4)
         pos = gt.sfdp_layout(graph)
         control = graph.new_edge_property("vector<double>")
         for e in graph.edges():
-            d = np.sqrt(sum((pos[e.source()].a - pos[e.target()].a) **2)) / 5  # for curvy edges
+            d = np.sqrt(sum((pos[e.source()].a - pos[e.target()].a) ** 2)) / 5  # for curvy edges
             control[e] = [0.3, d, 0.7, d]
-        gt.graph_draw(graph, mplfig=fig, pos=pos, vertex_size=deg, vertex_fill_color=deg, vorder=deg, edge_control_points=control)
+        gt.graph_draw(graph, mplfig=fig, pos=pos, vertex_size=deg, vertex_fill_color=deg, vorder=deg,
+                      edge_control_points=control)
         plt.savefig("../images/network week " + str(title))
         return
     d = nx.degree(G)
     degree_values = [v for k, v in d]
-    nx.draw_networkx(G, pos=nx.spring_layout(G, k=0.99), nodelist=G.nodes(), node_size=[v*10 for v in degree_values], with_labels=False,
+    nx.draw_networkx(G, pos=nx.spring_layout(G, k=0.99), nodelist=G.nodes(), node_size=[v * 10 for v in degree_values],
+                     with_labels=False,
                      node_color='lightgreen', alpha=0.6, ax=axs)
     axs.set_title("Network of users with average commitment > " + str(threshold) + " week " + str(title))
     axs.title.set_size(20)
 
+
+def scale_and_plot(first_array, second_array, title):
+    plt.figure(figsize=(10, 10))
+    first_array = rescale_array(first_array)
+    second_array = rescale_array(second_array)
+    plt.plot(first_array, 'ro-')
+    plt.plot(second_array, 'bx-')
+    plt.ylabel("Value")
+    plt.title(title, fontsize=20)
+    plt.show()
 
 
 if __name__ == '__main__':
@@ -214,7 +224,6 @@ if __name__ == '__main__':
     for i, date in enumerate(date_value):
         if date in gme_dates_as_string:
             date_post_counts_matching_gme.append(date_counts[i])
-
 
     gme_price_history['number_of_posts'] = date_post_counts_matching_gme
 

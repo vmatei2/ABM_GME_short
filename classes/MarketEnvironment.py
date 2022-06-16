@@ -11,7 +11,7 @@ class MarketEnvironment:
         self.initial_price = initial_price
         self.current_price = initial_price
         self.excess_demand = {}
-        self.tau = 100  # noise term for updating market price
+        self.tau = 2  # noise term for updating market price
         self.price_history = price_history
         self.simulation_history = {}
         self.date = start_date
