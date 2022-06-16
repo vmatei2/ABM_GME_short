@@ -9,7 +9,7 @@ class RegularRedditTrader(RedditTrader):
         if commitment is None:
             commitment = random.uniform(0.2, 0.5)  # normal random distribution with mean = 0 and std deviation = 1
         demand = 0  # an agent's demand in the stock
-        self.d = random.uniform(0.25, 0.5)  # threshold for difference in commitment to be too high - or confidence
+        self.d = random.uniform(0.2, 0.5)  # threshold for difference in commitment to be too high - or confidence
         # interval value - random choice rather than set values as all agents will be slightly different,
         # hence we want thought processes to be heterogeneous
         self.b = random.uniform(-1, 1)  # a parameter which gives the strength of the force calcuated as simply (current price - moving_average)
@@ -51,13 +51,15 @@ class RegularRedditTrader(RedditTrader):
     def make_decision(self, average_network_commitment, current_price, current_trading_day, price_history, white_noise):
         self.compute_price_expectation_chartist(current_price, current_trading_day, price_history, white_noise)
         if average_network_commitment > 0.65:
-            self.demand += 100
-        elif self.commitment > 0.7:
-            self.demand += 100
-        elif current_price > self.expected_price:
+            self.demand = 100
+        elif self.commitment > 0.6:
+            self.demand = 10
+        elif self.commitment > 0.4 and self.expected_price > current_price:
+            self.demand = 5
+        elif self.commitment < 0.4 and current_trading_day >= 59:
+            self.demand = -50
+        else:
             self.demand = 0
-        elif self.expected_price > current_price and self.commitment > 0.5:
-            self.demand += random.uniform(0.01, 1)
 
     def compute_price_expectation_chartist(self, current_price, current_trading_day, price_history, white_noise):
         """

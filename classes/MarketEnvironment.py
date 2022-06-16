@@ -13,6 +13,7 @@ class MarketEnvironment:
         self.excess_demand = {}
         self.tau = 100  # noise term for updating market price
         self.price_history = price_history
+        self.simulation_history = {}
         self.date = start_date
 
     def update_market(self, retail_traders, institutional_investors):
@@ -25,10 +26,14 @@ class MarketEnvironment:
         #     new_date = new_date + datetime.timedelta(days=2)
         print("Updated Price: ", self.current_price)
         print("Date is: ", self.date)
+        self.update_simulation_history()
         self.update_day()
 
     def update_day(self):
         self.date = self.date + datetime.timedelta(days=1)
+
+    def update_simulation_history(self):
+        self.simulation_history[self.date] = self.current_price
 
     def plot_price_history(self, title):
         """
@@ -36,7 +41,12 @@ class MarketEnvironment:
         :return:
         """
         plt.figure(figsize=(10, 10))
-        plt.plot(self.price_history)
+        plt.plot(self.simulation_history.keys(), self.simulation_history.values(), 'ro-')
+        plt.xlabel("Date", fontsize=15)
+        plt.ylabel("Price", fontsize=15)
+        plt.title(title, fontsize=19)
+        plt.show()
+
 
     def select_participating_agents(self, average_commitment_value, retail_agents):
         """
@@ -49,7 +59,7 @@ class MarketEnvironment:
         for id, agent in retail_agents.items():
             probabilities_dict[id] = all_agent_probabilities[i]
             i += 1
-        commitment_scaler = 0.002
+        commitment_scaler = 1.02
         noise_term = 0.012  #random.uniform(0.01, 0.015)
         threshold = average_commitment_value * commitment_scaler + noise_term
         # the line below loops over all probabilities and selects the ids of agents simply based on the thresholdf
@@ -69,3 +79,4 @@ class MarketEnvironment:
         number_of_agents = len(retail_traders) + len(institutional_investors)
         normalized_excess_demand = excess_demand / number_of_agents
         self.excess_demand = normalized_excess_demand
+        print("Market Excess Demand is: ", self.excess_demand)

@@ -80,6 +80,7 @@ class SimulationClass:
         for agent_id, agent in self.social_media_agents.items():
             if agent.commitment <= commitment_threshold:
                 agent.commitment = new_commitment
+                agent.demand = -20
 
     def create_insitutional_investors(self):
         institutional_investors = {}
@@ -191,14 +192,14 @@ class SimulationClass:
                 print("Finished Trading Day ", trading_day)
 
                 if trading_day == 60 and halt_trading:
-                    self.halt_trading(commitment_threshold=0.65, new_commitment=0.27)
+                    self.halt_trading(commitment_threshold=0.65, new_commitment=0.2)
                     print("Trading halted")
                 print()
         ### PLOTTING FUNCTIONS
         plot_all_commitments(all_commitments_each_round, self.N_agents, average_commitment_history,
                              "Evolution of all agent commitments")
 
-        self.plot_agent_network_evolution(agent_network_evolution_dict, threshold)
+#        self.plot_agent_network_evolution(agent_network_evolution_dict, threshold)
 
         simple_line_plot(average_commitment_history, "Trading Day", "Average Commitment",
                          "Average Commitment Evolution")
@@ -207,7 +208,7 @@ class SimulationClass:
 
         plot_commitment_into_groups(df_data, title="Evolution of agent commitments in the network through each 20 days")
 
-        market_environment.plot_price_history()
+        market_environment.plot_price_history("Price evolution during simulation")
 
 
 if __name__ == '__main__':
@@ -223,4 +224,4 @@ if __name__ == '__main__':
                                            price_history=gme_price_history, start_date=start_date)
     simulation = SimulationClass(time_steps=100, N_agents=10000, N_institutional_investors=300, m=4,
                                  market_environment=market_environment)
-    simulation.run_simulation(halt_trading=False)
+    simulation.run_simulation(halt_trading=True)

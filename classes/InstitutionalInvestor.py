@@ -4,6 +4,8 @@ class InstitutionalInvestor:
     This agent expects the stock to reach a value of 0 and greatly shorts the stock
     However, based on its own risk aversion, this agent can and will adapt its behaviour
     Going against its perceived opinion of the stock, in an effort to cut its losses
+
+    The above will be completed through an implementation of Asset Pricing under Prospect Theory
     """
     def __init__(self, id, demand, fundamental_price):
         self.id = id
