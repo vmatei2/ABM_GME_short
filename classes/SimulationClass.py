@@ -192,7 +192,7 @@ class SimulationClass:
                     print("Trading halted")
                 print()
         ### PLOTTING FUNCTIONS
-        plot_all_commitments(all_commitments_each_round, self.N_agents, average_commitment_history)
+        plot_all_commitments(all_commitments_each_round, self.N_agents, average_commitment_history, "Evolution of all agent commitments")
 
         self.plot_agent_network_evolution(agent_network_evolution_dict, threshold)
 
@@ -201,7 +201,7 @@ class SimulationClass:
         simple_line_plot(commitment_changes, "Trading Week", "Change in commitment", "Percentage Changes in Average "
                                                                                      "Commitment")
 
-        plot_commitment_into_groups(df_data)
+        plot_commitment_into_groups(df_data, title="Evolution of agent commitments in the network through each 20 days")
 
         market_environment.plot_price_history()
 

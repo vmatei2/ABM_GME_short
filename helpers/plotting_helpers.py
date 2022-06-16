@@ -22,7 +22,7 @@ def get_price_history(ticker, start_date, end_date):
     return price_history
 
 
-def plot_two_df_columns_together(data_frame, first_column, second_column, third_column=None, kind=None, rescale=False):
+def plot_two_df_columns_together(data_frame, first_column, second_column, third_column=None, kind=None, rescale=False, title=""):
     plt.figure(figsize=(12, 10))
     if rescale:
         data_frame[first_column] = rescale_array(data_frame[first_column])
@@ -47,9 +47,9 @@ def plot_two_df_columns_together(data_frame, first_column, second_column, third_
     second_plot.set_ylabel("Volume (Shares traded)", fontsize=20)
     second_plot.margins(0, 0)
     plt.grid(True)
-    plt.title("GameStop price and volume during short squeeze event", fontsize=20)
+    plt.title(title, fontsize=20)
     # For some reason the file still thinks it's in ABM_GME_Short.wiki so need to move out to save in images
-    plt.savefig("../images/price_volume_gme")
+    plt.savefig("../images/" + title)
     plt.show()
 
 
@@ -124,10 +124,11 @@ def log_log_plot(author_values, xlabel, ylabel, title):
     plt.xlabel(xlabel, fontsize=13)
     plt.ylabel(ylabel, fontsize=12)
     plt.title(title, fontsize=14)
+    plt.savefig("../images/" + title)
     plt.show()
 
 
-def plot_all_commitments(all_commitments_each_round, number_of_agents, average_commitment_history):
+def plot_all_commitments(all_commitments_each_round, number_of_agents, average_commitment_history, title):
     plt.figure(figsize=(10, 10))
     x = []
     for i in range(len(all_commitments_each_round)):
@@ -137,7 +138,8 @@ def plot_all_commitments(all_commitments_each_round, number_of_agents, average_c
     plt.plot(average_commitment_history, 'bo', label='Average commitment across the network')
     plt.xlabel("Trading Day")
     plt.ylabel("Commitment Values")
-    plt.title("Evolution of all agent commitments")
+    plt.title(title, fontsize=20)
+    plt.savefig("../images/" + title)
     plt.legend()
     plt.show()
 
@@ -151,15 +153,16 @@ def simple_line_plot(values_to_be_plotted, xlabel, ylabel, title):
     plt.show()
 
 
-def plot_commitment_into_groups(commitment_this_round):
+def plot_commitment_into_groups(commitment_this_round, title):
     columns = ["Number of agents in group", "Trading day", "Commitment group"]
     commitment_df = pd.DataFrame(commitment_this_round, columns=columns)
     plt.figure(figsize=(10, 10))
     ax = sns.barplot(x="Trading day", y="Number of agents in group", hue="Commitment group", data=commitment_df)
     for container in ax.containers:
         ax.bar_label(container,fontsize=15)
+    plt.title(title, fontsize=20)
+    plt.savefig("../images/" + title)
     plt.show()
-    stop = 0
 
 
 ####  NETWORK PLOTTING HELPERS
@@ -205,7 +208,6 @@ if __name__ == '__main__':
     cleaned_posts_path = "../kaggleData/cleaned_posts_data_dt_index"
     wsb_posts_data = pd.read_csv(cleaned_posts_path, infer_datetime_format=True)
 
-
     date_value, date_counts = extract_values_counts_as_lists(wsb_posts_data, 'datetime', False)
 
     date_post_counts_matching_gme = []
@@ -218,4 +220,5 @@ if __name__ == '__main__':
 
     print(gme_institutional_holders)
 
-    plot_two_df_columns_together(gme_price_history, "Close", "Volume", "number_of_posts", kind="area", rescale=True)
+    plot_two_df_columns_together(gme_price_history, "Close", "Volume", "number_of_posts", kind="area", rescale=True,
+                                 title="Rescaled Closing Price, Volume and Number of Posts")

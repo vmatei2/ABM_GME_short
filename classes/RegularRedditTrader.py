@@ -50,9 +50,9 @@ class RegularRedditTrader(RedditTrader):
 
     def make_decision(self, average_network_commitment, current_price, current_trading_day, price_history, white_noise):
         self.compute_price_expectation_chartist(current_price, current_trading_day, price_history, white_noise)
-        if average_network_commitment > 0.7:
+        if average_network_commitment > 0.65:
             self.demand += 100
-        elif self.commitment > 0.75:
+        elif self.commitment > 0.7:
             self.demand += 100
         elif current_price > self.expected_price:
             self.demand = 0

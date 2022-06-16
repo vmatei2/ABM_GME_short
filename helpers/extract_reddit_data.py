@@ -79,12 +79,12 @@ if __name__ == '__main__':
     date_value, date_counts = extract_values_counts_as_lists(wsb_posts_data, 'datetime', False)
     author_value_counts_dict = dict(zip(author_values, author_counts_sliced))
 
-    # barplot_percentages_on_top(one_post_per_author_df, "Number of post authors with premium accounts during analysed "
-    #                                                    "period",
-    #                            'author_premium', 'Has premium account')
-    #
-    # line_plot(author_values, author_counts_sliced, "Posts per author", "Usernames", "Count", 400, [0, 1000])
-    # line_plot(date_value, date_counts, "Posts per day", "Date", "Count", 5)
+    barplot_percentages_on_top(one_post_per_author_df, "Number of post authors with premium accounts during analysed "
+                                                       "period",
+                               'author_premium', 'Has premium account')
+
+    line_plot(author_values, author_counts_sliced, "Posts per author", "Usernames", "Count", 400, [0, 1000])
+    line_plot(date_value, date_counts, "Posts per day", "Date", "Count", 5)
 
     all_author_entries = wsb_posts_data["author"].to_numpy(dtype="str")
 
