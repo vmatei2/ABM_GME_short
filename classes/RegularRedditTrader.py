@@ -64,18 +64,18 @@ class RegularRedditTrader(RedditTrader):
         elif self.commitment > 0.6:
             self.demand = 10  # buys more stock
         elif self.commitment > 0.3 and self.expected_price > current_price:
-            self.demand = 1  # slightly committed, still considers technical analysis
+            self.demand += 0.2  # slightly committed, still considers technical analysis
         else:
-            self.demand = -1
+            self.demand = 0
         if self.demand != 0:
             self.demand_history.append(self.demand)
-        if len(self.demand_history) > 0 and self.demand == -1 and trading_halted:
+        if len(self.demand_history) > 0 and self.demand == 0 and trading_halted:
             self.has_closed_position = True
             print("agent has closed position")
 
     def compute_price_expectation_chartist(self, current_price, price_history, white_noise):
         """
-        Chartists agent detect a trend through looking at the distance between the price and its smoothed profile (given by moving average in this case)
+        Chartists agents detect a trend through looking at the distance between the price and its smoothed profile (given by moving average in this case)
         :param current_price:
         :param current_trading_day:
         :param price_history:
