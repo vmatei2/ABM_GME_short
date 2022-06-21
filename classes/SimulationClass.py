@@ -39,7 +39,8 @@ class SimulationClass:
         self.social_media_agents, self.average_degree = self.create_initial_network()  # the initial network of social media agents,
         # we already have a few central nodes network is set to increase in size and add new agents throughout the
         # simulation
-        self.institutional_investors = self.create_insitutional_investors()
+        self.institutional_investors = self.create_institutional_investors()
+        self.trading_halted = False
 
     def create_initial_network(self):
         barabasi_albert_network = nx.barabasi_albert_graph(n=self.N_agents, m=self.m, seed=2)
@@ -60,16 +61,17 @@ class SimulationClass:
         average_degree = round(average_degree)
         return social_media_agents, average_degree
 
-    def halt_trading(self, commitment_threshold, new_commitment):
+    def halt_trading(self, commitment_threshold, commitment_lower_upper):
+        self.trading_halted = True
         for agent_id, agent in self.social_media_agents.items():
             if agent.commitment <= commitment_threshold:
-                agent.commitment = new_commitment
-                agent.demand = -20
+                agent.commitment = random.uniform(commitment_lower_upper[0], commitment_lower_upper[1])
+                agent.demand = 0
 
-    def create_insitutional_investors(self):
+    def create_institutional_investors(self):
         institutional_investors = {}
         for i in range(self.N_institutional_investors):
-            institutional_investors[i] = InstitutionalInvestor(i, demand=-10, fundamental_price=0)
+            institutional_investors[i] = InstitutionalInvestor(i, demand=-12, fundamental_price=0)
         return institutional_investors
 
     @staticmethod
@@ -117,7 +119,7 @@ class SimulationClass:
                                             commitment=average_network_commitment)
             self.social_media_agents[new_id] = new_agent
 
-    def market_interactions(self, average_network_commitment, threshold, trading_day):
+    def market_interactions(self, average_network_commitment, threshold):
         if self.market_environment.date.weekday() in [5, 6]:  # Saturday or Sunday:
             self.market_environment.update_day()
             return
@@ -129,8 +131,8 @@ class SimulationClass:
             if isinstance(selected_agent, InfluentialRedditUser):
                 selected_agent.make_decision(average_network_commitment, threshold)
             else:
-                selected_agent.make_decision(average_network_commitment, market_environment.current_price, trading_day,
-                                             market_environment.price_history, 0.003)
+                selected_agent.make_decision(average_network_commitment, market_environment.current_price,
+                                             market_environment.price_history, 0.003, self.trading_halted)
         market_environment.update_market(self.social_media_agents, self.institutional_investors)
 
     def run_simulation(self, halt_trading):
@@ -169,13 +171,13 @@ class SimulationClass:
                     agent_network = create_network_from_agent_dictionary(self.social_media_agents, threshold=threshold)
                     agent_network_evolution_dict[step] = agent_network
                     step += 1
-                self.market_interactions(average_network_commitment, threshold, trading_day)
+                self.market_interactions(average_network_commitment, threshold)
                 trading_day += 1
                 print("Average Network Commitment: ", average_network_commitment)
                 print("Finished Trading Day ", trading_day)
 
                 if trading_day == 60 and halt_trading:
-                    self.halt_trading(commitment_threshold=0.65, new_commitment=0.17)
+                    self.halt_trading(commitment_threshold=0.65, commitment_lower_upper=[0.12, 0.25])
                     print("Trading halted")
                 print()
         ### PLOTTING FUNCTIONS
