@@ -71,7 +71,7 @@ class SimulationClass:
     def create_institutional_investors(self):
         institutional_investors = {}
         for i in range(self.N_institutional_investors):
-            institutional_investors[i] = InstitutionalInvestor(i, demand=-12, fundamental_price=0)
+            institutional_investors[i] = InstitutionalInvestor(i, demand=-12, fundamental_price=0.1)
         return institutional_investors
 
     @staticmethod
@@ -133,6 +133,10 @@ class SimulationClass:
             else:
                 selected_agent.make_decision(average_network_commitment, market_environment.current_price,
                                              market_environment.price_history, 0.003, self.trading_halted)
+        for i in range(int(len(self.institutional_investors)/10)):
+            institutional_inv_agent = random.choice(self.institutional_investors)
+            institutional_inv_agent.make_decision(self.market_environment.current_price, self.market_environment.price_history)
+
         market_environment.update_market(self.social_media_agents, self.institutional_investors)
 
     def run_simulation(self, halt_trading):
