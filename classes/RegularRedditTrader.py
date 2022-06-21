@@ -7,7 +7,7 @@ import numpy as np
 class RegularRedditTrader(RedditTrader):
     def __init__(self, id, neighbours_ids, commitment=None, investor_type=None):
         if commitment is None:
-            commitment = random.uniform(0.2, 0.5)  # normal random distribution with mean = 0 and std deviation = 1
+            commitment = random.uniform(0.2, 0.4)  # normal random distribution with mean = 0 and std deviation = 1
         demand = 0  # an agent's demand in the stock
         self.d = random.uniform(0.2, 0.5)  # threshold for difference in commitment to be too high - or confidence
         # interval value - random choice rather than set values as all agents will be slightly different,
@@ -59,16 +59,17 @@ class RegularRedditTrader(RedditTrader):
             return
         self.compute_price_expectation_chartist(current_price, price_history, white_noise)
         if average_network_commitment > 0.65:
-            self.demand = 50  # buys options
+            self.demand = 30  # buys options
+            print("Bought option")
         elif self.commitment > 0.6:
             self.demand = 10  # buys more stock
-        elif self.commitment > 0.36 and self.expected_price > current_price:
-            self.demand = 1  # slightly convinced, still considers technical analysis
+        elif self.commitment > 0.3 and self.expected_price > current_price:
+            self.demand = 1  # slightly committed, still considers technical analysis
         else:
-            self.demand = 0
+            self.demand = -1
         if self.demand != 0:
             self.demand_history.append(self.demand)
-        if len(self.demand_history) > 0 and self.demand == 0 and trading_halted:
+        if len(self.demand_history) > 0 and self.demand == -1 and trading_halted:
             self.has_closed_position = True
             print("agent has closed position")
 
