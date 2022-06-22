@@ -1,6 +1,8 @@
 import math
 import random
 
+import numpy as np
+from helpers.calculations_helpers import check_and_convert_imaginary_number
 
 class InstitutionalInvestor:
     """
@@ -17,6 +19,7 @@ class InstitutionalInvestor:
         self.demand = demand
         self.fundamental_price = fundamental_price
         self.risk_loving = self.assign_risk_type()
+        self.alpha, self.betta = self.assign_risk_variables()
 
     def make_decision(self, current_price, price_history):
         """
@@ -24,8 +27,12 @@ class InstitutionalInvestor:
         :param current_price:
         :return:
         """
-        self.utility_function(current_price, price_history)
-        return True
+        short_gme = self.utility_function(current_price, price_history)
+        if short_gme:
+            self.demand -= 1
+        else:
+            self.demand = 0
+        return short_gme
 
     def utility_function(self, current_price, price_history):
         """
@@ -40,20 +47,38 @@ class InstitutionalInvestor:
         :param price_history: extracting previous price from this
         :return:
         """
-        p_gain = 0.8
+        p_gain = 0.8 # use in dissertation "such that p_gain + p_loss = 1 "
         p_loss = 0.2
-        expected_price_chartist = self.compute_expected_price_chartist(fundamentalist_weight=0, chartist_weight=0,
-                                                                       noise_weight=0,
-                                                                       current_price=current_price,
-                                                                       price_history=price_history)
-        expected_price_fundamentalist = self.compute_expected_price_fundamentalist_apporoach(current_price)
+        fundamentalist_weight = 1
+        lambda_parameter = 2.25
+        chartist_weight = 2
+        noise_weight = 1
+        added_noise = random.uniform(0, 1)
+        expected_price_chartist = self.compute_expected_price(fundamentalist_weight=fundamentalist_weight, chartist_weight=chartist_weight,
+                                                              noise_weight=noise_weight, current_price=current_price,
+                                                              price_history=price_history, added_noise=added_noise)
+
+        fundamentalist_weight = 2
+        chartist_weight = 0.9
+        noise_weight = 0.9
+        expected_price_fundamentalist = self.compute_expected_price(fundamentalist_weight, chartist_weight, noise_weight,
+                                                                    current_price, price_history, added_noise)
+
         x_gain = abs(current_price - expected_price_fundamentalist)
         x_loss = abs(current_price - expected_price_chartist)
+        V_loss = lambda_parameter * (x_loss ** self.alpha)
+        V_gain = p_gain * (x_gain ** self.alpha) - (p_loss * lambda_parameter * (x_loss ** self.betta))
+
+        V_gain = check_and_convert_imaginary_number(V_gain)
+
+        should_gamble = V_gain > V_loss
+
+        return should_gamble
 
         return True
 
-    def compute_expected_price_chartist(self, fundamentalist_weight, chartist_weight, noise_weight, current_price,
-                                        price_history):
+    def compute_expected_price(self, fundamentalist_weight, chartist_weight, noise_weight, current_price,
+                               price_history, added_noise):
         """
         Do not want to give access to average commitment values, as this might over-complicate the model
         Given that the price is indeed driven by the commitment, it can be deemed as sufficient to simply
@@ -68,10 +93,20 @@ class InstitutionalInvestor:
         :return:
         """
         expected_return_chartist = self.compute_expected_return_chartist_approach(price_history)
-        expected_price = current_price * math.exp(expected_return_chartist)
+        expected_return_fundamentalist = math.log(self.fundamental_price / current_price)
+
+
+        expected_return = (1 / (fundamentalist_weight + chartist_weight + noise_weight)) * (
+                fundamentalist_weight * expected_return_fundamentalist + chartist_weight * expected_return_chartist +
+                noise_weight * added_noise
+        )
+
+        expected_price = current_price * np.exp(expected_return)
+
         return expected_price
 
-    def compute_expected_return_chartist_approach(self, price_history):
+    @staticmethod
+    def compute_expected_return_chartist_approach(price_history):
         """
         Formula implemented here is observed in the paper "Impact of heterogenous trading rules on the limit order book and order flows
         By Chiarella et al - 2009
@@ -87,17 +122,13 @@ class InstitutionalInvestor:
         future_expected_trend_chartist_approach = spot_price_observation / len(price_history)
         return future_expected_trend_chartist_approach
 
-    def compute_expected_return_fundamentalist_approach(self, current_price):
-        expected_return = math.log(self.fundamental_price / current_price)
-        return expected_return
-
-    def compute_expected_price_fundamentalist_apporoach(self, current_price):
-        expected_return = self.compute_expected_return_fundamentalist_approach(current_price)
-        expected_price = current_price * math.exp(expected_return)
-        return expected_price
-
     def assign_risk_type(self):
         is_risk_loving = [False, True]
         probabilities = [0.33, 0.67]
         risk_type = random.choices(is_risk_loving, probabilities)
         return risk_type
+
+    def assign_risk_variables(self):
+        if self.risk_loving:
+            return [2, 1]  # alpha betta for risk loving
+        return [0.5, 1]  # alpha betta for risk averse
