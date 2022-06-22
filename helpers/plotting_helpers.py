@@ -163,7 +163,21 @@ def plot_commitment_into_groups(commitment_this_round, title):
     plt.savefig("../images/" + title)
     plt.show()
 
+def plot_institutional_investors_decisions(decision_dict, dates):
+    short_gme_decisions = []
+    close_positions_decisions = []
+    for day, decisions in decision_dict.items():
+        short_gme_decisions.append(decisions.count(True)) # sum returns the number of True elements in a boolean array
+        close_positions_decisions.append(decisions.count(False))
 
+    plt.figure(figsize=(10, 10))
+    plt.plot(dates, short_gme_decisions, 'r')
+    plt.plot(dates, close_positions_decisions, 'y')
+    plt.xlabel("Trading Day")
+    plt.ylabel("Count")
+    plt.title("Institutional Investor Decisions at each trading day")
+    plt.legend(['Short GME Stock(Take Gamble)', 'Close Short Position(Accept Sure Loss)'])
+    plt.show()
 ####  NETWORK PLOTTING HELPERS
 
 

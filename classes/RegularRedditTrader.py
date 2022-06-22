@@ -19,6 +19,7 @@ class RegularRedditTrader(RedditTrader):
         self.has_closed_position = False  # variable to replicate how, after commitment going down, if the agent sells
         # then he is completely out, believing the market to be rigged
         self.demand_history = []
+        self.bought_option = False
         super().__init__(id, neighbours_ids, demand, commitment, investor_type)
 
     def update_commitment(self, agents, miu):
@@ -50,28 +51,28 @@ class RegularRedditTrader(RedditTrader):
             neighbour_choice_id = random.choice(self.neighbours_ids)  # randomly pick one neighbour for the interaction
             neighbour = agents[neighbour_choice_id]
             # otherwise, let's update this agent's opinion (being influenced)
-            updated_commitment = average_neighbour_commitment + miu * abs(self.commitment - neighbour.commitment)
+            updated_commitment = average_neighbour_commitment + miu * abs(self.commitment - average_neighbour_commitment)
             self.commitment = min(updated_commitment, 1)
 
     def make_decision(self, average_network_commitment, current_price, price_history, white_noise, trading_halted):
         #  if agent out of trade, then stay out
-        if self.has_closed_position:
+        if self.has_closed_position or self.bought_option:
             return
         self.compute_price_expectation_chartist(current_price, price_history, white_noise)
-        if average_network_commitment > 0.65:
-            self.demand = 30  # buys options
+        if self.commitment > 0.75:
+            self.demand = 100  # buys options
             print("Bought option")
-        elif self.commitment > 0.6:
-            self.demand = 10  # buys more stock
+            self.bought_option = True
+        elif self.commitment > 0.6 and average_network_commitment > 0.45:
+            self.demand +=1  # buys more stock
         elif self.commitment > 0.3 and self.expected_price > current_price:
-            self.demand += 0.2  # slightly committed, still considers technical analysis
+            self.demand += 1  # slightly committed, still considers technical analysis
         else:
             self.demand = 0
         if self.demand != 0:
             self.demand_history.append(self.demand)
         if len(self.demand_history) > 0 and self.demand == 0 and trading_halted:
             self.has_closed_position = True
-            print("agent has closed position")
 
     def compute_price_expectation_chartist(self, current_price, price_history, white_noise):
         """

@@ -16,7 +16,7 @@ from classes.RegularRedditTrader import RegularRedditTrader
 from classes.InstitutionalInvestor import InstitutionalInvestor
 from classes.MarketEnvironment import MarketEnvironment
 from helpers.plotting_helpers import plot_all_commitments, plot_commitment_into_groups, \
-    simple_line_plot, visualise_network, get_price_history, scale_and_plot
+    simple_line_plot, visualise_network, get_price_history, scale_and_plot, plot_institutional_investors_decisions
 
 
 def store_commitment_values_split_into_groups(commitment_this_round, trading_day, df_data):
@@ -41,6 +41,7 @@ class SimulationClass:
         # simulation
         self.institutional_investors = self.create_institutional_investors()
         self.trading_halted = False
+        self.miu = 0.14 # initial miu value
 
     def create_initial_network(self):
         barabasi_albert_network = nx.barabasi_albert_graph(n=self.N_agents, m=self.m, seed=2)
@@ -63,10 +64,14 @@ class SimulationClass:
 
     def halt_trading(self, commitment_threshold, commitment_lower_upper):
         self.trading_halted = True
+        self.miu = 0.04  # divide the scaling parameter by two
+        ids_to_be_deleted = []
         for agent_id, agent in self.social_media_agents.items():
             if agent.commitment <= commitment_threshold:
                 agent.commitment = random.uniform(commitment_lower_upper[0], commitment_lower_upper[1])
-                agent.demand = 0
+                agent.demand = -12
+
+        return ids_to_be_deleted
 
     def create_institutional_investors(self):
         institutional_investors = {}
@@ -96,7 +101,7 @@ class SimulationClass:
             random_agent_key]  # randomly picking an agent to update commitment
         if isinstance(agent_on_social_media, RegularRedditTrader):  # checking here if the agent is an instance of
             # a regular reddit trader instead of an influential one, which does not update his commitment at all
-            agent_on_social_media.update_commitment(agents=self.social_media_agents, miu=0.13)
+            agent_on_social_media.update_commitment(agents=self.social_media_agents, miu=self.miu)
         # the above is the updating of the commitment throughout the network, done in a more granular way the
         # below check ensures that we are at a trading day step and that's when we update the market + add new
         # users in the network
@@ -119,13 +124,15 @@ class SimulationClass:
                                             commitment=average_network_commitment)
             self.social_media_agents[new_id] = new_agent
 
-    def market_interactions(self, average_network_commitment, threshold):
+    def market_interactions(self, average_network_commitment, threshold, institutional_inv_decision_dict, trading_day):
         if self.market_environment.date.weekday() in [5, 6]:  # Saturday or Sunday:
             self.market_environment.update_day()
             return
         participating_agents = self.market_environment.select_participating_agents(average_network_commitment,
-                                                                                   self.social_media_agents)
-        print("Number of agents involved in this trading day: ", len(participating_agents))
+                                                                                self.social_media_agents)
+        volume = len(participating_agents)
+        institutional_inv_decision_dict[trading_day] = []
+        print("Number of agents involved in this trading day: ", volume)
         for agent_id in participating_agents:
             selected_agent = self.social_media_agents[agent_id]
             if isinstance(selected_agent, InfluentialRedditUser):
@@ -133,11 +140,12 @@ class SimulationClass:
             else:
                 selected_agent.make_decision(average_network_commitment, market_environment.current_price,
                                              market_environment.price_history, 0.003, self.trading_halted)
-        for i in range(int(len(self.institutional_investors)/10)):
+        for i in range(int(len(self.institutional_investors)/2)):
             institutional_inv_agent = random.choice(self.institutional_investors)
-            institutional_inv_agent.make_decision(self.market_environment.current_price, self.market_environment.price_history)
-
+            decision = institutional_inv_agent.make_decision(self.market_environment.current_price, self.market_environment.price_history)
+            institutional_inv_decision_dict[trading_day].append(decision)
         market_environment.update_market(self.social_media_agents, self.institutional_investors)
+        return volume
 
     def run_simulation(self, halt_trading):
         trading_day = 0
@@ -147,6 +155,9 @@ class SimulationClass:
         average_commitment_history = []
         all_commitments_each_round = []
         commitment_changes = []
+        volume_history = []
+        agent_ids_to_be_deleted = []
+        hedge_fund_decision_dict = {}
         df_data = []  # used in plotting the commitments on separate bar charts and different values
         for i in range(self.tau):
             self.update_agent_commitment()
@@ -175,13 +186,14 @@ class SimulationClass:
                     agent_network = create_network_from_agent_dictionary(self.social_media_agents, threshold=threshold)
                     agent_network_evolution_dict[step] = agent_network
                     step += 1
-                self.market_interactions(average_network_commitment, threshold)
+                volume = self.market_interactions(average_network_commitment, threshold, hedge_fund_decision_dict, trading_day)
+                volume_history.append(volume)
                 trading_day += 1
                 print("Average Network Commitment: ", average_network_commitment)
                 print("Finished Trading Day ", trading_day)
 
                 if trading_day == 60 and halt_trading:
-                    self.halt_trading(commitment_threshold=0.65, commitment_lower_upper=[0.12, 0.25])
+                    agent_ids_to_be_deleted = self.halt_trading(commitment_threshold=0.65, commitment_lower_upper=[0.12, 0.25])
                     print("Trading halted")
                 print()
         ### PLOTTING FUNCTIONS
@@ -194,6 +206,10 @@ class SimulationClass:
                          "Average Commitment Evolution")
         simple_line_plot(commitment_changes, "Trading Week", "Change in commitment", "Percentage Changes in Average "
                                                                                      "Commitment")
+
+        simple_line_plot(volume_history, "Trading Day", "Volume", "Volume observed in market simulation")
+
+        plot_institutional_investors_decisions(hedge_fund_decision_dict, market_environment.simulation_history.keys())
 
         plot_commitment_into_groups(df_data, title="Evolution of agent commitments in the network through each 20 days")
 

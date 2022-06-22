@@ -41,7 +41,7 @@ class MarketEnvironment:
         :return:
         """
         plt.figure(figsize=(10, 10))
-        plt.plot(self.simulation_history.keys(), self.simulation_history.values(), 'ro-')
+        plt.plot(self.simulation_history.keys(), self.simulation_history.values(), 'r')
         plt.xlabel("Date", fontsize=15)
         plt.ylabel("Price", fontsize=15)
         plt.title(title, fontsize=19)

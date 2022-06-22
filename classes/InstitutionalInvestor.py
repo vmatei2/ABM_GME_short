@@ -29,7 +29,7 @@ class InstitutionalInvestor:
         """
         short_gme = self.utility_function(current_price, price_history)
         if short_gme:
-            self.demand -= 1
+            self.demand -= 15
         else:
             self.demand = 0
         return short_gme
@@ -47,11 +47,11 @@ class InstitutionalInvestor:
         :param price_history: extracting previous price from this
         :return:
         """
-        p_gain = 0.8 # use in dissertation "such that p_gain + p_loss = 1 "
-        p_loss = 0.2
+        p_gain = 0.81  # use in dissertation "such that p_gain + p_loss = 1 "
+        p_loss = 0.21
         fundamentalist_weight = 1
         lambda_parameter = 2.25
-        chartist_weight = 2
+        chartist_weight = 2.4
         noise_weight = 1
         added_noise = random.uniform(0, 1)
         expected_price_chartist = self.compute_expected_price(fundamentalist_weight=fundamentalist_weight, chartist_weight=chartist_weight,
@@ -113,6 +113,7 @@ class InstitutionalInvestor:
         :param price_history:
         :return:
         """
+        price_history = price_history[-10:] # getting last 10 entries in array
         spot_price_observation = 0
         for i in range(len(price_history) - 1):
             previous_price = price_history[i + 1]
