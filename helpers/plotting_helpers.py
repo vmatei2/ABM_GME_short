@@ -182,7 +182,7 @@ def plot_institutional_investors_decisions(decision_dict, dates):
 
 
 def visualise_network(G, threshold, title, axs, use_graph_tool=False):
-    fig = plt.figure(figsize=(12, 10))
+    fig = plt.figure(figsize=(12, 11))
     if use_graph_tool:
         graph = nx2gt(G)
         deg = graph.degree_property_map("total")  # undirected graph so we are only working with total degrees
