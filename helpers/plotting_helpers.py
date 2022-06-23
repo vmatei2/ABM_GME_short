@@ -215,6 +215,19 @@ def scale_and_plot(first_array, second_array, title):
     plt.title(title, fontsize=20)
     plt.show()
 
+def plot_demand_dictionary(demand_dict, trading_period):
+    all_retail_demand = demand_dict['retail']
+    all_hf_demand = demand_dict['institutional']
+    plt.figure(figsize=(10, 10))
+    plt.plot(trading_period, all_retail_demand, 'g')
+    plt.plot(trading_period, all_hf_demand, 'y')
+
+    plt.xlabel("Trading Day")
+    plt.ylabel("Demand Evolution")
+    legend_ = ["Demand from retail agents", "Demand from institutional investor agents"]
+    plt.legend(legend_)
+    plt.show()
+
 
 if __name__ == '__main__':
     sns.set_style("darkgrid")

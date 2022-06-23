@@ -18,7 +18,7 @@ class MarketEnvironment:
 
     def update_market(self, retail_traders, institutional_investors):
         self.price_history.append(self.current_price)
-        self.update_excess_demand(retail_traders, institutional_investors)
+        demand_from_retail, demand_from_hf = self.update_excess_demand(retail_traders, institutional_investors)
         updated_price = self.current_price + self.tau * self.excess_demand
         print("Previous Price: ", self.current_price)
         self.current_price = updated_price
@@ -28,6 +28,7 @@ class MarketEnvironment:
         print("Date is: ", self.date)
         self.update_simulation_history()
         self.update_day()
+        return demand_from_retail, demand_from_hf
 
     def update_day(self):
         self.date = self.date + datetime.timedelta(days=1)
@@ -71,12 +72,14 @@ class MarketEnvironment:
         Updating the excess demand coming from retail trader and instituional investors
         :return:
         """
-        excess_demand = 0
+        demand_from_retail = 0
+        demand_from_hf = 0
         for id, retail_trader in retail_traders.items():
-            excess_demand += retail_trader.demand
+            demand_from_retail += retail_trader.demand
         for id, hedge_fund in institutional_investors.items():
-            excess_demand += hedge_fund.demand
+            demand_from_hf += hedge_fund.demand
         number_of_agents = len(retail_traders) + len(institutional_investors)
-        normalized_excess_demand = excess_demand / number_of_agents
+        normalized_excess_demand = (demand_from_retail + demand_from_hf) / number_of_agents
         self.excess_demand = normalized_excess_demand
         print("Market Excess Demand is: ", self.excess_demand)
+        return demand_from_retail, demand_from_hf

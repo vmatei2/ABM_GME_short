@@ -1,15 +1,15 @@
 import random
-
+from classes.RedditInvestorTypes import RedditInvestorTypes
 from classes.RedditTrader import RedditTrader
 import numpy as np
 
 
 class RegularRedditTrader(RedditTrader):
     def __init__(self, id, neighbours_ids, commitment=None, investor_type=None):
+        demand = 0 # an agent's initial demand
         if commitment is None:
-            commitment = random.uniform(0.2, 0.4)  # normal random distribution with mean = 0 and std deviation = 1
-        demand = 0  # an agent's demand in the stock
-        self.d = random.uniform(0.2, 0.5)  # threshold for difference in commitment to be too high - or confidence
+            commitment = random.uniform(0.3, 0.5)  # normal random distribution with mean = 0 and std deviation = 1
+        self.d = random.uniform(0.1, 0.3)  # threshold for difference in commitment to be too high - or confidence
         # interval value - random choice rather than set values as all agents will be slightly different,
         # hence we want thought processes to be heterogeneous
         self.b = random.uniform(-1, 1)  # a parameter which gives the strength of the force calculated as simply (
@@ -21,6 +21,7 @@ class RegularRedditTrader(RedditTrader):
         self.demand_history = []
         self.bought_option = False
         super().__init__(id, neighbours_ids, demand, commitment, investor_type)
+
 
     def update_commitment(self, agents, miu):
         """
@@ -39,40 +40,45 @@ class RegularRedditTrader(RedditTrader):
         :param miu: scaling
         parameter :return:
         """
+        neighbour_choice_id = random.choice(self.neighbours_ids)  # randomly pick one neighbour for the interaction
+        neighbour = agents[neighbour_choice_id]
         neighbour_commitment_value = 0
         for id in self.neighbours_ids:
             neighbour_commitment_value += agents[id].commitment
         average_neighbour_commitment = neighbour_commitment_value / len(self.neighbours_ids)
-        if abs(average_neighbour_commitment - self.commitment) >= self.d:
+        if abs(neighbour.commitment - self.commitment) >= self.d:
             # this happens in the case when the difference in commitment between the agent and its neighbours is too
             # big - therefore we do not update opinion at this time point
             pass
         else:
-            neighbour_choice_id = random.choice(self.neighbours_ids)  # randomly pick one neighbour for the interaction
-            neighbour = agents[neighbour_choice_id]
+
             # otherwise, let's update this agent's opinion (being influenced)
             updated_commitment = average_neighbour_commitment + miu * abs(self.commitment - average_neighbour_commitment)
             self.commitment = min(updated_commitment, 1)
 
     def make_decision(self, average_network_commitment, current_price, price_history, white_noise, trading_halted):
         #  if agent out of trade, then stay out
+
+        if len(self.demand_history) > 0 and self.demand == 0 and trading_halted:
+            self.has_closed_position = True
+            if self.investor_type == RedditInvestorTypes.RATIONAL_SHORT_TERM:
+                self.demand -= 1
+                print("Rational investor has shorted the stock")
         if self.has_closed_position or self.bought_option:
             return
         self.compute_price_expectation_chartist(current_price, price_history, white_noise)
-        if self.commitment > 0.75:
+        if self.commitment > 0.65:
             self.demand = 100  # buys options
             print("Bought option")
             self.bought_option = True
-        elif self.commitment > 0.6 and average_network_commitment > 0.45:
+        elif self.commitment > 0.57 and average_network_commitment > 0.45:
             self.demand +=1  # buys more stock
-        elif self.commitment > 0.3 and self.expected_price > current_price:
+        elif self.commitment > 0.4 and self.expected_price > current_price:
             self.demand += 1  # slightly committed, still considers technical analysis
         else:
-            self.demand = 0
+            self.demand = 0  # closes open position as commitment is low and not happy with GME
         if self.demand != 0:
             self.demand_history.append(self.demand)
-        if len(self.demand_history) > 0 and self.demand == 0 and trading_halted:
-            self.has_closed_position = True
 
     def compute_price_expectation_chartist(self, current_price, price_history, white_noise):
         """

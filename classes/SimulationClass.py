@@ -16,7 +16,8 @@ from classes.RegularRedditTrader import RegularRedditTrader
 from classes.InstitutionalInvestor import InstitutionalInvestor
 from classes.MarketEnvironment import MarketEnvironment
 from helpers.plotting_helpers import plot_all_commitments, plot_commitment_into_groups, \
-    simple_line_plot, visualise_network, get_price_history, scale_and_plot, plot_institutional_investors_decisions
+    simple_line_plot, visualise_network, get_price_history, scale_and_plot, plot_institutional_investors_decisions, \
+    plot_demand_dictionary
 
 
 def store_commitment_values_split_into_groups(commitment_this_round, trading_day, df_data):
@@ -41,7 +42,7 @@ class SimulationClass:
         # simulation
         self.institutional_investors = self.create_institutional_investors()
         self.trading_halted = False
-        self.miu = 0.14 # initial miu value
+        self.miu = 0.17 # initial miu value
 
     def create_initial_network(self):
         barabasi_albert_network = nx.barabasi_albert_graph(n=self.N_agents, m=self.m, seed=2)
@@ -64,7 +65,6 @@ class SimulationClass:
 
     def halt_trading(self, commitment_threshold, commitment_lower_upper):
         self.trading_halted = True
-        self.miu = 0.04  # divide the scaling parameter by two
         ids_to_be_deleted = []
         for agent_id, agent in self.social_media_agents.items():
             if agent.commitment <= commitment_threshold:
@@ -144,8 +144,8 @@ class SimulationClass:
             institutional_inv_agent = random.choice(self.institutional_investors)
             decision = institutional_inv_agent.make_decision(self.market_environment.current_price, self.market_environment.price_history)
             institutional_inv_decision_dict[trading_day].append(decision)
-        market_environment.update_market(self.social_media_agents, self.institutional_investors)
-        return volume
+        demand_from_retail, demand_from_hf = market_environment.update_market(self.social_media_agents, self.institutional_investors)
+        return volume, demand_from_retail, demand_from_hf
 
     def run_simulation(self, halt_trading):
         trading_day = 0
@@ -157,6 +157,7 @@ class SimulationClass:
         commitment_changes = []
         volume_history = []
         agent_ids_to_be_deleted = []
+        demand_dict = {'retail': [], 'institutional': []}
         hedge_fund_decision_dict = {}
         df_data = []  # used in plotting the commitments on separate bar charts and different values
         for i in range(self.tau):
@@ -186,8 +187,16 @@ class SimulationClass:
                     agent_network = create_network_from_agent_dictionary(self.social_media_agents, threshold=threshold)
                     agent_network_evolution_dict[step] = agent_network
                     step += 1
-                volume = self.market_interactions(average_network_commitment, threshold, hedge_fund_decision_dict, trading_day)
-                volume_history.append(volume)
+                try:
+                    volume, demand_retail, demand_hf = self.market_interactions(average_network_commitment, threshold, hedge_fund_decision_dict, trading_day)
+                    demand_dict['retail'].append(demand_retail)
+                    demand_dict['institutional'].append(demand_hf)
+                    volume_history.append(volume)
+                except TypeError as e:
+                    # Exception being hit when it is a weekend and the market is closed in the simulation
+                    # the market_interaction function returns nothing in this case
+                    pass
+
                 trading_day += 1
                 print("Average Network Commitment: ", average_network_commitment)
                 print("Finished Trading Day ", trading_day)
@@ -210,6 +219,8 @@ class SimulationClass:
         simple_line_plot(volume_history, "Trading Day", "Volume", "Volume observed in market simulation")
 
         plot_institutional_investors_decisions(hedge_fund_decision_dict, market_environment.simulation_history.keys())
+
+        plot_demand_dictionary(demand_dict, market_environment.simulation_history.keys())
 
         plot_commitment_into_groups(df_data, title="Evolution of agent commitments in the network through each 20 days")
 

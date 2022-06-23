@@ -13,4 +13,5 @@ class InfluentialRedditUser(RedditTrader):
     def make_decision(self, average_network_commitment, threshold):
         if average_network_commitment >= threshold:
             self.demand += 100  # option buying
+            print("Influential user has bought options")
         return

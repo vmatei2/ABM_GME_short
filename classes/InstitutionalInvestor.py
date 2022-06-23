@@ -30,6 +30,7 @@ class InstitutionalInvestor:
         short_gme = self.utility_function(current_price, price_history)
         if short_gme:
             self.demand -= 15
+
         else:
             self.demand = 0
         return short_gme
@@ -75,7 +76,6 @@ class InstitutionalInvestor:
 
         return should_gamble
 
-        return True
 
     def compute_expected_price(self, fundamentalist_weight, chartist_weight, noise_weight, current_price,
                                price_history, added_noise):
