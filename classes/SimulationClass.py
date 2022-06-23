@@ -128,7 +128,7 @@ class SimulationClass:
         if self.market_environment.date.weekday() in [5, 6]:  # Saturday or Sunday:
             self.market_environment.update_day()
             return
-        white_noise = 0.003
+        white_noise = random.uniform(-0.005, 0.005)
         participating_agents = self.market_environment.select_participating_agents(average_network_commitment,
                                                                                 self.social_media_agents)
         volume = len(participating_agents)
@@ -247,6 +247,6 @@ if __name__ == '__main__':
     start_date = datetime.datetime(2020, 12, 8)
     market_environment = MarketEnvironment(initial_price=16.35, name="GME Market Environment",
                                            price_history=gme_price_history, start_date=start_date)
-    simulation = SimulationClass(time_steps=100, N_agents=10000, N_institutional_investors=300, m=4,
+    simulation = SimulationClass(time_steps=100, N_agents=8000, N_institutional_investors=300, m=4,
                                  market_environment=market_environment)
     simulation.run_simulation(halt_trading=True)

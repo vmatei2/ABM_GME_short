@@ -68,15 +68,15 @@ class RegularRedditTrader(RedditTrader):
             return
         self.compute_price_expectation_chartist(current_price, price_history, white_noise)
         if self.commitment > 0.65:
-            self.demand = 100  # buys options
+            self.demand = 50  # buys options
             print("Bought option")
             self.bought_option = True
         elif self.commitment > 0.57 and average_network_commitment > 0.45:
-            self.demand +=1  # buys more stock
+            self.demand += 1  # buys more stock
         elif self.commitment > 0.4 and self.expected_price > current_price:
             self.demand += 1  # slightly committed, still considers technical analysis
         else:
-            self.demand = 0  # closes open position as commitment is low and not happy with GME
+            self.demand = -0.5  # closes open position as commitment is low and not happy with GME
         if self.demand != 0:
             self.demand_history.append(self.demand)
 
