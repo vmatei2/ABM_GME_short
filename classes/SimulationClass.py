@@ -128,23 +128,30 @@ class SimulationClass:
         if self.market_environment.date.weekday() in [5, 6]:  # Saturday or Sunday:
             self.market_environment.update_day()
             return
+        white_noise = 0.003
         participating_agents = self.market_environment.select_participating_agents(average_network_commitment,
                                                                                 self.social_media_agents)
         volume = len(participating_agents)
         institutional_inv_decision_dict[trading_day] = []
         print("Number of agents involved in this trading day: ", volume)
-        for agent_id in participating_agents:
-            selected_agent = self.social_media_agents[agent_id]
-            if isinstance(selected_agent, InfluentialRedditUser):
-                selected_agent.make_decision(average_network_commitment, threshold)
+        for id, agent in participating_agents.items():
+            if isinstance(agent, InfluentialRedditUser):
+                agent.make_decision(average_network_commitment, threshold)
             else:
-                selected_agent.make_decision(average_network_commitment, market_environment.current_price,
-                                             market_environment.price_history, 0.003, self.trading_halted)
+                agent.make_decision(average_network_commitment, market_environment.current_price,
+                                    market_environment.price_history, white_noise, self.trading_halted)
+        # for agent_id in participating_agents:
+        #     selected_agent = self.social_media_agents[agent_id]
+        #     if isinstance(selected_agent, InfluentialRedditUser):
+        #         selected_agent.make_decision(average_network_commitment, threshold)
+        #     else:
+        #         selected_agent.make_decision(average_network_commitment, market_environment.current_price,
+        #                                      market_environment.price_history, 0.003, self.trading_halted)
         for i in range(int(len(self.institutional_investors)/2)):
             institutional_inv_agent = random.choice(self.institutional_investors)
             decision = institutional_inv_agent.make_decision(self.market_environment.current_price, self.market_environment.price_history)
             institutional_inv_decision_dict[trading_day].append(decision)
-        demand_from_retail, demand_from_hf = market_environment.update_market(self.social_media_agents, self.institutional_investors)
+        demand_from_retail, demand_from_hf = market_environment.update_market(participating_agents, self.institutional_investors)
         return volume, demand_from_retail, demand_from_hf
 
     def run_simulation(self, halt_trading):

@@ -60,12 +60,16 @@ class MarketEnvironment:
         for id, agent in retail_agents.items():
             probabilities_dict[id] = all_agent_probabilities[i]
             i += 1
-        commitment_scaler = 1.1
+        commitment_scaler = 2
         noise_term = 0.012  #random.uniform(0.01, 0.015)
         threshold = average_commitment_value * commitment_scaler + noise_term
         # the line below loops over all probabilities and selects the ids of agents simply based on the thresholdf
         participating_agent_ids = [id for id, value in probabilities_dict.items() if value < threshold]
-        return participating_agent_ids
+        particpating_agents = {}
+        for id in participating_agent_ids:
+            particpating_agents[id] = retail_agents[id]
+
+        return particpating_agents
 
     def update_excess_demand(self, retail_traders, institutional_investors):
         """

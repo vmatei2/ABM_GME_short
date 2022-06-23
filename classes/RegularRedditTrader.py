@@ -82,12 +82,9 @@ class RegularRedditTrader(RedditTrader):
 
     def compute_price_expectation_chartist(self, current_price, price_history, white_noise):
         """
-        Chartists agents detect a trend through looking at the distance between the price and its smoothed profile (given by moving average in this case)
-        :param current_price:
-        :param current_trading_day:
-        :param price_history:
-        :param white_noise:
-        :return:
+        Chartists agents detect a trend through looking at the distance between the price and its smoothed profile (
+        given by moving average in this case) :param current_price: :param current_trading_day: :param price_history:
+        :param white_noise: :return:
         """
         #  below if statement considers whether the agent is simply looking for a quick profit, get in-get out or believe in GME
         if self.commitment > 0.5:
