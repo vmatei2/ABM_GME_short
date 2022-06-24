@@ -48,11 +48,11 @@ class InstitutionalInvestor:
         :param price_history: extracting previous price from this
         :return:
         """
-        p_gain = 0.81  # use in dissertation "such that p_gain + p_loss = 1 "
-        p_loss = 0.21
+        p_gain = 0.8  # use in dissertation "such that p_gain + p_loss = 1 "
+        p_loss = 0.2
         fundamentalist_weight = 1
         lambda_parameter = 2.25
-        chartist_weight = 2.45
+        chartist_weight = 2.65
         noise_weight = 1
         added_noise = random.uniform(0, 1)
         expected_price_chartist = self.compute_expected_price(fundamentalist_weight=fundamentalist_weight, chartist_weight=chartist_weight,
@@ -61,7 +61,7 @@ class InstitutionalInvestor:
 
         fundamentalist_weight = 2
         chartist_weight = 0.9
-        noise_weight = 0.9
+        noise_weight = 1
         expected_price_fundamentalist = self.compute_expected_price(fundamentalist_weight, chartist_weight, noise_weight,
                                                                     current_price, price_history, added_noise)
 

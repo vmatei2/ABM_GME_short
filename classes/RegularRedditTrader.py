@@ -20,6 +20,7 @@ class RegularRedditTrader(RedditTrader):
         # then he is completely out, believing the market to be rigged
         self.demand_history = []
         self.bought_option = False
+        self.has_trading_been_halted = False
         super().__init__(id, neighbours_ids, demand, commitment, investor_type)
 
 
@@ -56,36 +57,43 @@ class RegularRedditTrader(RedditTrader):
             updated_commitment = average_neighbour_commitment + miu * abs(self.commitment - average_neighbour_commitment)
             self.commitment = min(updated_commitment, 1)
 
+    def act_if_trading_halted(self, current_price, price_history, white_noise):
+        if self.has_trading_been_halted:
+            if self.commitment > 0.35:
+                self.compute_price_expectation_chartist(current_price, price_history, white_noise)
+                if self.expected_price > current_price:
+                    self.demand += 0.2
+            if self.commitment < 0.35:
+                fundamental_price = 10
+                if fundamental_price < current_price:
+                    self.demand -= self.demand
+        if not self.has_trading_been_halted:
+            current_demand = self.demand
+            self.demand = -current_demand
+            self.has_trading_been_halted = True
+
+
     def make_decision(self, average_network_commitment, current_price, price_history, white_noise, trading_halted):
         #  if agent out of trade, then stay out
-        if self.has_closed_position:
+        if trading_halted:
+            self.act_if_trading_halted(current_price, price_history, white_noise)
             return
-        if len(self.demand_history) > 0 and self.demand == 0 and trading_halted:
-            self.has_closed_position = True
-            if self.investor_type == RedditInvestorTypes.RATIONAL_SHORT_TERM:
-                self.demand = -0.5
-                print("Rational investor has shorted the stock")
-
+        if self.bought_option:  # not doing anything if we have bough an option already
+            return
         self.compute_price_expectation_chartist(current_price, price_history, white_noise)
         if self.commitment > 0.65:
-            if self.bought_option:
-                return
             self.demand = 15  # buys options
             print("Bought option")
             self.bought_option = True
-        elif self.commitment > 0.57 and average_network_commitment > 0.45:
-            self.demand = 4  # buys more stock
+        elif self.commitment > 0.55 and average_network_commitment > 0.45:
+            self.demand += 2  # buys more stock
         elif self.commitment > 0.35 and self.expected_price > current_price:
-            self.demand = 2  # slightly committed, still considers technical analysis
+            self.demand += 1  # slightly committed, still considers technical analysis
         elif self.expected_price > current_price:
             self.demand = 1 # closes open position as commitment is low and not happy with GME
-        elif self.commitment < 0.35 and not trading_halted:
+        elif self.commitment < 0.35:
             self.demand = 0
             print("agent demand is 0, expects stock to go down")
-        elif self.commitment < 0.35 and trading_halted:
-            self.demand = -4
-            self.has_closed_position = True
-            print("Trading halted, agent got scared")
         if self.demand != 0:
             self.demand_history.append(self.demand)
 
