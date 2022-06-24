@@ -21,6 +21,10 @@ class RegularRedditTrader(RedditTrader):
         self.demand_history = []
         self.bought_option = False
         self.has_trading_been_halted = False
+        self.post_halting_decisions = {}
+        self.post_halting_decisions['over 0.5 commitment'] = 0
+        self.post_halting_decisions['long-term'] = 0
+        self.post_halting_decisions['short-term-price-go-up'] = 0
         super().__init__(id, neighbours_ids, demand, commitment, investor_type)
 
 
@@ -59,17 +63,23 @@ class RegularRedditTrader(RedditTrader):
 
     def act_if_trading_halted(self, current_price, price_history, white_noise):
         if self.has_trading_been_halted:
-            if self.commitment > 0.35:
-                self.compute_price_expectation_chartist(current_price, price_history, white_noise)
-                if self.expected_price > current_price:
-                    self.demand += 0.2
-            if self.commitment < 0.35:
-                fundamental_price = 10
-                if fundamental_price < current_price:
-                    self.demand -= self.demand
+            if self.commitment > 0.45:
+                    self.demand += 1
+                    print("No moon no brrr")
+            else:
+                if self.investor_type == RedditInvestorTypes.LONGTERM:
+                    fundamental_price = 10 # in this case, our reddit agent will act rationally and consider the
+                    if fundamental_price < current_price:
+                        self.demand -= 1
+                        print("Not bought, price go to the ground brrr")
+                elif self.investor_type == RedditInvestorTypes.RATIONAL_SHORT_TERM:
+                    expected_price = self.compute_price_expectation_chartist(current_price, price_history, white_noise)
+                    if expected_price > current_price:
+                        self.demand += 1
+                        print("go to the moon")
         if not self.has_trading_been_halted:
-            current_demand = self.demand
-            self.demand = -current_demand
+            current_demand = -6
+            self.demand = current_demand
             self.has_trading_been_halted = True
 
 
@@ -82,13 +92,13 @@ class RegularRedditTrader(RedditTrader):
             return
         self.compute_price_expectation_chartist(current_price, price_history, white_noise)
         if self.commitment > 0.65:
-            self.demand = 15  # buys options
+            self.demand = 10  # buys options
             print("Bought option")
             self.bought_option = True
         elif self.commitment > 0.55 and average_network_commitment > 0.45:
-            self.demand += 2  # buys more stock
+            self.demand += 0.6  # buys more stock
         elif self.commitment > 0.35 and self.expected_price > current_price:
-            self.demand += 1  # slightly committed, still considers technical analysis
+            self.demand += 0.85 # slightly committed, still considers technical analysis
         elif self.expected_price > current_price:
             self.demand = 1 # closes open position as commitment is low and not happy with GME
         elif self.commitment < 0.35:

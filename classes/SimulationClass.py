@@ -55,8 +55,9 @@ class SimulationClass:
                 agent = InfluentialRedditUser(id=node_id, neighbours_ids=node_neighbours,
                                               market_first_price=self.market_environment.initial_price, investor_type=RedditInvestorTypes.LONGTERM)
             else:
-                investor_type = [RedditInvestorTypes.NAIVE, RedditInvestorTypes.FANATICAL, RedditInvestorTypes.RATIONAL_SHORT_TERM]
-                agent = RegularRedditTrader(id=node_id, neighbours_ids=node_neighbours, investor_type=random.choice(investor_type))
+                investor_type = [RedditInvestorTypes.LONGTERM, RedditInvestorTypes.RATIONAL_SHORT_TERM]
+                investor_type_probabilities = [0.5, 0.5]
+                agent = RegularRedditTrader(id=node_id, neighbours_ids=node_neighbours, investor_type=random.choices(investor_type, investor_type_probabilities)[0])
             social_media_agents[node_id] = agent
         degree_values = [v for k, v in sorted_node_degree_pairs]
         average_degree = sum(degree_values) / barabasi_albert_network.number_of_nodes()
@@ -126,7 +127,7 @@ class SimulationClass:
         if self.market_environment.date.weekday() in [5, 6]:  # Saturday or Sunday:
             self.market_environment.update_day()
             return
-        white_noise = random.uniform(-0.5, 0.5)
+        white_noise = random.uniform(-2, 2)
         participating_agents = self.market_environment.select_participating_agents(average_network_commitment,
                                                                                 self.social_media_agents)
         volume = len(participating_agents)

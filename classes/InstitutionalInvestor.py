@@ -4,6 +4,7 @@ import random
 import numpy as np
 from helpers.calculations_helpers import check_and_convert_imaginary_number
 
+
 class InstitutionalInvestor:
     """
     Class modelling the insitutional investors involved in the GameStop saga
@@ -52,17 +53,19 @@ class InstitutionalInvestor:
         p_loss = 0.2
         fundamentalist_weight = 1
         lambda_parameter = 2.25
-        chartist_weight = 2.65
+        chartist_weight = 2.55
         noise_weight = 1
         added_noise = random.uniform(0, 1)
-        expected_price_chartist = self.compute_expected_price(fundamentalist_weight=fundamentalist_weight, chartist_weight=chartist_weight,
+        expected_price_chartist = self.compute_expected_price(fundamentalist_weight=fundamentalist_weight,
+                                                              chartist_weight=chartist_weight,
                                                               noise_weight=noise_weight, current_price=current_price,
                                                               price_history=price_history, added_noise=added_noise)
 
         fundamentalist_weight = 2
         chartist_weight = 0.9
         noise_weight = 1
-        expected_price_fundamentalist = self.compute_expected_price(fundamentalist_weight, chartist_weight, noise_weight,
+        expected_price_fundamentalist = self.compute_expected_price(fundamentalist_weight, chartist_weight,
+                                                                    noise_weight,
                                                                     current_price, price_history, added_noise)
 
         x_gain = abs(current_price - expected_price_fundamentalist)
@@ -75,7 +78,6 @@ class InstitutionalInvestor:
         should_gamble = V_gain > V_loss
 
         return should_gamble
-
 
     def compute_expected_price(self, fundamentalist_weight, chartist_weight, noise_weight, current_price,
                                price_history, added_noise):
@@ -95,7 +97,6 @@ class InstitutionalInvestor:
         expected_return_chartist = self.compute_expected_return_chartist_approach(price_history)
         expected_return_fundamentalist = math.log(self.fundamental_price / current_price)
 
-
         expected_return = (1 / (fundamentalist_weight + chartist_weight + noise_weight)) * (
                 fundamentalist_weight * expected_return_fundamentalist + chartist_weight * expected_return_chartist +
                 noise_weight * added_noise
@@ -113,7 +114,7 @@ class InstitutionalInvestor:
         :param price_history:
         :return:
         """
-        price_history = price_history[-10:] # getting last 10 entries in array
+        price_history = price_history[-10:]  # getting last 10 entries in array
         spot_price_observation = 0
         for i in range(len(price_history) - 1):
             previous_price = price_history[i + 1]
