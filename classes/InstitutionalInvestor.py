@@ -52,7 +52,7 @@ class InstitutionalInvestor:
         p_loss = 0.21
         fundamentalist_weight = 1
         lambda_parameter = 2.25
-        chartist_weight = 2.4
+        chartist_weight = 2.45
         noise_weight = 1
         added_noise = random.uniform(0, 1)
         expected_price_chartist = self.compute_expected_price(fundamentalist_weight=fundamentalist_weight, chartist_weight=chartist_weight,

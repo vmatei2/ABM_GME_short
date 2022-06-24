@@ -58,25 +58,34 @@ class RegularRedditTrader(RedditTrader):
 
     def make_decision(self, average_network_commitment, current_price, price_history, white_noise, trading_halted):
         #  if agent out of trade, then stay out
-
+        if self.has_closed_position:
+            return
         if len(self.demand_history) > 0 and self.demand == 0 and trading_halted:
             self.has_closed_position = True
             if self.investor_type == RedditInvestorTypes.RATIONAL_SHORT_TERM:
-                self.demand -= 1
+                self.demand = -0.5
                 print("Rational investor has shorted the stock")
-        if self.has_closed_position or self.bought_option:
-            return
+
         self.compute_price_expectation_chartist(current_price, price_history, white_noise)
         if self.commitment > 0.65:
-            self.demand = 50  # buys options
+            if self.bought_option:
+                return
+            self.demand = 15  # buys options
             print("Bought option")
             self.bought_option = True
         elif self.commitment > 0.57 and average_network_commitment > 0.45:
-            self.demand += 1  # buys more stock
-        elif self.commitment > 0.4 and self.expected_price > current_price:
-            self.demand += 1  # slightly committed, still considers technical analysis
-        else:
-            self.demand = -0.5  # closes open position as commitment is low and not happy with GME
+            self.demand = 4  # buys more stock
+        elif self.commitment > 0.35 and self.expected_price > current_price:
+            self.demand = 2  # slightly committed, still considers technical analysis
+        elif self.expected_price > current_price:
+            self.demand = 1 # closes open position as commitment is low and not happy with GME
+        elif self.commitment < 0.35 and not trading_halted:
+            self.demand = 0
+            print("agent demand is 0, expects stock to go down")
+        elif self.commitment < 0.35 and trading_halted:
+            self.demand = -4
+            self.has_closed_position = True
+            print("Trading halted, agent got scared")
         if self.demand != 0:
             self.demand_history.append(self.demand)
 
@@ -93,12 +102,14 @@ class RegularRedditTrader(RedditTrader):
             rolling_average_window_length = 5
         rolling_average = self.compute_rolling_average(price_history, rolling_average_window_length)
         added_noise = self.b * white_noise
-        expected_price = current_price + self.b * (current_price - rolling_average) + added_noise
+        expected_price = current_price + self.b * (current_price - rolling_average) + white_noise
         self.expected_price = expected_price
+        return expected_price
 
     def compute_rolling_average(self, price_history, rolling_average_window_length):
         total_prices = 0
+        price_history = price_history[-rolling_average_window_length:]
         for i in range(rolling_average_window_length):
             total_prices += price_history[i]
-        rolling_average = total_prices / len(price_history)
+        rolling_average = total_prices / rolling_average_window_length
         return rolling_average
