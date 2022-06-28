@@ -229,12 +229,69 @@ def plot_demand_dictionary(demand_dict, trading_period):
     plt.show()
 
 
+def plot_multiple_figures(gme_price_history):
+    fig, ax = plt.subplots(2, 2, figsize=(16, 12))
+
+    axes = ax[0, 0]
+
+    title_fontsize = 18
+    xticklabel_fontsize = 14
+
+    ax[0, 0].plot(gme_price_history["Close"], 'r')
+    ax[0, 0].set_title("Closing price")
+    ax[0, 0].title.set_size(title_fontsize)
+    ax[0, 0].set_xticklabels(gme_price_history.index.date, rotation=45, fontsize=xticklabel_fontsize)
+
+    ax[0, 1].plot(gme_price_history["Volume"], 'b')
+    ax[0, 1].set_title("Volume Traded")
+    ax[0, 1].title.set_size(title_fontsize)
+    ax[0, 1].set_xticklabels(gme_price_history.index.date, rotation=45, fontsize=xticklabel_fontsize)
+
+    # let's calculate volatility here for the stock
+    gme_price_history['Daily Return'] = gme_price_history['Close'].pct_change(1)
+    ax[1, 0].plot(gme_price_history["Daily Return"], 'g')
+    ax[1, 0].set_title("Daily Return (%)")
+    ax[1, 0].title.set_size(title_fontsize)
+    ax[1, 0].set_xticklabels(gme_price_history.index.date, rotation=45, fontsize=xticklabel_fontsize)
+
+    # plot combining 3
+    gme_price_history["Close"] = rescale_array(gme_price_history["Close"])
+    gme_price_history["Volume"] = rescale_array(gme_price_history["Volume"])
+    gme_price_history["Open"] = rescale_array(gme_price_history["Open"])
+    gme_price_history["Daily Return"] = rescale_array(gme_price_history["Daily Return"])
+    ax[1, 1].plot(gme_price_history["Close"], label="Closing Price")
+    ax[1, 1].plot(gme_price_history["Volume"], label="Volume")
+    ax[1, 1].plot(gme_price_history["Daily Return"], label="Daily Return")
+    ax[1, 1].legend()
+    ax[1, 1].set_title("Rescaled closing, volume and return values")
+    ax[1, 1].title.set_size(title_fontsize)
+    ax[1, 1].set_xticklabels(gme_price_history.index.date, rotation=45, fontsize=xticklabel_fontsize)
+
+    plt.subplots_adjust(left=0.1,
+                        bottom=0.1,
+                        right=0.9,
+                        top=0.9,
+                        wspace=0.4,
+                        hspace=0.4)
+
+    plt.savefig("../images/gme_analysis")
+    plt.show()
+
+
+
+
+
+
+
 if __name__ == '__main__':
     sns.set_style("darkgrid")
     gme_ticker = "GME"
     gme = yf.Ticker(gme_ticker)
     gme_price_history = get_price_history(gme, "2020-12-08", "2021-02-04")
-    plot_two_df_columns_together(gme_price_history, "Close", "Volume", "Open", "area")
+    plot_two_df_columns_together(gme_price_history, "Close", "Volume", "Open", "area", title="Closing and Opening "
+                                                                                             "Price Against Traded "
+                                                                                             "Volume")
+    plot_multiple_figures(gme_price_history)
     gme_institutional_holders = gme.institutional_holders
     gme_dates = gme_price_history.index
     gme_dates_as_string = []
