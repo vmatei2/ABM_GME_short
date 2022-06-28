@@ -222,8 +222,6 @@ class SimulationClass:
         simple_line_plot(commitment_changes, "Trading Week", "Change in commitment", "Percentage Changes in Average "
                                                                                      "Commitment")
 
-        simple_line_plot(volume_history, "Trading Day", "Volume", "Volume observed in market simulation")
-
         plot_institutional_investors_decisions(hedge_fund_decision_dict, market_environment.simulation_history.keys())
 
         plot_demand_dictionary(demand_dict, market_environment.simulation_history.keys())
