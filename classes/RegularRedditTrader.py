@@ -63,7 +63,7 @@ class RegularRedditTrader(RedditTrader):
 
     def act_if_trading_halted(self, current_price, price_history, white_noise):
         if self.has_trading_been_halted:
-            if self.commitment > 0.45:
+            if self.commitment > 0.5:
                     self.demand += 1
                     print("No moon no brrr")
             else:
@@ -86,6 +86,7 @@ class RegularRedditTrader(RedditTrader):
 
     def make_decision(self, average_network_commitment, current_price, price_history, white_noise, trading_halted):
         #  if agent out of trade, then stay out
+        commitment_scaler = 1.2
         if trading_halted:
             self.act_if_trading_halted(current_price, price_history, white_noise)
             return
@@ -93,16 +94,16 @@ class RegularRedditTrader(RedditTrader):
             return
         self.compute_price_expectation_chartist(current_price, price_history, white_noise)
         if self.commitment > 0.65:
-            self.demand = 10  # buys options
+            self.demand = 100 * self.commitment  # buys options
             print("Bought option")
             self.bought_option = True
         elif self.commitment > 0.55 and average_network_commitment > 0.45:
-            self.demand += 0.6  # buys more stock
-        elif self.commitment > 0.35 and self.expected_price > current_price:
-            self.demand += 0.85 # slightly committed, still considers technical analysis
+            self.demand += commitment_scaler * self.commitment  # buys more stock
+        elif self.commitment > 0.3 and self.expected_price > current_price:
+            self.demand += commitment_scaler * self.commitment # slightly committed, still considers technical analysis
         elif self.expected_price > current_price:
-            self.demand = 1 # closes open position as commitment is low and not happy with GME
-        elif self.commitment < 0.35:
+            self.demand = self.commitment # closes open position as commitment is low and not happy with GME
+        elif self.commitment < 0.3:
             self.demand = 0
             print("agent demand is 0, expects stock to go down")
         if self.demand != 0:
