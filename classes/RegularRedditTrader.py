@@ -78,8 +78,9 @@ class RegularRedditTrader(RedditTrader):
                         self.demand += 1
                         print("go to the moon")
         if not self.has_trading_been_halted:
-            current_demand = -6
-            self.demand = current_demand
+            current_demand = self.demand / (1 / self.commitment)  # demand becomes a function of the agent's current
+            # commitmemnt
+            self.demand = -current_demand
             self.has_trading_been_halted = True
 
 
