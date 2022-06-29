@@ -75,7 +75,7 @@ class SimulationClass:
     def create_institutional_investors(self):
         institutional_investors = {}
         for i in range(self.N_institutional_investors):
-            institutional_investors[i] = InstitutionalInvestor(i, demand=-12, fundamental_price=1)
+            institutional_investors[i] = InstitutionalInvestor(i, demand=-10, fundamental_price=1)
         return institutional_investors
 
     @staticmethod
@@ -244,6 +244,6 @@ if __name__ == '__main__':
     start_date = datetime.datetime(2020, 12, 8)
     market_environment = MarketEnvironment(initial_price=16.35, name="GME Market Environment",
                                            price_history=gme_price_history, start_date=start_date)
-    simulation = SimulationClass(time_steps=100, N_agents=10000, N_institutional_investors=600, m=4,
+    simulation = SimulationClass(time_steps=100, N_agents=10000, N_institutional_investors=200, m=4,
                                  market_environment=market_environment)
     simulation.run_simulation(halt_trading=True)

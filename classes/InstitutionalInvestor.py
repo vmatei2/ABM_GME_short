@@ -30,7 +30,7 @@ class InstitutionalInvestor:
         """
         short_gme = self.utility_function(current_price, price_history)
         if short_gme:
-            self.demand -= 15
+            self.demand -= 1
 
         else:
             self.demand = 0
@@ -52,7 +52,7 @@ class InstitutionalInvestor:
         p_gain = 0.8  # use in dissertation "such that p_gain + p_loss = 1 "
         p_loss = 0.2
         fundamentalist_weight = 1
-        lambda_parameter = 2.25
+        lambda_parameter = 1.75
         chartist_weight = 2.55
         noise_weight = 1
         added_noise = random.uniform(0, 1)

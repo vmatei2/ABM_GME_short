@@ -109,6 +109,8 @@ class RegularRedditTrader(RedditTrader):
 
     def compute_price_expectation_chartist(self, current_price, price_history, white_noise):
         """
+        Taken from - minimal agent based model for financial markets
+
         Chartists agents detect a trend through looking at the distance between the price and its smoothed profile (
         given by moving average in this case) :param current_price: :param current_trading_day: :param price_history:
         :param white_noise: :return:
