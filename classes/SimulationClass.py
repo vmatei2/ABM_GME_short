@@ -236,8 +236,8 @@ class SimulationClass:
 
         #        self.plot_agent_network_evolution(agent_network_evolution_dict, threshold)
 
-        simple_line_plot(average_commitment_history, "Trading Day", "Average Commitment",
-                         "Average Commitment Evolution")
+        # simple_line_plot(average_commitment_history, "Trading Day", "Average Commitment",
+        #                  "Average Commitment Evolution")
         simple_line_plot(commitment_changes, "Trading Week", "Change in commitment", "Percentage Changes in Average "
                                                                                      "Commitment")
 
@@ -249,14 +249,15 @@ class SimulationClass:
 
         market_environment.plot_price_history("Price evolution during simulation")
 
-        scale_and_plot(list(market_environment.simulation_history.values()), average_commitment_history,
-                       "Scaled price and commitment evolution")
+        # scale_and_plot(list(market_environment.simulation_history.values()), average_commitment_history,
+        #                "Scaled price and commitment evolution")
 
         barplot_options_bought(list(market_environment.simulation_history.keys()), options_bought_history)
 
 
 if __name__ == '__main__':
     sns.set_style("darkgrid")
+    sns.set_palette("Set2")
 
     gme_ticker = "GME"
     gme = yf.Ticker(gme_ticker)
