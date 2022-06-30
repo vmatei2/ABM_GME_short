@@ -17,7 +17,7 @@ from classes.InstitutionalInvestor import InstitutionalInvestor
 from classes.MarketEnvironment import MarketEnvironment
 from helpers.plotting_helpers import plot_all_commitments, plot_commitment_into_groups, \
     simple_line_plot, visualise_network, get_price_history, scale_and_plot, plot_institutional_investors_decisions, \
-    plot_demand_dictionary
+    plot_demand_dictionary, barplot_options_bought
 
 
 def store_commitment_values_split_into_groups(commitment_this_round, trading_day, df_data):
@@ -42,7 +42,7 @@ class SimulationClass:
         # simulation
         self.institutional_investors = self.create_institutional_investors()
         self.trading_halted = False
-        self.miu = 0.17 # initial miu value
+        self.miu = 0.17  # initial miu value
 
     def create_initial_network(self):
         barabasi_albert_network = nx.barabasi_albert_graph(n=self.N_agents, m=self.m, seed=2)
@@ -53,11 +53,13 @@ class SimulationClass:
             node_neighbours = list(barabasi_albert_network.neighbors(node_id))
             if i < 5:  # defining 5 largest nodes as being the influential ones in the network
                 agent = InfluentialRedditUser(id=node_id, neighbours_ids=node_neighbours,
-                                              market_first_price=self.market_environment.initial_price, investor_type=RedditInvestorTypes.LONGTERM)
+                                              market_first_price=self.market_environment.initial_price,
+                                              investor_type=RedditInvestorTypes.LONGTERM)
             else:
                 investor_type = [RedditInvestorTypes.LONGTERM, RedditInvestorTypes.RATIONAL_SHORT_TERM]
                 investor_type_probabilities = [0.5, 0.5]
-                agent = RegularRedditTrader(id=node_id, neighbours_ids=node_neighbours, investor_type=random.choices(investor_type, investor_type_probabilities)[0])
+                agent = RegularRedditTrader(id=node_id, neighbours_ids=node_neighbours,
+                                            investor_type=random.choices(investor_type, investor_type_probabilities)[0])
             social_media_agents[node_id] = agent
         degree_values = [v for k, v in sorted_node_degree_pairs]
         average_degree = sum(degree_values) / barabasi_albert_network.number_of_nodes()
@@ -129,16 +131,19 @@ class SimulationClass:
             return
         white_noise = random.uniform(-2, 2)
         participating_agents = self.market_environment.select_participating_agents(average_network_commitment,
-                                                                                self.social_media_agents)
+                                                                                   self.social_media_agents)
         volume = len(participating_agents)
         institutional_inv_decision_dict[trading_day] = []
+        options_bought = 0
         print("Number of agents involved in this trading day: ", volume)
         for id, agent in participating_agents.items():
             if isinstance(agent, InfluentialRedditUser):
                 agent.make_decision(average_network_commitment, threshold)
             else:
-                agent.make_decision(average_network_commitment, market_environment.current_price,
-                                    market_environment.price_history, white_noise, self.trading_halted)
+                decision = agent.make_decision(average_network_commitment, market_environment.current_price,
+                                               market_environment.price_history, white_noise, self.trading_halted)
+                if decision == 1:  # above function returns 1 when agent buys option
+                    options_bought += 1
         # for agent_id in participating_agents:
         #     selected_agent = self.social_media_agents[agent_id]
         #     if isinstance(selected_agent, InfluentialRedditUser):
@@ -146,12 +151,14 @@ class SimulationClass:
         #     else:
         #         selected_agent.make_decision(average_network_commitment, market_environment.current_price,
         #                                      market_environment.price_history, 0.003, self.trading_halted)
-        for i in range(int(len(self.institutional_investors)/2)):
+        for i in range(int(len(self.institutional_investors) / 2)):
             institutional_inv_agent = random.choice(self.institutional_investors)
-            decision = institutional_inv_agent.make_decision(self.market_environment.current_price, self.market_environment.price_history)
+            decision = institutional_inv_agent.make_decision(self.market_environment.current_price,
+                                                             self.market_environment.price_history)
             institutional_inv_decision_dict[trading_day].append(decision)
-        demand_from_retail, demand_from_hf = market_environment.update_market(participating_agents, self.institutional_investors)
-        return volume, demand_from_retail, demand_from_hf
+        demand_from_retail, demand_from_hf = market_environment.update_market(participating_agents,
+                                                                              self.institutional_investors)
+        return volume, demand_from_retail, demand_from_hf, options_bought
 
     def run_simulation(self, halt_trading):
         trading_day = 0
@@ -162,6 +169,7 @@ class SimulationClass:
         all_commitments_each_round = []
         commitment_changes = []
         volume_history = []
+        options_bought_history = []
         agent_ids_to_be_deleted = []
         demand_dict = {'retail': [], 'institutional': []}
         hedge_fund_decision_dict = {}
@@ -194,10 +202,13 @@ class SimulationClass:
                     agent_network_evolution_dict[step] = agent_network
                     step += 1
                 try:
-                    volume, demand_retail, demand_hf = self.market_interactions(average_network_commitment, threshold, hedge_fund_decision_dict, trading_day)
+                    volume, demand_retail, demand_hf, options_bought = self.market_interactions(
+                        average_network_commitment, threshold,
+                        hedge_fund_decision_dict, trading_day)
                     demand_dict['retail'].append(demand_retail)
                     demand_dict['institutional'].append(demand_hf)
                     volume_history.append(volume)
+                    options_bought_history.append(options_bought)
                 except TypeError as e:
                     # Exception being hit when it is a weekend and the market is closed in the simulation
                     # the market_interaction function returns nothing in this case
@@ -208,14 +219,22 @@ class SimulationClass:
                 print("Finished Trading Day ", trading_day)
 
                 if trading_day == 60 and halt_trading:
-                    agent_ids_to_be_deleted = self.halt_trading(commitment_threshold=0.65, commitment_lower_upper=[0.12, 0.25])
+                    agent_ids_to_be_deleted = self.halt_trading(commitment_threshold=0.65,
+                                                                commitment_lower_upper=[0.12, 0.25])
                     print("Trading halted")
                 print()
+        self.run_all_plots(market_environment, all_commitments_each_round, average_commitment_history,
+                           commitment_changes, hedge_fund_decision_dict, demand_dict, df_data,
+                           options_bought_history)
+
+    def run_all_plots(self, market_environment, all_commitments_each_round, average_commitment_history,
+                      commitment_changes, hedge_fund_decision_dict,
+                      demand_dict, df_data, options_bought_history):
         ### PLOTTING FUNCTIONS
         plot_all_commitments(all_commitments_each_round, self.N_agents, average_commitment_history,
                              "Evolution of all agent commitments")
 
-#        self.plot_agent_network_evolution(agent_network_evolution_dict, threshold)
+        #        self.plot_agent_network_evolution(agent_network_evolution_dict, threshold)
 
         simple_line_plot(average_commitment_history, "Trading Day", "Average Commitment",
                          "Average Commitment Evolution")
@@ -230,7 +249,10 @@ class SimulationClass:
 
         market_environment.plot_price_history("Price evolution during simulation")
 
-        scale_and_plot(list(market_environment.simulation_history.values()), average_commitment_history, "Scaled price and commitment evolution")
+        scale_and_plot(list(market_environment.simulation_history.values()), average_commitment_history,
+                       "Scaled price and commitment evolution")
+
+        barplot_options_bought(list(market_environment.simulation_history.keys()), options_bought_history)
 
 
 if __name__ == '__main__':

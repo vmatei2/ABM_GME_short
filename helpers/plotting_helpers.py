@@ -278,7 +278,24 @@ def plot_multiple_figures(gme_price_history):
     plt.show()
 
 
-
+def barplot_options_bought(dates, options_bought):
+    plt.figure(figsize=(10, 10))
+    dates = dates[:43]
+    dates = [date.date() for date in dates]
+    dates_new = []
+    for i, date in enumerate(dates):
+        if i % 2 == 0:
+            dates_new.append(date)
+        else:
+            dates_new.append(" ")
+    options_bought = options_bought[:43]
+    sns.barplot(dates_new, options_bought)
+    plt.xlabel("Dates", fontsize=12)
+    plt.xticks(rotation=45)
+    plt.locator_params(axis='x', nbins=len(dates)/2)
+    plt.ylabel("Options Volume", fontsize=12)
+    plt.title("Option Trading Volume in Simulation", fontsize=16)
+    plt.show()
 
 
 
