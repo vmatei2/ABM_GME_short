@@ -78,7 +78,7 @@ class RegularRedditTrader(RedditTrader):
         if not self.has_trading_been_halted:
             current_demand = self.demand / (1 / self.commitment)  # demand becomes a function of the agent's current
             # commitmemnt
-            self.demand = -current_demand
+            self.demand = - current_demand
             self.has_trading_been_halted = True
 
 
@@ -91,13 +91,11 @@ class RegularRedditTrader(RedditTrader):
         if self.bought_option:  # not doing anything if we have bought an option already
             return
         self.compute_price_expectation_chartist(current_price, price_history, white_noise)
-        if self.commitment > 0.65:
+        if self.commitment > 0.65 and average_network_commitment > 0.5:
             self.demand = 100 * self.commitment  # buys options
             print("Bought option")
             self.bought_option = True
             return 1
-        elif self.commitment > 0.55 and average_network_commitment > 0.45:
-            self.demand += commitment_scaler * self.commitment  # buys more stock
         elif self.commitment > 0.3 and self.expected_price > current_price:
             self.demand += commitment_scaler * self.commitment # slightly committed, still considers technical analysis
         elif self.expected_price > current_price:
