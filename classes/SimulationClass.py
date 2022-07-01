@@ -8,6 +8,7 @@ import yfinance as yf
 
 from classes.RedditInvestorTypes import RedditInvestorTypes
 from helpers.calculations_helpers import split_commitment_into_groups
+from helpers.stylized_facts import *
 from helpers.network_helpers import get_sorted_degree_values, gather_commitment_values, \
     create_network_from_agent_dictionary
 from helpers.network_helpers import calculate_average_commitment
@@ -223,9 +224,13 @@ class SimulationClass:
                                                                 commitment_lower_upper=[0.12, 0.25])
                     print("Trading halted")
                 print()
+        extract_weekend_data_effect(market_environment.simulation_history)
+
         self.run_all_plots(market_environment, all_commitments_each_round, average_commitment_history,
                            commitment_changes, hedge_fund_decision_dict, demand_dict, df_data,
                            options_bought_history)
+
+
 
     def run_all_plots(self, market_environment, all_commitments_each_round, average_commitment_history,
                       commitment_changes, hedge_fund_decision_dict,
