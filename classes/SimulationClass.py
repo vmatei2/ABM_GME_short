@@ -78,7 +78,7 @@ class SimulationClass:
     def create_institutional_investors(self):
         institutional_investors = {}
         for i in range(self.N_institutional_investors):
-            institutional_investors[i] = InstitutionalInvestor(i, demand=-10, fundamental_price=1)
+            institutional_investors[i] = InstitutionalInvestor(i, demand=-1, fundamental_price=1)
         return institutional_investors
 
     @staticmethod

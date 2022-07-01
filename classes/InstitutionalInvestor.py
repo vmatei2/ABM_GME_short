@@ -30,7 +30,10 @@ class InstitutionalInvestor:
         """
         short_gme = self.utility_function(current_price, price_history)
         if short_gme:
-            self.demand -= 1
+            if self.demand != 0:
+                self.demand -= self.demand
+            else:
+                self.demand = -1  # start shorting again after closing position
 
         else:
             self.demand = 0
