@@ -6,7 +6,7 @@ import numpy as np
 
 class RegularRedditTrader(RedditTrader):
     def __init__(self, id, neighbours_ids, commitment=None, investor_type=None):
-        demand = 0 # an agent's initial demand
+        demand = 0  # an agent's initial demand
         if commitment is None:
             commitment = random.uniform(0.3, 0.5)  # normal random distribution with mean = 0 and std deviation = 1
         self.d = random.uniform(0.1, 0.3)  # threshold for difference in commitment to be too high - or confidence
@@ -26,7 +26,6 @@ class RegularRedditTrader(RedditTrader):
         self.post_halting_decisions['long-term'] = 0
         self.post_halting_decisions['short-term-price-go-up'] = 0
         super().__init__(id, neighbours_ids, demand, commitment, investor_type)
-
 
     def update_commitment(self, agents, miu):
         """
@@ -58,16 +57,17 @@ class RegularRedditTrader(RedditTrader):
         else:
 
             # otherwise, let's update this agent's opinion (being influenced)
-            updated_commitment = average_neighbour_commitment + miu * abs(self.commitment - average_neighbour_commitment)
+            updated_commitment = average_neighbour_commitment + miu * abs(
+                self.commitment - average_neighbour_commitment)
             self.commitment = min(updated_commitment, 1)
 
     def act_if_trading_halted(self, current_price, price_history, white_noise):
         if self.has_trading_been_halted:
             if self.commitment > 0.5:
-                    self.demand += 1
+                self.demand += 1
             else:
                 if self.investor_type == RedditInvestorTypes.LONGTERM:
-                    fundamental_price = 10 # in this case, our reddit agent will act rationally and consider the
+                    fundamental_price = 10  # in this case, our reddit agent will act rationally and consider the
                     if fundamental_price < current_price:
                         self.demand -= 1
                 elif self.investor_type == RedditInvestorTypes.RATIONAL_SHORT_TERM:
@@ -80,7 +80,6 @@ class RegularRedditTrader(RedditTrader):
             # commitmemnt
             self.demand = - current_demand
             self.has_trading_been_halted = True
-
 
     def make_decision(self, average_network_commitment, current_price, price_history, white_noise, trading_halted):
         #  if agent out of trade, then stay out
@@ -97,9 +96,9 @@ class RegularRedditTrader(RedditTrader):
             self.bought_option = True
             return 1
         elif self.commitment > 0.3 and self.expected_price > current_price:
-            self.demand += commitment_scaler * self.commitment # slightly committed, still considers technical analysis
+            self.demand += commitment_scaler * self.commitment  # slightly committed, still considers technical analysis
         elif self.expected_price > current_price:
-            self.demand = self.commitment # closes open position as commitment is low and not happy with GME
+            self.demand = self.commitment  # closes open position as commitment is low and not happy with GME
         elif self.commitment < 0.3:
             self.demand = 0
             print("agent demand is 0, expects stock to go down")
