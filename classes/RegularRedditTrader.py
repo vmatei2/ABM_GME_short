@@ -100,7 +100,7 @@ class RegularRedditTrader(RedditTrader):
         elif self.expected_price > current_price:
             self.demand = self.commitment  # closes open position as commitment is low and not happy with GME
         elif self.commitment < 0.3:
-            self.demand = 0
+            self.demand -= self.commitment * commitment_scaler
             print("agent demand is 0, expects stock to go down")
         if self.demand != 0:
             self.demand_history.append(self.demand)
