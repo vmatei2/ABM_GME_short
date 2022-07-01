@@ -64,16 +64,16 @@ class RegularRedditTrader(RedditTrader):
     def act_if_trading_halted(self, current_price, price_history, white_noise):
         if self.has_trading_been_halted:
             if self.commitment > 0.5:
-                self.demand += 1
+                self.demand += self.commitment
             else:
                 if self.investor_type == RedditInvestorTypes.LONGTERM:
                     fundamental_price = 10  # in this case, our reddit agent will act rationally and consider the
                     if fundamental_price < current_price:
-                        self.demand -= 1
+                        self.demand -= self.commitment
                 elif self.investor_type == RedditInvestorTypes.RATIONAL_SHORT_TERM:
                     expected_price = self.compute_price_expectation_chartist(current_price, price_history, white_noise)
                     if expected_price > current_price:
-                        self.demand += 1
+                        self.demand += self.commitment
 
         if not self.has_trading_been_halted:
             current_demand = self.demand / (1 / self.commitment)  # demand becomes a function of the agent's current
@@ -83,7 +83,7 @@ class RegularRedditTrader(RedditTrader):
 
     def make_decision(self, average_network_commitment, current_price, price_history, white_noise, trading_halted):
         #  if agent out of trade, then stay out
-        commitment_scaler = 1.2
+        commitment_scaler = 1
         if trading_halted:
             self.act_if_trading_halted(current_price, price_history, white_noise)
             return
@@ -95,7 +95,7 @@ class RegularRedditTrader(RedditTrader):
             print("Bought option")
             self.bought_option = True
             return 1
-        elif self.commitment > 0.3 and self.expected_price > current_price:
+        elif self.commitment > 0.4 and self.expected_price > current_price:
             self.demand += commitment_scaler * self.commitment  # slightly committed, still considers technical analysis
         elif self.expected_price > current_price:
             self.demand = self.commitment  # closes open position as commitment is low and not happy with GME
