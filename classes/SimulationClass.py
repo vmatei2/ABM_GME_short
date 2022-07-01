@@ -55,7 +55,7 @@ class SimulationClass:
             if i < 5:  # defining 5 largest nodes as being the influential ones in the network
                 agent = InfluentialRedditUser(id=node_id, neighbours_ids=node_neighbours,
                                               market_first_price=self.market_environment.initial_price,
-                                              investor_type=RedditInvestorTypes.LONGTERM)
+                                              investor_type=RedditInvestorTypes.FANATICAL)
             else:
                 investor_type = [RedditInvestorTypes.LONGTERM, RedditInvestorTypes.RATIONAL_SHORT_TERM]
                 investor_type_probabilities = [0.5, 0.5]
