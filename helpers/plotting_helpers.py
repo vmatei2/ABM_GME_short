@@ -55,20 +55,22 @@ def plot_two_df_columns_together(data_frame, first_column, second_column, third_
 
 
 def barplot_percentages_on_top(df, title, column, xlabel):
-    fig, ax = plt.subplots(figsize=(10, 10))
+    fig, ax = plt.subplots(figsize=(7, 10))
     total_rows = int(len(df))
     sns.countplot(x=column, data=df)
-    plt.title(title, fontsize=18)
-    plt.ylabel("Count", fontsize=14)
-    plt.xlabel(xlabel, fontsize=14)
-    plt.xticks(fontsize=14)
-    plt.yticks(fontsize=14)
+    plt.title(title, fontsize=20)
+    plt.ylabel("Count", fontsize=18)
+    plt.xlabel(xlabel, fontsize=18)
+    plt.xticks(fontsize=16)
+    plt.yticks(fontsize=16)
     for p in ax.patches:
         percentage = '{:.2f}'.format(100 * p.get_height() / total_rows)
+        percentage = percentage + "%"
         x = p.get_x() + p.get_width() / 2
         y = p.get_height()
-        ax.annotate(percentage, (x, y), ha='center', va='center', fontsize=11, xytext=(0, 5),
+        ax.annotate(percentage, (x, y), ha='center', va='center', fontsize=18, xytext=(0, 5),
                     textcoords='offset points')
+    plt.savefig("post_authors_premium_accs.jpg")
     plt.show()
 
 
@@ -116,13 +118,15 @@ def log_log_plot(author_values, xlabel, ylabel, title):
     print("In the log log function")
     hist = dict(collections.Counter(author_values))
     print("Calculated author_hist vector")
-    plt.figure(figsize=(10, 10))
+    plt.figure(figsize=(7, 10))
     plt.grid(True)
     plt.loglog(hist.keys(), hist.values(), 'ro-')
 
-    plt.xlabel(xlabel, fontsize=13)
-    plt.ylabel(ylabel, fontsize=12)
-    plt.title(title, fontsize=14)
+    plt.xlabel(xlabel, fontsize=18)
+    plt.ylabel(ylabel, fontsize=18)
+    plt.title(title, fontsize=20)
+    plt.xticks(fontsize=15)
+    plt.yticks(fontsize=15)
     plt.savefig("../images/" + title)
     plt.show()
 
