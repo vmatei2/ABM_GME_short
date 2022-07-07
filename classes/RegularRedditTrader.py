@@ -113,10 +113,7 @@ class RegularRedditTrader(RedditTrader):
         :param white_noise: :return:
         """
         #  below if statement considers whether the agent is simply looking for a quick profit, get in-get out or believe in GME
-        if self.commitment > 0.5:
-            rolling_average_window_length = 15
-        else:
-            rolling_average_window_length = 5
+        rolling_average_window_length = 15
         rolling_average = self.compute_rolling_average(price_history, rolling_average_window_length)
         added_noise = self.b * white_noise
         expected_price = current_price + self.b * (current_price - rolling_average) + white_noise
