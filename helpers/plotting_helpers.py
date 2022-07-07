@@ -22,14 +22,16 @@ def get_price_history(ticker, start_date, end_date):
     return price_history
 
 
-def plot_two_df_columns_together(data_frame, first_column, second_column, third_column=None, kind=None, rescale=False,
+def plot_two_df_columns_together(data_frame, first_column, second_column, third_column=None, fourth_column=None, kind=None, rescale=False,
                                  title=""):
-    plt.figure(figsize=(12, 10))
+    plt.figure(figsize=(10, 10))
     if rescale:
         data_frame[first_column] = rescale_array(data_frame[first_column])
         data_frame[second_column] = rescale_array(data_frame[second_column])
         if third_column is not None:
             data_frame[third_column] = rescale_array(data_frame[third_column])
+        if fourth_column is not None:
+            data_frame[fourth_column] = rescale_array(data_frame[fourth_column])
     first_plot = data_frame[first_column].plot(legend=True)
     if kind == None:
         second_plot = data_frame[second_column].plot(secondary_y=True, alpha=0.6, legend=True)
@@ -39,6 +41,8 @@ def plot_two_df_columns_together(data_frame, first_column, second_column, third_
 
     if third_column is not None:
         third_plot = data_frame[third_column].plot(legend=True)
+    if fourth_column is not None:
+        fourth_plot = data_frame[fourth_column].plot(legend=True)
     first_plot.margins(0, 0)
     first_plot.yaxis.set_tick_params(labelsize=18)
     first_plot.xaxis.set_tick_params(labelsize=18)
@@ -310,9 +314,9 @@ if __name__ == '__main__':
     gme_ticker = "GME"
     gme = yf.Ticker(gme_ticker)
     gme_price_history = get_price_history(gme, "2020-12-08", "2021-02-04")
-    plot_two_df_columns_together(gme_price_history, "Close", "Volume", "Open", "area", title="Closing and Opening "
-                                                                                             "Price Against Traded "
-                                                                                             "Volume")
+    # plot_two_df_columns_together(gme_price_history, "Close", "Volume", "Open", "area", title="Closing and Opening "
+    #                                                                                          "Price Against Traded "
+    #                                                                                          "Volume")
     plot_multiple_figures(gme_price_history)
     gme_institutional_holders = gme.institutional_holders
     gme_dates = gme_price_history.index
@@ -323,17 +327,24 @@ if __name__ == '__main__':
 
     cleaned_posts_path = "../kaggleData/cleaned_posts_data_dt_index"
     wsb_posts_data = pd.read_csv(cleaned_posts_path, infer_datetime_format=True)
+    one_post_per_day_df = wsb_posts_data.groupby('datetime').last()
+    subreddit_subscribers = one_post_per_day_df['subreddit_subscribers'].tolist()
+
 
     date_value, date_counts = extract_values_counts_as_lists(wsb_posts_data, 'datetime', False)
 
     date_post_counts_matching_gme = []
+    subreddit_subscribers_matching_gme = [] # for storing the data where the counts match the gme price evolution
     for i, date in enumerate(date_value):
         if date in gme_dates_as_string:
             date_post_counts_matching_gme.append(date_counts[i])
+            subreddit_subscribers_matching_gme.append(subreddit_subscribers[i])
 
     gme_price_history['number_of_posts'] = date_post_counts_matching_gme
+    gme_price_history['subreddit_subscribers'] = subreddit_subscribers_matching_gme
 
-    print(gme_institutional_holders)
 
-    plot_two_df_columns_together(gme_price_history, "Close", "Volume", "number_of_posts", kind="area", rescale=True,
-                                 title="Rescaled Closing Price, Volume and Number of Posts")
+    plot_two_df_columns_together(gme_price_history, first_column="Close", second_column="Volume",
+                                 third_column="number_of_posts", kind="area",
+                                 rescale=True, title="Rescaled Closing Price, Volume, Number of Posts")
+

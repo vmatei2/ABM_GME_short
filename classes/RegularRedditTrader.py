@@ -15,7 +15,6 @@ class RegularRedditTrader(RedditTrader):
         self.b = random.uniform(-1, 1)  # a parameter which gives the strength of the force calculated as simply (
         # current price - moving_average)
         self.expected_price = 0
-        self.risk_aversion = np.random.normal(0, 1, 1)  # mean, std deviation and size of the array to be returned
         self.has_closed_position = False  # variable to replicate how, after commitment going down, if the agent sells
         # then he is completely out, believing the market to be rigged
         self.demand_history = []

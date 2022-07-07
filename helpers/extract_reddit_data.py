@@ -41,9 +41,10 @@ def convert_utc_todatetime(df):
     df = df.sort_values(by='datetime')
     # convert time stamps to date time for easier plotting
     df['datetime'] = pd.to_datetime(df['datetime']).dt.date
+    df_without_dt_index = df
     df = df.set_index(pd.DatetimeIndex(df['datetime']))
     df.to_csv("../kaggleData/cleaned_posts_data_dt_index", index=False)
-    return df
+    return df, df_without_dt_index
 
 
 def degree_distribution_generic_netowrk(n, m):
@@ -118,26 +119,23 @@ if __name__ == '__main__':
     cleaned_posts_data_path = "../kaggleData/cleaned_posts_data.csv"
     # wsb_comment_data = pd.read_csv(comments_filepath)
     wsb_posts_data = pd.read_csv(cleaned_posts_data_path)
-    wsb_posts_data = convert_utc_todatetime(wsb_posts_data)
+    wsb_posts_data, wsb_posts_data_without_dt_index = convert_utc_todatetime(wsb_posts_data)
 
     one_post_per_author_df = wsb_posts_data.groupby('author').first()
     value_counts_author_premium = one_post_per_author_df['author_premium'].value_counts()
-
     premium_authors = list(one_post_per_author_df.loc[one_post_per_author_df["author_premium"] == True].index)
-
     author_values, author_counts = extract_values_counts_as_lists(wsb_posts_data, 'author')
-
     author_values = author_values[:10000]
 
     plot_percentage_premium_users_top_x(premium_authors, author_values)
     author_counts_sliced = author_counts[:10000]
-
     date_value, date_counts = extract_values_counts_as_lists(wsb_posts_data, 'datetime', False)
     author_value_counts_dict = dict(zip(author_values, author_counts_sliced))
 
+    one_post_per_day_df = wsb_posts_data_without_dt_index.groupby('datetime').last()
+
     barplot_percentages_on_top(one_post_per_author_df, "Post authors with premium accounts",
                                'author_premium', 'Has premium account')
-
     line_plot(author_values, author_counts_sliced, "Posts per author", "Usernames", "Count", 400, [0, 1000])
     line_plot(date_value, date_counts, "Posts per day", "Date", "Count", 5)
 
