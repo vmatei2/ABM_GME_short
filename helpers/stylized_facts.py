@@ -59,3 +59,28 @@ def pct_change(nparray):
     pct = np.zeros_like(nparray)
     pct[1:] = np.diff(nparray) / np.abs(nparray[:-1])
     return pct
+
+
+def observe_fat_tails_returns_distribution(price_history):
+    log_returns = np.log(np.diff(price_history))
+    plt.figure(figsize=(10, 10))
+    ii = np.isfinite(log_returns) # getting rid of NaN values
+    log_returns = log_returns[ii]
+    sns.distplot(log_returns)
+    returns_mean = np.mean(log_returns)
+    returns_std_dev = np.std(log_returns)
+    gaussian_dist = np.random.normal(returns_mean, returns_std_dev, 50)
+    sns.distplot(gaussian_dist)
+    plt.legend(["Returns Distribution", "Gaussian Distribution"], fontsize=20)
+    plt.show()
+
+
+
+def calculate_log_returns(price_history):
+    price_history = np.array(price_history)
+    percentage_change = pct_change(price_history)
+    log_returns = np.log(1 + percentage_change)  # log returns are simply the natural log of 1 plus the arithmetic
+    return log_returns
+
+
+

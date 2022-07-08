@@ -84,7 +84,7 @@ class SimulationClass:
     @staticmethod
     def plot_agent_network_evolution(agent_network_evolution_dict, threshold):
         rows = int(len(agent_network_evolution_dict) / 2)
-        fig, axs = plt.subplots(rows + 1, 2, figsize=(20, 20))
+        fig, axs = plt.subplots(rows + 1, 2, figsize=(20, 16))
         i = 0
         for week, network in agent_network_evolution_dict.items():
             if week % 2 == 0:
@@ -94,6 +94,8 @@ class SimulationClass:
             visualise_network(network, threshold, week, axs[i, column])
             if week % 2 != 0:
                 i += 1  # only increase row number after visualising the network
+        fig.delaxes(axs[i, 1])
+        plt.savefig("agent_network_evolution")
         plt.show()
 
     def update_agent_commitment(self):
@@ -228,18 +230,20 @@ class SimulationClass:
 
         self.run_all_plots(market_environment, all_commitments_each_round, average_commitment_history,
                            commitment_changes, hedge_fund_decision_dict, demand_dict, df_data,
-                           options_bought_history)
+                           options_bought_history, agent_network_evolution_dict)
 
 
 
     def run_all_plots(self, market_environment, all_commitments_each_round, average_commitment_history,
                       commitment_changes, hedge_fund_decision_dict,
-                      demand_dict, df_data, options_bought_history):
+                      demand_dict, df_data, options_bought_history,
+                      agent_network_evolution_dict):
         ### PLOTTING FUNCTIONS
         plot_all_commitments(all_commitments_each_round, self.N_agents, average_commitment_history,
                              "Evolution of all agent commitments")
 
-        #        self.plot_agent_network_evolution(agent_network_evolution_dict, threshold)
+        network_evolution_threshold = 0.65
+        self.plot_agent_network_evolution(agent_network_evolution_dict, network_evolution_threshold)
 
         # simple_line_plot(average_commitment_history, "Trading Day", "Average Commitment",
         #                  "Average Commitment Evolution")
@@ -254,15 +258,13 @@ class SimulationClass:
 
         market_environment.plot_price_history("Price evolution during simulation")
 
-        # scale_and_plot(list(market_environment.simulation_history.values()), average_commitment_history,
-        #                "Scaled price and commitment evolution")
-
         barplot_options_bought(list(market_environment.simulation_history.keys()), options_bought_history)
+
+        observe_fat_tails_returns_distribution(list(market_environment.simulation_history.values()))
 
 
 if __name__ == '__main__':
     sns.set_style("darkgrid")
-    sns.set_palette("Set2")
 
     gme_ticker = "GME"
     gme = yf.Ticker(gme_ticker)

@@ -136,18 +136,18 @@ def log_log_plot(author_values, xlabel, ylabel, title):
 
 
 def plot_all_commitments(all_commitments_each_round, number_of_agents, average_commitment_history, title):
-    plt.figure(figsize=(10, 10))
+    plt.figure(figsize=(8, 8))
     x = []
     for i in range(len(all_commitments_each_round)):
         x.append(i)
         all_commitments_each_round[i] = all_commitments_each_round[i][:number_of_agents]
     plt.plot(x, all_commitments_each_round)
     plt.plot(average_commitment_history, 'bo', label='Average commitment across the network')
-    plt.xlabel("Trading Day")
-    plt.ylabel("Commitment Values")
+    plt.xlabel("Trading Day", fontsize=16)
+    plt.ylabel("Commitment Values", fontsize=16)
     plt.title(title, fontsize=20)
+    plt.legend(loc='upper right')
     plt.savefig("../images/" + title)
-    plt.legend()
     plt.show()
 
 
@@ -190,7 +190,7 @@ def plot_institutional_investors_decisions(decision_dict, dates):
 
 
 def visualise_network(G, threshold, title, axs, use_graph_tool=False):
-    fig = plt.figure(figsize=(12, 11))
+    fig = plt.figure(figsize=(8, 8))
     if use_graph_tool:
         graph = nx2gt(G)
         deg = graph.degree_property_map("total")  # undirected graph so we are only working with total degrees
@@ -209,8 +209,8 @@ def visualise_network(G, threshold, title, axs, use_graph_tool=False):
     nx.draw_networkx(G, pos=nx.spring_layout(G, k=0.99), nodelist=G.nodes(), node_size=[v * 10 for v in degree_values],
                      with_labels=False,
                      node_color='lightgreen', alpha=0.6, ax=axs)
-    axs.set_title("Network of users with average commitment > " + str(threshold) + " week " + str(title))
-    axs.title.set_size(20)
+    axs.set_title("Network of users with average commitment > " + str(threshold) + " period " + str(title))
+    axs.title.set_size(22)
 
 
 def scale_and_plot(first_array, second_array, title):
