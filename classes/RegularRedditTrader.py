@@ -62,8 +62,8 @@ class RegularRedditTrader(RedditTrader):
 
     def act_if_trading_halted(self, current_price, price_history, white_noise):
         if self.has_trading_been_halted:
-            if self.commitment > 0.5: # 0.3 / 0.4
-                self.demand += self.commitment
+            if self.commitment > 0.5:  # 0.3 / 0.4
+                self.demand = self.commitment
             else:
                 if self.investor_type == RedditInvestorTypes.LONGTERM:
                     fundamental_price = 10  # in this case, our reddit agent will act rationally and consider the
@@ -72,7 +72,7 @@ class RegularRedditTrader(RedditTrader):
                 elif self.investor_type == RedditInvestorTypes.RATIONAL_SHORT_TERM:
                     expected_price = self.compute_price_expectation_chartist(current_price, price_history, white_noise)
                     if expected_price > current_price:
-                        self.demand = self.commitment
+                        self.demand += abs(self.commitment)
                     else:
                         self.demand -= self.commitment
 
@@ -84,14 +84,14 @@ class RegularRedditTrader(RedditTrader):
 
     def make_decision(self, average_network_commitment, current_price, price_history, white_noise, trading_halted):
         #  if agent out of trade, then stay out
-        commitment_scaler = 0.95
+        commitment_scaler = 0.9
         if trading_halted:
             self.act_if_trading_halted(current_price, price_history, white_noise)
             return
         if self.bought_option:  # not doing anything if we have bought an option already
             return
         self.compute_price_expectation_chartist(current_price, price_history, white_noise)
-        if self.commitment > 0.6 and average_network_commitment > 0.6:
+        if self.commitment > 0.6 and average_network_commitment > 0.624:
             self.demand = 100 * self.commitment  # buys options
             print("Bought option")
             self.bought_option = True
