@@ -221,9 +221,10 @@ class SimulationClass:
                 print("Average Network Commitment: ", average_network_commitment)
                 print("Finished Trading Day ", trading_day)
 
-                if trading_day == 66 and halt_trading:
+                halt_trading_threshold = 0.97
+                if volume >= halt_trading_threshold * self.N_agents and halt_trading:
                     agent_ids_to_be_deleted = self.halt_trading(commitment_threshold=0.65,
-                                                                commitment_lower_upper=[0.12, 0.25])
+                                                                commitment_lower_upper=[0.12, 0.2])
                     print("Trading halted")
                 print()
         extract_weekend_data_effect(market_environment.simulation_history)
@@ -262,6 +263,10 @@ class SimulationClass:
 
         observe_fat_tails_returns_distribution(list(market_environment.simulation_history.values()))
 
+        observe_volatility_clustering(list(market_environment.simulation_history.values()))
+
+        observe_autocorrelation_abs_returns(list(market_environment.simulation_history.values()))
+
 
 if __name__ == '__main__':
     sns.set_style("darkgrid")
@@ -274,7 +279,7 @@ if __name__ == '__main__':
     start_date = datetime.datetime(2020, 12, 8)
     market_environment = MarketEnvironment(initial_price=16.35, name="GME Market Environment",
                                            price_history=gme_price_history, start_date=start_date)
-    simulation = SimulationClass(time_steps=100, N_agents=10000, N_institutional_investors=200, m=4,
+    simulation = SimulationClass(time_steps=100, N_agents=10000, N_institutional_investors=400, m=4,
                                  market_environment=market_environment)
     simulation.run_simulation(halt_trading=True)
 
