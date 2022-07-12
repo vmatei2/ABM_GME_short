@@ -132,7 +132,7 @@ class SimulationClass:
         if self.market_environment.date.weekday() in [5, 6]:  # Saturday or Sunday:
             self.market_environment.update_day()
             return
-        white_noise = random.uniform(-2, 2)
+        white_noise = random.uniform(-1, 1)
         participating_agents = self.market_environment.select_participating_agents(average_network_commitment,
                                                                                    self.social_media_agents)
         volume = len(participating_agents)
@@ -221,7 +221,7 @@ class SimulationClass:
                 print("Average Network Commitment: ", average_network_commitment)
                 print("Finished Trading Day ", trading_day)
 
-                if trading_day == 60 and halt_trading:
+                if trading_day == 66 and halt_trading:
                     agent_ids_to_be_deleted = self.halt_trading(commitment_threshold=0.65,
                                                                 commitment_lower_upper=[0.12, 0.25])
                     print("Trading halted")
