@@ -1,7 +1,7 @@
 import matplotlib.pyplot as plt
 import numpy as np
 import seaborn as sns
-
+from statsmodels.graphics.tsaplots import plot_acf
 
 def extract_weekend_data_effect(simulation_history):
     returns_dictionary = {}
@@ -62,25 +62,17 @@ def pct_change(nparray):
 
 
 def observe_fat_tails_returns_distribution(price_history):
-    log_returns = np.log(np.diff(price_history))
+    # arithmetic returns
+    log_returns_stack = np.diff(np.log(price_history))
     plt.figure(figsize=(10, 10))
-    ii = np.isfinite(log_returns) # getting rid of NaN values
-    log_returns = log_returns[ii]
-    sns.distplot(log_returns)
-    returns_mean = np.mean(log_returns)
-    returns_std_dev = np.std(log_returns)
+    sns.distplot(log_returns_stack)
+    returns_mean = np.mean(log_returns_stack)
+    returns_std_dev = np.std(log_returns_stack)
     gaussian_dist = np.random.normal(returns_mean, returns_std_dev, 50)
     sns.distplot(gaussian_dist)
     plt.legend(["Returns Distribution", "Gaussian Distribution"], fontsize=20)
     plt.show()
 
-
-
-def calculate_log_returns(price_history):
-    price_history = np.array(price_history)
-    percentage_change = pct_change(price_history)
-    log_returns = np.log(1 + percentage_change)  # log returns are simply the natural log of 1 plus the arithmetic
-    return log_returns
 
 
 def plot_simulation_against_real_values(simulation_values, real_values):
@@ -93,4 +85,29 @@ def plot_simulation_against_real_values(simulation_values, real_values):
     plt.plot(real_values, 'g')
     plt.title("Simulation price vs Observed price", fontsize=22)
     plt.legend(["Simulated Price", "Real Price"])
+    plt.show()
+
+
+def observe_volatility_clustering(price_history):
+    log_returns = np.diff(np.log(price_history))
+    price_history = np.array(price_history)
+    diff = price_history[1:] - price_history[:-1]
+    pct_changes = diff / price_history[1:] * 100
+    plt.figure(figsize=(10, 10))
+    plt.plot(pct_changes)
+    plt.xlabel("Trading Day", fontsize=20)
+    plt.ylabel("Log returns (%)", fontsize=20)
+    plt.title("Log returns plot", fontsize=20)
+    plt.xticks(fontsize=18)
+    plt.yticks(fontsize=18)
+    plt.show()
+
+
+def observe_autocorrelation_abs_returns(price_history):
+    returns = np.diff(np.log(price_history))
+    returns = returns ** 2
+    plt.figure(figsize=(10, 10))
+    plot_acf(returns, lags=50)
+    plt.title("Autocorrelation of returns", fontsize=20)
+    plt.xlabel("Lag", fontsize=18)
     plt.show()
