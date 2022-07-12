@@ -267,6 +267,7 @@ class SimulationClass:
 
         observe_autocorrelation_abs_returns(list(market_environment.simulation_history.values()))
 
+        observe_antileverage_effect(list(market_environment.simulation_history.values()))
 
 if __name__ == '__main__':
     sns.set_style("darkgrid")

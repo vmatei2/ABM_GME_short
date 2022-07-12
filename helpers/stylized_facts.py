@@ -3,6 +3,9 @@ import numpy as np
 import seaborn as sns
 from statsmodels.graphics.tsaplots import plot_acf
 
+from helpers.calculations_helpers import rescale_array
+
+
 def extract_weekend_data_effect(simulation_history):
     returns_dictionary = {}
     price_history = list(simulation_history.values())
@@ -107,7 +110,34 @@ def observe_autocorrelation_abs_returns(price_history):
     returns = np.diff(np.log(price_history))
     returns = returns ** 2
     plt.figure(figsize=(10, 10))
-    plot_acf(returns, lags=50)
+    plot_acf(returns, lags=70)
     plt.title("Autocorrelation of returns", fontsize=20)
     plt.xlabel("Lag", fontsize=18)
+    plt.show()
+
+
+def observe_antileverage_effect(price_history):
+    """
+    Anti-leverage effect is simply the opposite of the leverage effect (prices fall as volatility rises)
+    and has been defined in "Does the short-squeeze lead to market abnormality and antileverage effect?"
+    :param price_history:
+    :return:
+    """
+    returns = np.diff(np.log(price_history))
+    volatility_list = []
+    window_length = 5
+    for timestep in range(len(price_history)):
+        sub_price_history = price_history[timestep: timestep + window_length]
+        mean_i = np.mean(sub_price_history)
+        vol_i = (np.sum((sub_price_history - mean_i)**2)/ len(sub_price_history)**0.5)
+        volatility_list.append(vol_i)
+    returns = rescale_array(returns)
+    volatility_list = rescale_array(volatility_list)
+    plt.figure(figsize=(10, 10))
+    plt.plot(returns, 'g')
+    plt.plot(volatility_list, 'r')
+    plt.legend["Rescaled Returns", "Rescaled Volatility"]
+    plt.title("Observing antileverage effect in the simulation", fontsize=20)
+    plt.xlabel("Trading Day", fontsize=16)
+    plt.ylabel("Rescaled y axis", fontsize=16)
     plt.show()
