@@ -91,7 +91,7 @@ class RegularRedditTrader(RedditTrader):
         if self.bought_option:  # not doing anything if we have bought an option already
             return
         self.compute_price_expectation_chartist(current_price, price_history, white_noise)
-        if self.commitment > 0.6 and average_network_commitment > 0.58:
+        if self.commitment > 0.6 and average_network_commitment > 0.6:
             self.demand = 100 * self.commitment  # buys options
             print("Bought option")
             self.bought_option = True
