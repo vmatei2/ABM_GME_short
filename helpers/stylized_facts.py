@@ -83,4 +83,12 @@ def calculate_log_returns(price_history):
     return log_returns
 
 
-
+def plot_simulation_against_real_values(simulation_values, real_values):
+    plt.figure(figsize=(10, 10))
+    plt.xlabel("Date", fontsize=20)
+    plt.ylabel("Price", fontsize=20)
+    plt.plot(simulation_values, 'r')
+    plt.plot(real_values, 'g')
+    plt.title("Simulation price vs Observed price", fontsize=22)
+    plt.legend(["Simulated Price", "Real Price"])
+    plt.show()

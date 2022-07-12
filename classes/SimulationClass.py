@@ -78,7 +78,7 @@ class SimulationClass:
     def create_institutional_investors(self):
         institutional_investors = {}
         for i in range(self.N_institutional_investors):
-            institutional_investors[i] = InstitutionalInvestor(i, demand=-1, fundamental_price=1)
+            institutional_investors[i] = InstitutionalInvestor(i, demand=-100, fundamental_price=1)
         return institutional_investors
 
     @staticmethod
@@ -277,3 +277,7 @@ if __name__ == '__main__':
     simulation = SimulationClass(time_steps=100, N_agents=10000, N_institutional_investors=200, m=4,
                                  market_environment=market_environment)
     simulation.run_simulation(halt_trading=True)
+
+    gme_price_history = get_price_history(gme, "2020-11-15", "2021-02-10")
+    gme_price_history = gme_price_history["Close"].to_list()
+    plot_simulation_against_real_values(list(market_environment.simulation_history.values()), gme_price_history)
