@@ -136,7 +136,7 @@ def observe_antileverage_effect(price_history):
     plt.figure(figsize=(10, 10))
     plt.plot(returns, 'g')
     plt.plot(volatility_list, 'r')
-    plt.legend["Rescaled Returns", "Rescaled Volatility"]
+    plt.legend(["Rescaled Returns", "Rescaled Volatility"], fontsize=14)
     plt.title("Observing antileverage effect in the simulation", fontsize=20)
     plt.xlabel("Trading Day", fontsize=16)
     plt.ylabel("Rescaled y axis", fontsize=16)
