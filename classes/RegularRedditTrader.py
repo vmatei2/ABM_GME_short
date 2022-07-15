@@ -84,7 +84,7 @@ class RegularRedditTrader(RedditTrader):
 
     def make_decision(self, average_network_commitment, current_price, price_history, white_noise, trading_halted):
 
-        commitment_scaler = 0.9
+        commitment_scaler = 1.1
         if trading_halted:
             self.act_if_trading_halted(current_price, price_history, white_noise)
             return
@@ -98,11 +98,15 @@ class RegularRedditTrader(RedditTrader):
         elif self.commitment > 0.5:
             self.demand = commitment_scaler * self.commitment  # slightly committed, still considers technical analysis
         elif self.commitment < 0.5:
-            expected_price = self.compute_price_expectation_chartist(current_price, price_history, white_noise)
-            if expected_price > current_price and self.investor_type == RedditInvestorTypes.RATIONAL_SHORT_TERM:
+            if self.investor_type == RedditInvestorTypes.RATIONAL_SHORT_TERM:
+                expected_price = self.compute_price_expectation_chartist(current_price, price_history, white_noise)
+            elif self.investor_type == RedditInvestorTypes.LONGTERM:
+                expected_price = 10 # introduce fundamental pricing formula calculation here
+            if expected_price > current_price:
                 self.demand += commitment_scaler * self.commitment
-            elif expected_price < current_price and self.investor_type == RedditInvestorTypes.RATIONAL_SHORT_TERM:
+            elif expected_price < current_price:
                 self.demand -= commitment_scaler * self.commitment
+
          #  self.demand -= self.commitment * commitment_scaler
         if self.demand != 0:
             self.demand_history.append(self.demand)
