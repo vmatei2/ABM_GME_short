@@ -277,7 +277,7 @@ if __name__ == '__main__':
     gme = yf.Ticker(gme_ticker)
     gme_price_history = get_price_history(gme, "2020-11-15", "2020-12-08")
     gme_price_history = gme_price_history["Close"].to_list()
-    n_simulations = 5
+    n_simulations = 3
     simulation_prices = []
 
     for i in range(n_simulations):
@@ -298,3 +298,4 @@ if __name__ == '__main__':
 
     average_simulation_prices = average_price_history(simulation_prices)
     observe_autocorrelation_abs_returns(average_simulation_prices)
+    observe_fat_tails_returns_distribution(average_simulation_prices)

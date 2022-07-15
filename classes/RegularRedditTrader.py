@@ -100,7 +100,10 @@ class RegularRedditTrader(RedditTrader):
             self.demand = commitment_scaler * self.commitment  # slightly committed, still considers technical analysis
 #
         elif self.commitment < 0.3:
-            self.demand -= self.commitment * commitment_scaler
+            current_demand = self.demand / (1 / self.commitment)  # demand becomes a function of the agent's current
+            # commitmemnt
+            self.demand = -current_demand
+         #  self.demand -= self.commitment * commitment_scaler
             print("agent demand is 0, expects stock to go down")
         if self.demand != 0:
             self.demand_history.append(self.demand)

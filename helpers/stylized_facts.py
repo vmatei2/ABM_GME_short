@@ -2,7 +2,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import seaborn as sns
 from statsmodels.graphics.tsaplots import plot_acf
-
+from statsmodels.api import qqplot, qqplot_2samples
 from helpers.calculations_helpers import rescale_array
 
 
@@ -74,6 +74,10 @@ def observe_fat_tails_returns_distribution(price_history):
     gaussian_dist = np.random.normal(returns_mean, returns_std_dev, 50)
     sns.distplot(gaussian_dist)
     plt.legend(["Returns Distribution", "Gaussian Distribution"], fontsize=20)
+    plt.show()
+    plt.figure(figsize=(10, 10))
+    qqplot(log_returns_stack, line='45')
+    plt.title("Quantile-Quantile returns plot", fontsize=20)
     plt.show()
 
 
