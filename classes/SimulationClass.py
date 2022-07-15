@@ -78,7 +78,7 @@ class SimulationClass:
     def create_institutional_investors(self):
         institutional_investors = {}
         for i in range(self.N_institutional_investors):
-            institutional_investors[i] = InstitutionalInvestor(i, demand=-100, fundamental_price=1)
+            institutional_investors[i] = InstitutionalInvestor(i, demand=-200, fundamental_price=1)
         return institutional_investors
 
     @staticmethod
@@ -173,7 +173,6 @@ class SimulationClass:
         commitment_changes = []
         volume_history = []
         options_bought_history = []
-        agent_ids_to_be_deleted = []
         demand_dict = {'retail': [], 'institutional': []}
         hedge_fund_decision_dict = {}
         df_data = []  # used in plotting the commitments on separate bar charts and different values
@@ -229,11 +228,12 @@ class SimulationClass:
                 print()
         extract_weekend_data_effect(market_environment.simulation_history)
 
-        self.run_all_plots(market_environment, all_commitments_each_round, average_commitment_history,
-                           commitment_changes, hedge_fund_decision_dict, demand_dict, df_data,
-                           options_bought_history, agent_network_evolution_dict)
+        # self.run_all_plots(market_environment, all_commitments_each_round, average_commitment_history,
+        #                    commitment_changes, hedge_fund_decision_dict, demand_dict, df_data,
+        #                    options_bought_history, agent_network_evolution_dict)
+        simulated_price = list(market_environment.simulation_history.values())
 
-
+        return simulated_price
 
     def run_all_plots(self, market_environment, all_commitments_each_round, average_commitment_history,
                       commitment_changes, hedge_fund_decision_dict,
@@ -269,6 +269,7 @@ class SimulationClass:
 
         observe_antileverage_effect(list(market_environment.simulation_history.values()))
 
+
 if __name__ == '__main__':
     sns.set_style("darkgrid")
 
@@ -276,14 +277,24 @@ if __name__ == '__main__':
     gme = yf.Ticker(gme_ticker)
     gme_price_history = get_price_history(gme, "2020-11-15", "2020-12-08")
     gme_price_history = gme_price_history["Close"].to_list()
+    n_simulations = 5
+    simulation_prices = []
 
-    start_date = datetime.datetime(2020, 12, 8)
-    market_environment = MarketEnvironment(initial_price=16.35, name="GME Market Environment",
-                                           price_history=gme_price_history, start_date=start_date)
-    simulation = SimulationClass(time_steps=100, N_agents=10000, N_institutional_investors=400, m=4,
-                                 market_environment=market_environment)
-    simulation.run_simulation(halt_trading=True)
+    for i in range(n_simulations):
+        start_date = datetime.datetime(2020, 12, 8)
+        market_environment = MarketEnvironment(initial_price=16.35, name="GME Market Environment",
+                                               price_history=gme_price_history, start_date=start_date)
+        simulation = SimulationClass(time_steps=100, N_agents=10000, N_institutional_investors=200, m=4,
+                                     market_environment=market_environment)
+        prices = simulation.run_simulation(halt_trading=True)
+        simulation_prices.append(prices)
+
+    stop = 0
 
     gme_price_history = get_price_history(gme, "2020-11-15", "2021-02-28")
     gme_price_history = gme_price_history["Close"].to_list()
+
     plot_simulation_against_real_values(list(market_environment.simulation_history.values()), gme_price_history)
+
+    average_simulation_prices = average_price_history(simulation_prices)
+    observe_autocorrelation_abs_returns(average_simulation_prices)

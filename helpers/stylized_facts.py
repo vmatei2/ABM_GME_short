@@ -111,8 +111,10 @@ def observe_autocorrelation_abs_returns(price_history):
     returns = returns ** 2
     plt.figure(figsize=(10, 10))
     plot_acf(returns, lags=70)
+    plt.ylabel("Correlation value", fontsize=18)
     plt.title("Autocorrelation of returns", fontsize=20)
     plt.xlabel("Lag", fontsize=18)
+    plt.savefig("../images/returns_autocorrelation.jpg")
     plt.show()
 
 
@@ -141,3 +143,9 @@ def observe_antileverage_effect(price_history):
     plt.xlabel("Trading Day", fontsize=16)
     plt.ylabel("Rescaled y axis", fontsize=16)
     plt.show()
+
+
+def average_price_history(simulated_prices):
+    prices_as_arrays = [np.array(x) for x in simulated_prices]
+    average_price_values = [np.mean(k) for k in zip(*prices_as_arrays)]
+    return average_price_values
