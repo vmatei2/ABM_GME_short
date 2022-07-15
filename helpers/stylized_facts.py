@@ -67,17 +67,22 @@ def pct_change(nparray):
 def observe_fat_tails_returns_distribution(price_history):
     # arithmetic returns
     log_returns_stack = np.diff(np.log(price_history))
-    plt.figure(figsize=(10, 10))
+    plt.figure(figsize=(7, 10))
     sns.distplot(log_returns_stack)
     returns_mean = np.mean(log_returns_stack)
     returns_std_dev = np.std(log_returns_stack)
     gaussian_dist = np.random.normal(returns_mean, returns_std_dev, 50)
     sns.distplot(gaussian_dist)
-    plt.legend(["Returns Distribution", "Gaussian Distribution"], fontsize=20)
+    plt.legend(["Returns Distribution", "Gaussian Distribution"], fontsize=18)
+    plt.title("Returns Distribution against Gaussian Distribution", fontsize=20)
+    plt.yticks(fontsize=14)
+    plt.xticks(fontsize=14)
+    plt.savefig("../images/returns_dist_against_gaussian")
     plt.show()
-    plt.figure(figsize=(10, 10))
+    plt.figure(figsize=(7, 10))
     qqplot(log_returns_stack, fit=True, line='q')
     plt.title("Quantile-Quantile returns plot", fontsize=20)
+    plt.savefig("../images/quantile_returns_plot")
     plt.show()
 
 
