@@ -277,7 +277,7 @@ if __name__ == '__main__':
     gme = yf.Ticker(gme_ticker)
     gme_price_history = get_price_history(gme, "2020-11-15", "2020-12-08")
     gme_price_history = gme_price_history["Close"].to_list()
-    n_simulations = 3
+    n_simulations = 1
     simulation_prices = []
 
     for i in range(n_simulations):

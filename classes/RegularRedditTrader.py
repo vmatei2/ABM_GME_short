@@ -83,28 +83,27 @@ class RegularRedditTrader(RedditTrader):
             self.has_trading_been_halted = True
 
     def make_decision(self, average_network_commitment, current_price, price_history, white_noise, trading_halted):
-        #  if agent out of trade, then stay out
+
         commitment_scaler = 0.9
         if trading_halted:
             self.act_if_trading_halted(current_price, price_history, white_noise)
             return
         if self.bought_option:  # not doing anything if we have bought an option already
             return
-        self.compute_price_expectation_chartist(current_price, price_history, white_noise)
         if self.commitment > 0.6 and average_network_commitment > 0.624:
             self.demand = 100 * self.commitment  # buys options
             print("Bought option")
             self.bought_option = True
             return 1
-        elif self.commitment > 0.4:
+        elif self.commitment > 0.5:
             self.demand = commitment_scaler * self.commitment  # slightly committed, still considers technical analysis
-#
-        elif self.commitment < 0.3:
-            current_demand = self.demand / (1 / self.commitment)  # demand becomes a function of the agent's current
-            # commitmemnt
-            self.demand = -current_demand
+        elif self.commitment < 0.5:
+            expected_price = self.compute_price_expectation_chartist(current_price, price_history, white_noise)
+            if expected_price > current_price and self.investor_type == RedditInvestorTypes.RATIONAL_SHORT_TERM:
+                self.demand += commitment_scaler * self.commitment
+            elif expected_price < current_price and self.investor_type == RedditInvestorTypes.RATIONAL_SHORT_TERM:
+                self.demand -= commitment_scaler * self.commitment
          #  self.demand -= self.commitment * commitment_scaler
-            print("agent demand is 0, expects stock to go down")
         if self.demand != 0:
             self.demand_history.append(self.demand)
 

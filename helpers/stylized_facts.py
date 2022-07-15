@@ -76,7 +76,7 @@ def observe_fat_tails_returns_distribution(price_history):
     plt.legend(["Returns Distribution", "Gaussian Distribution"], fontsize=20)
     plt.show()
     plt.figure(figsize=(10, 10))
-    qqplot(log_returns_stack, line='45')
+    qqplot(log_returns_stack, fit=True, line='q')
     plt.title("Quantile-Quantile returns plot", fontsize=20)
     plt.show()
 
