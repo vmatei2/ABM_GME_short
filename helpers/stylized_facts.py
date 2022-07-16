@@ -11,13 +11,18 @@ def extract_weekend_data_effect(simulation_history):
     price_history = list(simulation_history.values())
     price_history = np.array(price_history)
     returns_history = pct_change(price_history)
+    returns_history = np.diff(np.log(price_history))
     monday_returns = []
     friday_returns = []
+    returns_history = np.insert(returns_history, 0, 0)  # inserting first day as 0 to ensure it matches with
+    # simulation_dict as we had no
+    # return for first entry
     i = 0
     for date, price in simulation_history.items():
+
         returns_dictionary[date.date()] = returns_history[i]
         i += 1
-    plt.figure(figsize=(12, 8))
+    plt.figure(figsize=(8, 8))
     dates, returns = zip(*sorted(returns_dictionary.items()))
     returns = np.array(returns)
     dates = list(dates)
@@ -37,7 +42,7 @@ def extract_weekend_data_effect(simulation_history):
             y_offset = 12
             if y < 0:
                 y_offset = -y_offset
-            ax.annotate(y, (x, y), ha='center', va='center', fontsize=7, xytext=(0, y_offset)
+            ax.annotate(y, (x, y), ha='center', va='center', fontsize=8, xytext=(0, y_offset)
                         , textcoords="offset points")
         if x == friday_index:
             y = round(p.get_height(), 4)
@@ -45,14 +50,17 @@ def extract_weekend_data_effect(simulation_history):
             y_offset = 3
             if y < 0:
                 y_offset = -y_offset
-            ax.annotate(y, (x, y), ha='center', va='center', fontsize=7, xytext=(0, y_offset)
+            ax.annotate(y, (x, y), ha='center', va='center', fontsize=8, xytext=(0, y_offset)
                         , textcoords="offset points")
     plt.xticks(rotation=45)
     plt.xlabel("Dates", fontsize=14)
     plt.ylabel("Return Values", fontsize=14)
     plt.title("Returns Across Simulation Days", fontsize=18)
+    plt.savefig("../images/weekend_effect")
     print("Mean Returns of Monday: ", np.mean(monday_returns))
     print("Mean Returns of Friday: ", np.mean(friday_returns))
+    monday_returns.pop(0)
+    print("Correlation coefficient between M and F returns: ", np.corrcoef(monday_returns, friday_returns))
     return returns_dictionary
 
 
@@ -67,7 +75,7 @@ def pct_change(nparray):
 def observe_fat_tails_returns_distribution(price_history):
     # arithmetic returns
     log_returns_stack = np.diff(np.log(price_history))
-    plt.figure(figsize=(7, 10))
+    plt.figure(figsize=(8, 9))
     sns.distplot(log_returns_stack)
     returns_mean = np.mean(log_returns_stack)
     returns_std_dev = np.std(log_returns_stack)
@@ -81,22 +89,23 @@ def observe_fat_tails_returns_distribution(price_history):
     plt.show()
     plt.figure(figsize=(7, 10))
     qqplot(log_returns_stack, fit=True, line='q')
-    plt.title("Quantile-Quantile returns plot", fontsize=20)
+    plt.title("Quantile-Quantile returns plot", fontsize=16)
     plt.savefig("../images/quantile_returns_plot")
     plt.show()
 
 
 
 def plot_simulation_against_real_values(simulation_values, real_values):
-    plt.figure(figsize=(10, 10))
+    plt.figure(figsize=(8, 10))
     plt.xlabel("Trading Day", fontsize=20)
     plt.ylabel("Price", fontsize=20)
     plt.xticks(fontsize=15)
     plt.yticks(fontsize=15)
     plt.plot(simulation_values, 'r')
     plt.plot(real_values, 'g')
-    plt.title("Simulation price vs Observed price", fontsize=22)
+    plt.title("Simulated Price vs Observed price", fontsize=20)
     plt.legend(["Simulated Price", "Real Price"])
+    plt.savefig("../images/simulated_price_against_real")
     plt.show()
 
 

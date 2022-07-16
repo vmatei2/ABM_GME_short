@@ -281,7 +281,7 @@ if __name__ == '__main__':
     simulation_prices = []
 
     for i in range(n_simulations):
-        start_date = datetime.datetime(2020, 12, 8)
+        start_date = datetime.datetime(2020, 12, 7)
         market_environment = MarketEnvironment(initial_price=16.35, name="GME Market Environment",
                                                price_history=gme_price_history, start_date=start_date)
         simulation = SimulationClass(time_steps=100, N_agents=10000, N_institutional_investors=200, m=4,
