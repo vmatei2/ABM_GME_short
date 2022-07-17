@@ -149,17 +149,25 @@ def observe_antileverage_effect(price_history):
     for timestep in range(len(price_history)):
         sub_price_history = price_history[timestep: timestep + window_length]
         mean_i = np.mean(sub_price_history)
-        vol_i = (np.sum((sub_price_history - mean_i)**2)/ len(sub_price_history)**0.5)
+        vol_i = (np.sum((sub_price_history - mean_i)**2)/len(sub_price_history))**0.5
         volatility_list.append(vol_i)
-    returns = rescale_array(returns)
-    volatility_list = rescale_array(volatility_list)
-    plt.figure(figsize=(10, 10))
-    plt.plot(returns, 'g')
-    plt.plot(volatility_list, 'r')
-    plt.legend(["Rescaled Returns", "Rescaled Volatility"], fontsize=14)
-    plt.title("Observing antileverage effect in the simulation", fontsize=20)
-    plt.xlabel("Trading Day", fontsize=16)
-    plt.ylabel("Rescaled y axis", fontsize=16)
+    fig, ax = plt.subplots(figsize=(8, 8))
+    ax.plot(returns, 'g-', label="Returns")
+    ax.set_xlabel("Trading Day", fontsize=15)
+    ax.set_ylabel("Log Returns", fontsize=15)
+    ax2 = ax.twinx()
+    ax2.plot(volatility_list, 'r-', label="Volatility")
+    ax2.set_ylabel("Volatility", fontsize=15)
+
+    handles, labels = [], []
+    for ax in fig.axes:
+        for h, l in zip(*ax.get_legend_handles_labels()):
+            handles.append(h)
+            labels.append(l)
+    plt.legend(handles, labels)
+    plt.title("Observing the anti-leverage effect in the simulation", fontsize=20)
+    plt.tight_layout()
+    plt.savefig("../images/anti_leverage_effect")
     plt.show()
 
 

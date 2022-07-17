@@ -299,3 +299,4 @@ if __name__ == '__main__':
     average_simulation_prices = average_price_history(simulation_prices)
     observe_autocorrelation_abs_returns(average_simulation_prices)
     observe_fat_tails_returns_distribution(average_simulation_prices)
+    observe_antileverage_effect(average_simulation_prices)
