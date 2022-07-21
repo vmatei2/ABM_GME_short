@@ -22,7 +22,8 @@ def get_price_history(ticker, start_date, end_date):
     return price_history
 
 
-def plot_two_df_columns_together(data_frame, first_column, second_column, third_column=None, fourth_column=None, kind=None, rescale=False,
+def plot_two_df_columns_together(data_frame, first_column, second_column, third_column=None, fourth_column=None,
+                                 kind=None, rescale=False,
                                  title=""):
     plt.figure(figsize=(10, 10))
     if rescale:
@@ -171,21 +172,25 @@ def plot_commitment_into_groups(commitment_this_round, title):
     plt.savefig("../images/" + title)
     plt.show()
 
+
 def plot_institutional_investors_decisions(decision_dict, dates):
     short_gme_decisions = []
     close_positions_decisions = []
     for day, decisions in decision_dict.items():
-        short_gme_decisions.append(decisions.count(True)) # sum returns the number of True elements in a boolean array
+        short_gme_decisions.append(decisions.count(True))  # sum returns the number of True elements in a boolean array
         close_positions_decisions.append(decisions.count(False))
 
-    plt.figure(figsize=(10, 10))
+    plt.figure(figsize=(8, 8))
     plt.plot(dates, short_gme_decisions, 'r')
     plt.plot(dates, close_positions_decisions, 'y')
-    plt.xlabel("Trading Day")
-    plt.ylabel("Count")
-    plt.title("Institutional Investor Decisions at each trading day")
-    plt.legend(['Short GME Stock(Take Gamble)', 'Close Short Position(Accept Sure Loss)'])
+    plt.xlabel("Trading Day", fontsize=17)
+    plt.ylabel("Count", fontsize=17)
+    plt.title("Institutional Investor Decisions at each trading day", fontsize=20)
+    plt.legend(['Short GME Stock(Take Gamble)', 'Close Short Position(Accept Sure Loss)'], fontsize=12, loc=6) # 6 = center left location
+    plt.savefig("../images/institutional_inv_decisions")
     plt.show()
+
+
 ####  NETWORK PLOTTING HELPERS
 
 
@@ -223,6 +228,7 @@ def scale_and_plot(first_array, second_array, title):
     plt.ylabel("Value")
     plt.title(title, fontsize=20)
     plt.show()
+
 
 def plot_demand_dictionary(demand_dict, trading_period):
     all_retail_demand = demand_dict['retail']
@@ -302,12 +308,10 @@ def barplot_options_bought(dates, options_bought):
     plt.xlabel("Dates", fontsize=16)
     plt.xticks(rotation=45, fontsize=13)
     plt.yticks(fontsize=13)
-    plt.locator_params(axis='x', nbins=len(dates)/2)
+    plt.locator_params(axis='x', nbins=len(dates) / 2)
     plt.ylabel("Options Volume", fontsize=16)
     plt.title("Option Trading Volume in Simulation", fontsize=18)
     plt.show()
-
-
 
 
 if __name__ == '__main__':
@@ -331,11 +335,10 @@ if __name__ == '__main__':
     one_post_per_day_df = wsb_posts_data.groupby('datetime').last()
     subreddit_subscribers = one_post_per_day_df['subreddit_subscribers'].tolist()
 
-
     date_value, date_counts = extract_values_counts_as_lists(wsb_posts_data, 'datetime', False)
 
     date_post_counts_matching_gme = []
-    subreddit_subscribers_matching_gme = [] # for storing the data where the counts match the gme price evolution
+    subreddit_subscribers_matching_gme = []  # for storing the data where the counts match the gme price evolution
     for i, date in enumerate(date_value):
         if date in gme_dates_as_string:
             date_post_counts_matching_gme.append(date_counts[i])
@@ -344,8 +347,6 @@ if __name__ == '__main__':
     gme_price_history['number_of_posts'] = date_post_counts_matching_gme
     gme_price_history['subreddit_subscribers'] = subreddit_subscribers_matching_gme
 
-
     plot_two_df_columns_together(gme_price_history, first_column="Close", second_column="Volume",
                                  third_column="number_of_posts", kind="area",
                                  rescale=True, title="Rescaled Closing Price, Volume, Number of Posts")
-
