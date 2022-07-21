@@ -84,7 +84,7 @@ class SimulationClass:
     @staticmethod
     def plot_agent_network_evolution(agent_network_evolution_dict, threshold):
         rows = int(len(agent_network_evolution_dict) / 2)
-        fig, axs = plt.subplots(rows + 1, 2, figsize=(20, 16))
+        fig, axs = plt.subplots(rows + 1, 2, figsize=(17, 16))
         i = 0
         for week, network in agent_network_evolution_dict.items():
             if week % 2 == 0:
@@ -228,9 +228,9 @@ class SimulationClass:
                 print()
         extract_weekend_data_effect(market_environment.simulation_history)
 
-        # self.run_all_plots(market_environment, all_commitments_each_round, average_commitment_history,
-        #                    commitment_changes, hedge_fund_decision_dict, demand_dict, df_data,
-        #                    options_bought_history, agent_network_evolution_dict)
+        self.run_all_plots(market_environment, all_commitments_each_round, average_commitment_history,
+                           commitment_changes, hedge_fund_decision_dict, demand_dict, df_data,
+                           options_bought_history, agent_network_evolution_dict)
         simulated_price = list(market_environment.simulation_history.values())
 
         return simulated_price
@@ -300,3 +300,6 @@ if __name__ == '__main__':
     observe_autocorrelation_abs_returns(average_simulation_prices)
     observe_fat_tails_returns_distribution(average_simulation_prices)
     observe_antileverage_effect(average_simulation_prices)
+
+    observe_autocorrelation_abs_returns(gme_price_history, real_gme_price=True)
+    observe_fat_tails_returns_distribution(gme_price_history, real_gme_price=True)

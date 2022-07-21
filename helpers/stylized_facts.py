@@ -72,7 +72,7 @@ def pct_change(nparray):
     return pct
 
 
-def observe_fat_tails_returns_distribution(price_history):
+def observe_fat_tails_returns_distribution(price_history, real_gme_price=False):
     # arithmetic returns
     log_returns_stack = np.diff(np.log(price_history))
     plt.figure(figsize=(8, 9))
@@ -87,10 +87,16 @@ def observe_fat_tails_returns_distribution(price_history):
     plt.xticks(fontsize=14)
     plt.savefig("../images/returns_dist_against_gaussian")
     plt.show()
-    plt.figure(figsize=(7, 10))
+    plt.figure(figsize=(7, 8))
     qqplot(log_returns_stack, fit=True, line='q')
-    plt.title("Quantile-Quantile returns plot", fontsize=16)
-    plt.savefig("../images/quantile_returns_plot")
+    if real_gme_price:
+        title = "Quantile-Quantile plot of empirical GME returns"
+        save_path = "../images/quantile_returns_plot_real_gme.png"
+    else:
+        title = "Quantile-Quantile plot of simulated returns"
+        save_path = "../images/quantile_returns_plot.png"
+    plt.title(title, fontsize=16)
+    plt.savefig(save_path)
     plt.show()
 
 
@@ -124,15 +130,21 @@ def observe_volatility_clustering(price_history):
     plt.show()
 
 
-def observe_autocorrelation_abs_returns(price_history):
+def observe_autocorrelation_abs_returns(price_history, real_gme_price=False):
     returns = np.diff(np.log(price_history))
     returns = returns ** 2
-    plt.figure(figsize=(10, 10))
-    plot_acf(returns, lags=70)
+    plt.figure(figsize=(7, 8))
+    plot_acf(returns, lags=68)
     plt.ylabel("Correlation value", fontsize=18)
-    plt.title("Autocorrelation of returns", fontsize=20)
+    if real_gme_price:
+        title = "Autocorelation of returns GME empirical price"
+        save_path = "../images/returns_autocorrelation_GME_emp.jpg"
+    else:
+        title = "Autocorrelation of returns simulated price"
+        save_path = "../images/returns_autocorrelationp.jpg"
+    plt.title(title, fontsize=20)
     plt.xlabel("Lag", fontsize=18)
-    plt.savefig("../images/returns_autocorrelation.jpg")
+    plt.savefig(save_path)
     plt.show()
 
 
@@ -164,7 +176,7 @@ def observe_antileverage_effect(price_history):
         for h, l in zip(*ax.get_legend_handles_labels()):
             handles.append(h)
             labels.append(l)
-    plt.legend(handles, labels)
+    plt.legend(handles, labels, fontsize=19)
     plt.title("Observing the anti-leverage effect in the simulation", fontsize=20)
     plt.tight_layout()
     plt.savefig("../images/anti_leverage_effect")
