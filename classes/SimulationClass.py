@@ -31,19 +31,20 @@ def store_commitment_values_split_into_groups(commitment_this_round, trading_day
 
 
 class SimulationClass:
-    def __init__(self, time_steps, N_agents, N_institutional_investors, m, market_environment):
+    def __init__(self, time_steps, N_agents, N_institutional_investors, m, market_environment, miu, commitment_scaler):
         self.N_agents = N_agents  # number of participating retail traders in the simulation
         self.N_institutional_investors = N_institutional_investors
         self.m = m  # number of edges to attach from a new node to existing nodes
         self.time_steps = time_steps
         self.tau = int((N_agents / 2) * time_steps)  # parameter for updating the opinion profile of the population
         self.market_environment = market_environment
+        self.miu = miu  # opinion diffusion scaler
+        self.commitment_scaler = commitment_scaler
         self.social_media_agents, self.average_degree = self.create_initial_network()  # the initial network of social media agents,
         # we already have a few central nodes network is set to increase in size and add new agents throughout the
         # simulation
         self.institutional_investors = self.create_institutional_investors()
         self.trading_halted = False
-        self.miu = 0.17  # initial miu value
 
     def create_initial_network(self):
         barabasi_albert_network = nx.barabasi_albert_graph(n=self.N_agents, m=self.m, seed=2)
@@ -60,7 +61,8 @@ class SimulationClass:
                 investor_type = [RedditInvestorTypes.LONGTERM, RedditInvestorTypes.RATIONAL_SHORT_TERM]
                 investor_type_probabilities = [0.5, 0.5]
                 agent = RegularRedditTrader(id=node_id, neighbours_ids=node_neighbours,
-                                            investor_type=random.choices(investor_type, investor_type_probabilities)[0])
+                                            investor_type=random.choices(investor_type, investor_type_probabilities)[0],
+                                            commitment_scaler=self.commitment_scaler)
             social_media_agents[node_id] = agent
         degree_values = [v for k, v in sorted_node_degree_pairs]
         average_degree = sum(degree_values) / barabasi_albert_network.number_of_nodes()
@@ -285,7 +287,7 @@ if __name__ == '__main__':
         market_environment = MarketEnvironment(initial_price=16.35, name="GME Market Environment",
                                                price_history=gme_price_history, start_date=start_date)
         simulation = SimulationClass(time_steps=100, N_agents=10000, N_institutional_investors=200, m=4,
-                                     market_environment=market_environment)
+                                     market_environment=market_environment, miu=0.17, commitment_scaler=1.1)
         prices = simulation.run_simulation(halt_trading=True)
         simulation_prices.append(prices)
 

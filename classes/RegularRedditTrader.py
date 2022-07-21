@@ -5,7 +5,7 @@ import numpy as np
 
 
 class RegularRedditTrader(RedditTrader):
-    def __init__(self, id, neighbours_ids, commitment=None, investor_type=None):
+    def __init__(self, id, neighbours_ids, commitment=None, investor_type=None, commitment_scaler=None):
         demand = 0  # an agent's initial demand
         if commitment is None:
             commitment = random.uniform(0.3, 0.5)  # normal random distribution with mean = 0 and std deviation = 1
@@ -15,6 +15,7 @@ class RegularRedditTrader(RedditTrader):
         self.b = random.uniform(-1, 1)  # a parameter which gives the strength of the force calculated as simply (
         # current price - moving_average)
         self.expected_price = 0
+        self.commitment_scaler = commitment_scaler
         self.has_closed_position = False  # variable to replicate how, after commitment going down, if the agent sells
         # then he is completely out, believing the market to be rigged
         self.demand_history = []
@@ -61,12 +62,11 @@ class RegularRedditTrader(RedditTrader):
             self.commitment = min(updated_commitment, 1)
 
     def act_if_trading_halted(self, current_price, price_history, white_noise):
-        commitment_scaler = 1.1
         if self.has_trading_been_halted:
             if self.commitment > 0.5:  # 0.3 / 0.4
-                self.demand = commitment_scaler * self.commitment
+                self.demand = self.commitment_scaler * self.commitment
             else:
-                self.decision_based_on_personal_strategy(current_price, price_history, white_noise, commitment_scaler)
+                self.decision_based_on_personal_strategy(current_price, price_history, white_noise)
 
         if not self.has_trading_been_halted:
             current_demand = self.demand / (1 / self.commitment)  # demand becomes a function of the agent's current
@@ -75,25 +75,24 @@ class RegularRedditTrader(RedditTrader):
             self.has_trading_been_halted = True
 
 
-    def decision_based_on_personal_strategy(self, current_price, price_history, white_noise, commitment_scaler):
+    def decision_based_on_personal_strategy(self, current_price, price_history, white_noise):
         if self.investor_type == RedditInvestorTypes.RATIONAL_SHORT_TERM:
             expected_price = self.compute_price_expectation_chartist(current_price, price_history, white_noise)
             if expected_price > current_price:
-                self.demand += commitment_scaler * self.commitment
+                self.demand += self.commitment_scaler * self.commitment
             else:
-                self.demand -= commitment_scaler * self.commitment
+                self.demand -= self.commitment_scaler * self.commitment
         elif self.investor_type == RedditInvestorTypes.LONGTERM:
             expected_price = 10  # introduce fundamentalist pricing formula calculation here
             if expected_price < current_price:
-                self.demand = -self.commitment * commitment_scaler
+                self.demand = -self.commitment * self.commitment_scaler
             elif expected_price > current_price:
-                self.demand += self.commitment * commitment_scaler
+                self.demand += self.commitment * self.commitment_scaler
 
 
 
     def make_decision(self, average_network_commitment, current_price, price_history, white_noise, trading_halted):
 
-        commitment_scaler = 1.1
         if trading_halted:
             self.act_if_trading_halted(current_price, price_history, white_noise)
             return
@@ -105,9 +104,9 @@ class RegularRedditTrader(RedditTrader):
             self.bought_option = True
             return
         elif self.commitment > 0.5:
-            self.demand = commitment_scaler * self.commitment  # slightly committed, still considers technical analysis
+            self.demand = self.commitment_scaler * self.commitment  # slightly committed, still considers technical analysis
         elif self.commitment < 0.5:
-            self.decision_based_on_personal_strategy(current_price, price_history, white_noise, commitment_scaler)
+            self.decision_based_on_personal_strategy(current_price, price_history, white_noise)
         if self.demand != 0:
             self.demand_history.append(self.demand)
 
