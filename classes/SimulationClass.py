@@ -244,7 +244,7 @@ class SimulationClass:
                              "Evolution of all agent commitments")
 
         network_evolution_threshold = 0.65
-        self.plot_agent_network_evolution(agent_network_evolution_dict, network_evolution_threshold)
+        # self.plot_agent_network_evolution(agent_network_evolution_dict, network_evolution_threshold)
 
         # simple_line_plot(average_commitment_history, "Trading Day", "Average Commitment",
         #                  "Average Commitment Evolution")
