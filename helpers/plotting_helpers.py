@@ -209,7 +209,8 @@ def visualise_network(G, threshold, title, axs, use_graph_tool=False):
     nx.draw_networkx(G, pos=nx.spring_layout(G, k=0.99), nodelist=G.nodes(), node_size=[v * 10 for v in degree_values],
                      with_labels=False,
                      node_color='lightgreen', alpha=0.6, ax=axs)
-    axs.set_title("Network of users with average commitment > " + str(threshold) + " period " + str(title))
+    title = title + 1
+    axs.set_title("Network of users (commitment > " + str(threshold) + ") period " + str(title))
     axs.title.set_size(22)
 
 
