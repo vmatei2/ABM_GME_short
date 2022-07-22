@@ -7,6 +7,7 @@ import seaborn as sns
 import yfinance as yf
 
 from classes.RedditInvestorTypes import RedditInvestorTypes
+from classes.SensitivityAnalysis import calculate_rmse, plot_sens_analysis_results, write_results_dict_to_file
 from helpers.calculations_helpers import split_commitment_into_groups
 from helpers.stylized_facts import *
 from helpers.network_helpers import get_sorted_degree_values, gather_commitment_values, \
@@ -145,8 +146,8 @@ class SimulationClass:
             if isinstance(agent, InfluentialRedditUser):
                 agent.make_decision(average_network_commitment, threshold)
             else:
-                decision = agent.make_decision(average_network_commitment, market_environment.current_price,
-                                               market_environment.price_history, white_noise, self.trading_halted)
+                decision = agent.make_decision(average_network_commitment, self.market_environment.current_price,
+                                               self.market_environment.price_history, white_noise, self.trading_halted)
                 if decision == 1:  # above function returns 1 when agent buys option
                     options_bought += 1
         # for agent_id in participating_agents:
@@ -161,7 +162,7 @@ class SimulationClass:
             decision = institutional_inv_agent.make_decision(self.market_environment.current_price,
                                                              self.market_environment.price_history)
             institutional_inv_decision_dict[trading_day].append(decision)
-        demand_from_retail, demand_from_hf = market_environment.update_market(participating_agents,
+        demand_from_retail, demand_from_hf = self.market_environment.update_market(participating_agents,
                                                                               self.institutional_investors)
         return volume, demand_from_retail, demand_from_hf, options_bought
 
@@ -228,12 +229,12 @@ class SimulationClass:
                                                                 commitment_lower_upper=[0.12, 0.2])
                     print("Trading halted")
                 print()
-        extract_weekend_data_effect(market_environment.simulation_history)
+        extract_weekend_data_effect(self.market_environment.simulation_history)
 
-        self.run_all_plots(market_environment, all_commitments_each_round, average_commitment_history,
-                           commitment_changes, hedge_fund_decision_dict, demand_dict, df_data,
-                           options_bought_history, agent_network_evolution_dict)
-        simulated_price = list(market_environment.simulation_history.values())
+        # self.run_all_plots(market_environment, all_commitments_each_round, average_commitment_history,
+        #                    commitment_changes, hedge_fund_decision_dict, demand_dict, df_data,
+        #                    options_bought_history, agent_network_evolution_dict)
+        simulated_price = list(self.market_environment.simulation_history.values())
 
         return simulated_price
 
@@ -272,6 +273,15 @@ class SimulationClass:
         observe_antileverage_effect(list(market_environment.simulation_history.values()))
 
 
+def start_simulation(simulation_prices, miu, commitment_scaler):
+    start_date = datetime.datetime(2020, 12, 7)
+    market_environment = MarketEnvironment(initial_price=16.35, name="GME Market Environment",
+                                           price_history=gme_price_history, start_date=start_date)
+    simulation = SimulationClass(time_steps=100, N_agents=10000, N_institutional_investors=200, m=4,
+                                 market_environment=market_environment, miu=miu, commitment_scaler=commitment_scaler)
+    prices = simulation.run_simulation(halt_trading=True)
+    return prices, market_environment
+
 if __name__ == '__main__':
     sns.set_style("darkgrid")
 
@@ -279,29 +289,50 @@ if __name__ == '__main__':
     gme = yf.Ticker(gme_ticker)
     gme_price_history = get_price_history(gme, "2020-11-15", "2020-12-08")
     gme_price_history = gme_price_history["Close"].to_list()
+    gme_price_history = [x * 4 for x in gme_price_history]  # to account for the 4-1 stock split
     n_simulations = 1
     simulation_prices = []
+    #
+    # for i in range(n_simulations):
+    #     prices, market_environment = start_simulation(simulation_prices)
+    #     simulation_prices.append(prices)
 
-    for i in range(n_simulations):
-        start_date = datetime.datetime(2020, 12, 7)
-        market_environment = MarketEnvironment(initial_price=16.35, name="GME Market Environment",
-                                               price_history=gme_price_history, start_date=start_date)
-        simulation = SimulationClass(time_steps=100, N_agents=10000, N_institutional_investors=200, m=4,
-                                     market_environment=market_environment, miu=0.17, commitment_scaler=1.1)
-        prices = simulation.run_simulation(halt_trading=True)
-        simulation_prices.append(prices)
-
-    stop = 0
 
     gme_price_history = get_price_history(gme, "2020-11-15", "2021-02-28")
     gme_price_history = gme_price_history["Close"].to_list()
+    gme_price_history = [x * 4 for x in gme_price_history] # to account for 4-1 stock split
 
-    plot_simulation_against_real_values(list(market_environment.simulation_history.values()), gme_price_history)
+    # plot_simulation_against_real_values(list(market_environment.simulation_history.values()), gme_price_history)
+    #
+    #
+    # average_simulation_prices = average_price_history(simulation_prices)
+    # observe_autocorrelation_abs_returns(average_simulation_prices)
+    # observe_fat_tails_returns_distribution(average_simulation_prices)
+    # observe_antileverage_effect(average_simulation_prices)
+    # observe_autocorrelation_abs_returns(gme_price_history, real_gme_price=True)
+    # observe_fat_tails_returns_distribution(gme_price_history, real_gme_price=True)
 
-    average_simulation_prices = average_price_history(simulation_prices)
-    observe_autocorrelation_abs_returns(average_simulation_prices)
-    observe_fat_tails_returns_distribution(average_simulation_prices)
-    observe_antileverage_effect(average_simulation_prices)
 
-    observe_autocorrelation_abs_returns(gme_price_history, real_gme_price=True)
-    observe_fat_tails_returns_distribution(gme_price_history, real_gme_price=True)
+    #  Sensitivity Analysis Section
+    compare_up_to = 52  # around point when GME reached peak-price
+
+    # calculate_rmse(average_simulation_prices[:compare_up_to], gme_price_history[:compare_up_to])
+
+    rmse_dict = {}  # key = Run, Value = [0-RMSE, 1-Miu, 2-commitment_scaler]
+    i = 0
+    miu_values = np.linspace(0.1, 0.3, 4)  # list from 0.1-0.3 step-size = 0.1
+    commitment_scaler_values = np.linspace(0.5, 1.5, 4)
+    for miu in miu_values:
+        for commitment_scaler in commitment_scaler_values:
+            simulation_prices, market_environment = start_simulation(simulation_prices, miu, commitment_scaler)
+            rmse = calculate_rmse(simulation_prices[:compare_up_to], gme_price_history[:compare_up_to])
+            rmse_dict[i] = [rmse, miu, commitment_scaler]
+            print("Run " + str(i) + " finished")
+            i += 1
+
+    plot_sens_analysis_results(rmse_dict)
+    write_results_dict_to_file(rmse_dict)
+    stop = 0
+
+
+
