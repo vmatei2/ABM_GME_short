@@ -100,7 +100,6 @@ class RegularRedditTrader(RedditTrader):
             return
         if self.commitment > 0.6 and average_network_commitment > 0.624:
             self.demand = 100 * self.commitment  # buys options
-            print("Bought option")
             self.bought_option = True
             return
         elif self.commitment > 0.5:
