@@ -98,7 +98,10 @@ class InstitutionalInvestor:
         :return:
         """
         expected_return_chartist = self.compute_expected_return_chartist_approach(price_history)
-        expected_return_fundamentalist = math.log(self.fundamental_price / current_price)
+        try:
+            expected_return_fundamentalist = math.log(self.fundamental_price / current_price)
+        except ValueError as e:
+            expected_return_fundamentalist = 0
 
         expected_return = (1 / (fundamentalist_weight + chartist_weight + noise_weight)) * (
                 fundamentalist_weight * expected_return_fundamentalist + chartist_weight * expected_return_chartist +
@@ -122,7 +125,10 @@ class InstitutionalInvestor:
         for i in range(len(price_history) - 1):
             previous_price = price_history[i + 1]
             previous_previous_price = price_history[i]
-            spot_price_observation += math.log(previous_price / previous_previous_price)
+            try:
+                spot_price_observation += math.log(previous_price / previous_previous_price)
+            except ValueError as e:
+                spot_price_observation += 0
 
         future_expected_trend_chartist_approach = spot_price_observation / len(price_history)
         return future_expected_trend_chartist_approach
