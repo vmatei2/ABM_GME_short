@@ -32,15 +32,17 @@ def store_commitment_values_split_into_groups(commitment_this_round, trading_day
 
 
 class SimulationClass:
-    def __init__(self, time_steps, N_agents, N_institutional_investors, m, market_environment, miu, commitment_scaler):
+    def __init__(self, time_steps, N_agents, N_institutional_investors, m, market_environment, miu, commitment_scaler, volume_threshold, fundamental_price_inst_inv):
         self.N_agents = N_agents  # number of participating retail traders in the simulation
-        self.N_institutional_investors = N_institutional_investors
+        self.N_institutional_investors = int(N_institutional_investors)
         self.m = m  # number of edges to attach from a new node to existing nodes
         self.time_steps = time_steps
         self.tau = int((N_agents / 2) * time_steps)  # parameter for updating the opinion profile of the population
         self.market_environment = market_environment
         self.miu = miu  # opinion diffusion scaler
         self.commitment_scaler = commitment_scaler
+        self.volume_threshold = volume_threshold
+        self.fundamental_price_inst_inv = fundamental_price_inst_inv
         self.social_media_agents, self.average_degree = self.create_initial_network()  # the initial network of social media agents,
         # we already have a few central nodes network is set to increase in size and add new agents throughout the
         # simulation
@@ -81,7 +83,7 @@ class SimulationClass:
     def create_institutional_investors(self):
         institutional_investors = {}
         for i in range(self.N_institutional_investors):
-            institutional_investors[i] = InstitutionalInvestor(i, demand=-200, fundamental_price=1)
+            institutional_investors[i] = InstitutionalInvestor(i, demand=-200, fundamental_price=self.fundamental_price_inst_inv)
         return institutional_investors
 
     @staticmethod
@@ -223,8 +225,7 @@ class SimulationClass:
                 print("Average Network Commitment: ", average_network_commitment)
                 print("Finished Trading Day ", trading_day)
 
-                halt_trading_threshold = 0.97
-                if volume >= halt_trading_threshold * self.N_agents and halt_trading:
+                if volume >= self.volume_threshold * self.N_agents and halt_trading:
                     agent_ids_to_be_deleted = self.halt_trading(commitment_threshold=0.65,
                                                                 commitment_lower_upper=[0.12, 0.2])
                     print("Trading halted")
@@ -273,14 +274,67 @@ class SimulationClass:
         observe_antileverage_effect(list(market_environment.simulation_history.values()))
 
 
-def start_simulation(simulation_prices, miu, commitment_scaler):
+def start_simulation(miu=0.17, commitment_scaler=1.5, n_agents=10000, n_institutional_investors=200, fundamental_price_inst_inv=1, volume_threshold=0.97):
     start_date = datetime.datetime(2020, 12, 7)
     market_environment = MarketEnvironment(initial_price=16.35, name="GME Market Environment",
                                            price_history=gme_price_history, start_date=start_date)
-    simulation = SimulationClass(time_steps=100, N_agents=10000, N_institutional_investors=200, m=4,
-                                 market_environment=market_environment, miu=miu, commitment_scaler=commitment_scaler)
+    simulation = SimulationClass(time_steps=100, N_agents=n_agents, N_institutional_investors=n_institutional_investors, m=4,
+                                 market_environment=market_environment, miu=miu, commitment_scaler=commitment_scaler, volume_threshold=volume_threshold, fundamental_price_inst_inv=fundamental_price_inst_inv)
     prices = simulation.run_simulation(halt_trading=True)
-    return prices, market_environment
+    return prices, market_environment, simulation
+
+def run_sensitivity_analysis_miu_commitment_scaler(miu_values, commitment_scaler_values, rmse_dict, price_dict, i):
+    for miu in miu_values:
+        for commitment_scaler in commitment_scaler_values:
+            simulation_prices, market_environment, simulation_object = start_simulation(miu=miu, commitment_scaler=commitment_scaler)
+            rmse = calculate_rmse(simulation_prices[:len(gme_history_copy)], gme_history_copy)
+            rmse_dict[i] = [rmse, miu, commitment_scaler]
+            print("Run " + str(i) + " finished")
+            key_name = [rmse, miu, commitment_scaler]
+            key_name = str(key_name)
+            max_price = np.max(simulation_prices)
+            min_price = np.min(simulation_prices)
+            price_dict[key_name] = [max_price, min_price]
+            i += 1
+    return rmse_dict, price_dict
+
+def one_factor_at_a_time_sensitivity_analysis(n_reddit_agents_list, n_inst_investors_list, fund_prices_list, commitment_scaler_list, volume_threshold_list, miu_list):
+    all_lists = [n_reddit_agents_list, n_inst_investors_list, fund_prices_list, commitment_scaler_list, volume_threshold_list, miu_list]
+    results_dict = {}
+    iteration = 1
+    for index, parameter_list in enumerate(all_lists):
+        for parameter in parameter_list:
+            if index == 0:  #  update n reddit agents list
+                prices, market_object, simulation_object = start_simulation(n_agents=parameter)
+            elif index == 1: # update n inst investors
+                prices, market_object, simulation_object = start_simulation(n_institutional_investors=parameter)
+            elif index == 2:
+                prices, market_object, simulation_object = start_simulation(fundamental_price_inst_inv=parameter)
+            elif index == 3:
+                prices, market_object, simulation_object = start_simulation(commitment_scaler=parameter)
+            elif index == 4:
+                prices, market_object, simulation_object = start_simulation(volume_threshold=parameter)
+            elif index == 5:
+                prices, market_object, simulation_object = start_simulation(miu=parameter)
+            results_dict[iteration] = {}
+            results_dict[iteration]["N_agents"] = simulation_object.N_agents
+            results_dict[iteration]["N_inst_investors"] = simulation_object.N_institutional_investors
+            results_dict[iteration]["fundamental_price_inst_inv"] = simulation_object.fundamental_price_inst_inv
+            results_dict[iteration]["commitment_scaler"] = simulation_object.commitment_scaler
+            results_dict[iteration]["volume_threshold"] = simulation_object.volume_threshold
+            results_dict[iteration]["miu"] = simulation_object.miu
+            rmse = calculate_rmse(prices[:len(gme_history_copy)], gme_history_copy)
+            results_dict[iteration]["rmse"] = rmse
+            max_price = np.max(prices)
+            min_price = np.min(prices)
+            results_dict[iteration]["max_price"] = max_price
+            results_dict[iteration]["min_price"] = min_price
+            iteration += 1
+    return results_dict
+
+
+
+
 
 if __name__ == '__main__':
     sns.set_style("darkgrid")
@@ -291,7 +345,6 @@ if __name__ == '__main__':
     gme_price_history = gme_price_history["Close"].to_list()
     gme_price_history = [x * 4 for x in gme_price_history]  # to account for the 4-1 stock split
     n_simulations = 1
-    simulation_prices = []
     #
     # for i in range(n_simulations):
     #     prices, market_environment = start_simulation(simulation_prices)
@@ -300,7 +353,8 @@ if __name__ == '__main__':
 
     gme_price_history = get_price_history(gme, "2020-11-15", "2021-02-28")
     gme_price_history = gme_price_history["Close"].to_list()
-    gme_price_history = [x * 4 for x in gme_price_history] # to account for 4-1 stock split
+    gme_price_history = [x * 4 for x in gme_price_history]  # to account for 4-1 stock split
+    gme_history_copy = gme_price_history.copy()
 
     # plot_simulation_against_real_values(list(market_environment.simulation_history.values()), gme_price_history)
     #
@@ -319,19 +373,28 @@ if __name__ == '__main__':
     # calculate_rmse(average_simulation_prices[:compare_up_to], gme_price_history[:compare_up_to])
 
     rmse_dict = {}  # key = Run, Value = [0-RMSE, 1-Miu, 2-commitment_scaler]
+    price_dict = {}
     i = 0
-    miu_values = np.linspace(0.1, 0.3, 4)  # list from 0.1-0.3 step-size = 0.1
-    commitment_scaler_values = np.linspace(0.5, 1.5, 4)
-    for miu in miu_values:
-        for commitment_scaler in commitment_scaler_values:
-            simulation_prices, market_environment = start_simulation(simulation_prices, miu, commitment_scaler)
-            rmse = calculate_rmse(simulation_prices[:compare_up_to], gme_price_history[:compare_up_to])
-            rmse_dict[i] = [rmse, miu, commitment_scaler]
-            print("Run " + str(i) + " finished")
-            i += 1
+    miu_values = np.linspace(0.1, 0.4, 20)  # list from 0.1-0.3 step-size = 0.1
+    commitment_scaler_values = np.linspace(0.75, 2, 20)
 
-    plot_sens_analysis_results(rmse_dict)
-    write_results_dict_to_file(rmse_dict)
+    #  run_sensitivity_analysis_miu_commitment_scaler(miu_values, commitment_scaler_values, rmse_dict, price_dict, i)
+
+    n_reedit_agents_list = np.linspace(5000, 15000, 2)
+    n_inst_investors_list = np.linspace(100, 200, 2)
+    fund_prices_list = np.linspace(1, 16, 2)
+    commitment_scaler_list = np.linspace(1, 1.5, 2)
+    volume_threshold_list = (0.9, 0.97, 2)
+    miu_parameter_list = (0.1, 0.17, 2)
+    sa_results_dict = one_factor_at_a_time_sensitivity_analysis(n_reedit_agents_list, n_inst_investors_list, fund_prices_list, commitment_scaler_list, volume_threshold_list,
+                                                                miu_parameter_list)
+    write_results_dict_to_file(sa_results_dict, "ofat_sa_results")
+
+
+    # plot_sens_analysis_results(rmse_dict)
+    # write_results_dict_to_file(rmse_dict, file_name="sensitivty_analysis_rmse_miu_comm_sclaer")
+    # write_results_dict_to_file(price_dict, file_name="sensitivity_analysis_price_dict")
+
     stop = 0
 
 
