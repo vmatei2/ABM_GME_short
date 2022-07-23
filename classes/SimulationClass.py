@@ -33,7 +33,7 @@ def store_commitment_values_split_into_groups(commitment_this_round, trading_day
 
 class SimulationClass:
     def __init__(self, time_steps, N_agents, N_institutional_investors, m, market_environment, miu, commitment_scaler, volume_threshold, fundamental_price_inst_inv):
-        self.N_agents = N_agents  # number of participating retail traders in the simulation
+        self.N_agents = int(N_agents)  # number of participating retail traders in the simulation
         self.N_institutional_investors = int(N_institutional_investors)
         self.m = m  # number of edges to attach from a new node to existing nodes
         self.time_steps = time_steps
@@ -380,12 +380,12 @@ if __name__ == '__main__':
 
     #  run_sensitivity_analysis_miu_commitment_scaler(miu_values, commitment_scaler_values, rmse_dict, price_dict, i)
 
-    n_reedit_agents_list = np.linspace(5000, 15000, 2)
-    n_inst_investors_list = np.linspace(100, 200, 2)
-    fund_prices_list = np.linspace(1, 16, 2)
-    commitment_scaler_list = np.linspace(1, 1.5, 2)
-    volume_threshold_list = (0.9, 0.97, 2)
-    miu_parameter_list = (0.1, 0.17, 2)
+    n_reedit_agents_list = np.linspace(1000, 15000, 50)
+    n_inst_investors_list = np.linspace(100, 1000, 20)
+    fund_prices_list = np.linspace(1, 16, 16)
+    commitment_scaler_list = np.linspace(0.1, 5, 50)
+    volume_threshold_list = np.linspace(0.6, 1, 4)
+    miu_parameter_list = np.linspace(0.1, 5, 50)
     sa_results_dict = one_factor_at_a_time_sensitivity_analysis(n_reedit_agents_list, n_inst_investors_list, fund_prices_list, commitment_scaler_list, volume_threshold_list,
                                                                 miu_parameter_list)
     write_results_dict_to_file(sa_results_dict, "ofat_sa_results")
