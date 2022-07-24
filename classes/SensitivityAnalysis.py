@@ -50,8 +50,9 @@ def write_results_dict_to_file(results_dict, file_name):
 def load_results(file_name):
     f = open(file_name)
     data = json.load(f)
-    stop = 0
+    return data
 
 
 if __name__ == '__main__':
-    load_results("ofat_sa_results")
+    price_dict = load_results("sensitivity_analysis_price_dict")
+    stop = 0

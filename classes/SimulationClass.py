@@ -287,7 +287,7 @@ def run_sensitivity_analysis_miu_commitment_scaler(miu_values, commitment_scaler
     for miu in miu_values:
         for commitment_scaler in commitment_scaler_values:
             simulation_prices, market_environment, simulation_object = start_simulation(miu=miu, commitment_scaler=commitment_scaler)
-            rmse = calculate_rmse(simulation_prices[:len(gme_history_copy)], gme_history_copy)
+            rmse = calculate_rmse(simulation_prices[:51], gme_history_copy[:51])
             rmse_dict[i] = [rmse, miu, commitment_scaler]
             print("Run " + str(i) + " finished")
             key_name = [rmse, miu, commitment_scaler]
@@ -378,22 +378,23 @@ if __name__ == '__main__':
     miu_values = np.linspace(0.1, 0.4, 20)  # list from 0.1-0.3 step-size = 0.1
     commitment_scaler_values = np.linspace(0.75, 2, 20)
 
-    #  run_sensitivity_analysis_miu_commitment_scaler(miu_values, commitment_scaler_values, rmse_dict, price_dict, i)
+    run_sensitivity_analysis_miu_commitment_scaler(miu_values, commitment_scaler_values, rmse_dict, price_dict, i)
+    plot_sens_analysis_results(rmse_dict)
+    write_results_dict_to_file(rmse_dict, file_name="sensitivty_analysis_rmse_miu_comm_sclaer")
+    write_results_dict_to_file(price_dict, file_name="sensitivity_analysis_price_dict")
 
-    n_reedit_agents_list = np.linspace(1000, 15000, 50)
-    n_inst_investors_list = np.linspace(100, 1000, 20)
-    fund_prices_list = np.linspace(1, 16, 16)
+    n_reddit_agents_list = np.linspace(1000, 15000, 50)
+    n_inst_investors_list = np.linspace(100, 2000, 50)
+    fund_prices_list = np.linspace(1, 50, 11)
     commitment_scaler_list = np.linspace(0.1, 5, 50)
-    volume_threshold_list = np.linspace(0.6, 1, 4)
-    miu_parameter_list = np.linspace(0.1, 5, 50)
-    sa_results_dict = one_factor_at_a_time_sensitivity_analysis(n_reedit_agents_list, n_inst_investors_list, fund_prices_list, commitment_scaler_list, volume_threshold_list,
+    volume_threshold_list = np.linspace(0.6, 1, 11)
+    miu_parameter_list = np.linspace(0.1, 2, 20)
+    sa_results_dict = one_factor_at_a_time_sensitivity_analysis(n_reddit_agents_list, n_inst_investors_list, fund_prices_list, commitment_scaler_list, volume_threshold_list,
                                                                 miu_parameter_list)
     write_results_dict_to_file(sa_results_dict, "ofat_sa_results")
 
 
-    # plot_sens_analysis_results(rmse_dict)
-    # write_results_dict_to_file(rmse_dict, file_name="sensitivty_analysis_rmse_miu_comm_sclaer")
-    # write_results_dict_to_file(price_dict, file_name="sensitivity_analysis_price_dict")
+
 
     stop = 0
 
