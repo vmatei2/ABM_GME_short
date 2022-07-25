@@ -21,6 +21,11 @@ def get_price_history(ticker, start_date, end_date):
     price_history = ticker.history(start=start_date, end=end_date)
     return price_history
 
+def select_closing_prices(price_history_df):
+    closing_prices = price_history_df["Close"].to_list()
+    closing_prices = [x * 4 for x in closing_prices]
+    return closing_prices
+
 
 def plot_two_df_columns_together(data_frame, first_column, second_column, third_column=None, fourth_column=None,
                                  kind=None, rescale=False,

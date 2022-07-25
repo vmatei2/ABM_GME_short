@@ -15,11 +15,12 @@ class InstitutionalInvestor:
     The above will be completed through an implementation of Asset Pricing under Prospect Theory
     """
 
-    def __init__(self, id, demand, fundamental_price):
+    def __init__(self, id, demand, fundamental_price, lambda_parameter):
         self.id = id
         self.demand = demand
         self.fundamental_price = fundamental_price
         self.risk_loving = self.assign_risk_type()
+        self.lambda_parameter = lambda_parameter
         self.alpha, self.betta = self.assign_risk_variables()
 
     def make_decision(self, current_price, price_history):
@@ -55,7 +56,6 @@ class InstitutionalInvestor:
         p_gain = 0.8  # use in dissertation "such that p_gain + p_loss = 1 "
         p_loss = 0.2
         fundamentalist_weight = 1
-        lambda_parameter = 1.75
         chartist_weight = 2.55
         noise_weight = 1
         added_noise = random.uniform(0, 1)
@@ -73,8 +73,8 @@ class InstitutionalInvestor:
 
         x_gain = abs(current_price - expected_price_fundamentalist)
         x_loss = abs(current_price - expected_price_chartist)
-        V_loss = lambda_parameter * (x_loss ** self.alpha)
-        V_gain = p_gain * (x_gain ** self.alpha) - (p_loss * lambda_parameter * (x_loss ** self.betta))
+        V_loss = self.lambda_parameter * (x_loss ** self.alpha)
+        V_gain = p_gain * (x_gain ** self.alpha) - (p_loss * self.lambda_parameter * (x_loss ** self.betta))
 
         V_gain = check_and_convert_imaginary_number(V_gain)
 

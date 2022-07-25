@@ -19,7 +19,7 @@ from classes.InstitutionalInvestor import InstitutionalInvestor
 from classes.MarketEnvironment import MarketEnvironment
 from helpers.plotting_helpers import plot_all_commitments, plot_commitment_into_groups, \
     simple_line_plot, visualise_network, get_price_history, scale_and_plot, plot_institutional_investors_decisions, \
-    plot_demand_dictionary, barplot_options_bought
+    plot_demand_dictionary, barplot_options_bought, select_closing_prices
 
 
 def store_commitment_values_split_into_groups(commitment_this_round, trading_day, df_data):
@@ -32,7 +32,8 @@ def store_commitment_values_split_into_groups(commitment_this_round, trading_day
 
 
 class SimulationClass:
-    def __init__(self, time_steps, N_agents, N_institutional_investors, m, market_environment, miu, commitment_scaler, volume_threshold, fundamental_price_inst_inv):
+    def __init__(self, time_steps, N_agents, N_institutional_investors, m, market_environment, miu,
+                 commitment_scaler, volume_threshold, fundamental_price_inst_inv, lambda_parameter):
         self.N_agents = int(N_agents)  # number of participating retail traders in the simulation
         self.N_institutional_investors = int(N_institutional_investors)
         self.m = m  # number of edges to attach from a new node to existing nodes
@@ -42,6 +43,7 @@ class SimulationClass:
         self.miu = miu  # opinion diffusion scaler
         self.commitment_scaler = commitment_scaler
         self.volume_threshold = volume_threshold
+        self.lambda_parameter = lambda_parameter
         self.fundamental_price_inst_inv = fundamental_price_inst_inv
         self.social_media_agents, self.average_degree = self.create_initial_network()  # the initial network of social media agents,
         # we already have a few central nodes network is set to increase in size and add new agents throughout the
@@ -83,7 +85,8 @@ class SimulationClass:
     def create_institutional_investors(self):
         institutional_investors = {}
         for i in range(self.N_institutional_investors):
-            institutional_investors[i] = InstitutionalInvestor(i, demand=-200, fundamental_price=self.fundamental_price_inst_inv)
+            institutional_investors[i] = InstitutionalInvestor(i, demand=-200, fundamental_price=self.fundamental_price_inst_inv,
+                                                               lambda_parameter=self.lambda_parameter)
         return institutional_investors
 
     @staticmethod
@@ -152,13 +155,6 @@ class SimulationClass:
                                                self.market_environment.price_history, white_noise, self.trading_halted)
                 if decision == 1:  # above function returns 1 when agent buys option
                     options_bought += 1
-        # for agent_id in participating_agents:
-        #     selected_agent = self.social_media_agents[agent_id]
-        #     if isinstance(selected_agent, InfluentialRedditUser):
-        #         selected_agent.make_decision(average_network_commitment, threshold)
-        #     else:
-        #         selected_agent.make_decision(average_network_commitment, market_environment.current_price,
-        #                                      market_environment.price_history, 0.003, self.trading_halted)
         for i in range(int(len(self.institutional_investors) / 2)):
             institutional_inv_agent = random.choice(self.institutional_investors)
             decision = institutional_inv_agent.make_decision(self.market_environment.current_price,
@@ -230,14 +226,13 @@ class SimulationClass:
                                                                 commitment_lower_upper=[0.12, 0.2])
                     print("Trading halted")
                 print()
-        extract_weekend_data_effect(self.market_environment.simulation_history)
 
         # self.run_all_plots(market_environment, all_commitments_each_round, average_commitment_history,
         #                    commitment_changes, hedge_fund_decision_dict, demand_dict, df_data,
         #                    options_bought_history, agent_network_evolution_dict)
         simulated_price = list(self.market_environment.simulation_history.values())
 
-        return simulated_price
+        return simulated_price, average_commitment_history
 
     def run_all_plots(self, market_environment, all_commitments_each_round, average_commitment_history,
                       commitment_changes, hedge_fund_decision_dict,
@@ -248,10 +243,10 @@ class SimulationClass:
                              "Evolution of all agent commitments")
 
         network_evolution_threshold = 0.65
-        # self.plot_agent_network_evolution(agent_network_evolution_dict, network_evolution_threshold)
+        self.plot_agent_network_evolution(agent_network_evolution_dict, network_evolution_threshold)
 
-        # simple_line_plot(average_commitment_history, "Trading Day", "Average Commitment",
-        #                  "Average Commitment Evolution")
+        simple_line_plot(average_commitment_history, "Trading Day", "Average Commitment",
+                          "Average Commitment Evolution")
         simple_line_plot(commitment_changes, "Trading Week", "Change in commitment", "Percentage Changes in Average "
                                                                                      "Commitment")
 
@@ -273,15 +268,22 @@ class SimulationClass:
 
         observe_antileverage_effect(list(market_environment.simulation_history.values()))
 
+        extract_weekend_data_effect(market_environment.simulation_history)
+
 
 def start_simulation(miu=0.17, commitment_scaler=1.5, n_agents=10000, n_institutional_investors=200, fundamental_price_inst_inv=1, volume_threshold=0.97):
+    gme = yf.Ticker("GME")
+    gme_price_history = get_price_history(gme, "2020-11-15", "2020-12-08")
+    gme_price_history = select_closing_prices(gme_price_history)
     start_date = datetime.datetime(2020, 12, 7)
     market_environment = MarketEnvironment(initial_price=16.35, name="GME Market Environment",
                                            price_history=gme_price_history, start_date=start_date)
     simulation = SimulationClass(time_steps=100, N_agents=n_agents, N_institutional_investors=n_institutional_investors, m=4,
-                                 market_environment=market_environment, miu=miu, commitment_scaler=commitment_scaler, volume_threshold=volume_threshold, fundamental_price_inst_inv=fundamental_price_inst_inv)
-    prices = simulation.run_simulation(halt_trading=True)
-    return prices, market_environment, simulation
+                                 market_environment=market_environment, miu=miu,
+                                 commitment_scaler=commitment_scaler, volume_threshold=volume_threshold,
+                                 fundamental_price_inst_inv=fundamental_price_inst_inv)
+    prices, average_commitment_history = simulation.run_simulation(halt_trading=False)
+    return prices, market_environment, simulation, average_commitment_history
 
 def run_sensitivity_analysis_miu_commitment_scaler(miu_values, commitment_scaler_values, rmse_dict, price_dict, i):
     for miu in miu_values:
@@ -339,34 +341,14 @@ def one_factor_at_a_time_sensitivity_analysis(n_reddit_agents_list, n_inst_inves
 if __name__ == '__main__':
     sns.set_style("darkgrid")
 
-    gme_ticker = "GME"
-    gme = yf.Ticker(gme_ticker)
-    gme_price_history = get_price_history(gme, "2020-11-15", "2020-12-08")
-    gme_price_history = gme_price_history["Close"].to_list()
-    gme_price_history = [x * 4 for x in gme_price_history]  # to account for the 4-1 stock split
     n_simulations = 1
     #
     # for i in range(n_simulations):
     #     prices, market_environment = start_simulation(simulation_prices)
     #     simulation_prices.append(prices)
-
-
-    gme_price_history = get_price_history(gme, "2020-11-15", "2021-02-28")
-    gme_price_history = gme_price_history["Close"].to_list()
-    gme_price_history = [x * 4 for x in gme_price_history]  # to account for 4-1 stock split
-    gme_history_copy = gme_price_history.copy()
-
-    # plot_simulation_against_real_values(list(market_environment.simulation_history.values()), gme_price_history)
-    #
-    #
-    # average_simulation_prices = average_price_history(simulation_prices)
-    # observe_autocorrelation_abs_returns(average_simulation_prices)
-    # observe_fat_tails_returns_distribution(average_simulation_prices)
-    # observe_antileverage_effect(average_simulation_prices)
-    # observe_autocorrelation_abs_returns(gme_price_history, real_gme_price=True)
-    # observe_fat_tails_returns_distribution(gme_price_history, real_gme_price=True)
-
-
+    # gme_price_history = get_price_history(gme, "2020-11-15", "2021-02-28")
+    # gme_price_history = select_closing_prices(gme_price_history)
+    # gme_history_copy = gme_price_history.copy()
     #  Sensitivity Analysis Section
     compare_up_to = 52  # around point when GME reached peak-price
 
@@ -393,10 +375,6 @@ if __name__ == '__main__':
                                                                 miu_parameter_list)
     write_results_dict_to_file(sa_results_dict, "ofat_sa_results")
 
-
-
-
-    stop = 0
 
 
 
