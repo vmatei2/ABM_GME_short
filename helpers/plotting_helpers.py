@@ -185,15 +185,15 @@ def plot_institutional_investors_decisions(decision_dict, dates):
         short_gme_decisions.append(decisions.count(True))  # sum returns the number of True elements in a boolean array
         close_positions_decisions.append(decisions.count(False))
 
-    plt.figure(figsize=(8, 8))
     plt.plot(dates, short_gme_decisions, 'r')
     plt.plot(dates, close_positions_decisions, 'y')
+
     plt.xlabel("Trading Day", fontsize=17)
     plt.ylabel("Count", fontsize=17)
     plt.title("Institutional Investor Decisions at each trading day", fontsize=20)
     plt.legend(['Short GME Stock(Take Gamble)', 'Close Short Position(Accept Sure Loss)'], fontsize=12, loc=6) # 6 = center left location
     plt.savefig("../images/institutional_inv_decisions")
-    plt.show()
+
 
 
 ####  NETWORK PLOTTING HELPERS

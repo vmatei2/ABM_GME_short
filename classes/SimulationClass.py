@@ -227,12 +227,12 @@ class SimulationClass:
                     print("Trading halted")
                 print()
 
-        # self.run_all_plots(market_environment, all_commitments_each_round, average_commitment_history,
-        #                    commitment_changes, hedge_fund_decision_dict, demand_dict, df_data,
-        #                    options_bought_history, agent_network_evolution_dict)
+        self.run_all_plots(self.market_environment, all_commitments_each_round, average_commitment_history,
+                            commitment_changes, hedge_fund_decision_dict, demand_dict, df_data,
+                           options_bought_history, agent_network_evolution_dict)
         simulated_price = list(self.market_environment.simulation_history.values())
 
-        return simulated_price, average_commitment_history
+        return simulated_price, average_commitment_history, hedge_fund_decision_dict
 
     def run_all_plots(self, market_environment, all_commitments_each_round, average_commitment_history,
                       commitment_changes, hedge_fund_decision_dict,
@@ -271,7 +271,9 @@ class SimulationClass:
         extract_weekend_data_effect(market_environment.simulation_history)
 
 
-def start_simulation(miu=0.17, commitment_scaler=1.5, n_agents=10000, n_institutional_investors=200, fundamental_price_inst_inv=1, volume_threshold=0.97):
+def start_simulation(miu=0.17, commitment_scaler=1.5, n_agents=10000,
+                     n_institutional_investors=200, fundamental_price_inst_inv=1,
+                     volume_threshold=0.97, lambda_parameter=1.75):
     gme = yf.Ticker("GME")
     gme_price_history = get_price_history(gme, "2020-11-15", "2020-12-08")
     gme_price_history = select_closing_prices(gme_price_history)
@@ -281,9 +283,10 @@ def start_simulation(miu=0.17, commitment_scaler=1.5, n_agents=10000, n_institut
     simulation = SimulationClass(time_steps=100, N_agents=n_agents, N_institutional_investors=n_institutional_investors, m=4,
                                  market_environment=market_environment, miu=miu,
                                  commitment_scaler=commitment_scaler, volume_threshold=volume_threshold,
-                                 fundamental_price_inst_inv=fundamental_price_inst_inv)
-    prices, average_commitment_history = simulation.run_simulation(halt_trading=False)
-    return prices, market_environment, simulation, average_commitment_history
+                                 fundamental_price_inst_inv=fundamental_price_inst_inv,
+                                 lambda_parameter=lambda_parameter)
+    prices, average_commitment_history, hf_decision_dict = simulation.run_simulation(halt_trading=True)
+    return prices, market_environment, simulation, average_commitment_history, hf_decision_dict
 
 def run_sensitivity_analysis_miu_commitment_scaler(miu_values, commitment_scaler_values, rmse_dict, price_dict, i):
     for miu in miu_values:
@@ -340,7 +343,7 @@ def one_factor_at_a_time_sensitivity_analysis(n_reddit_agents_list, n_inst_inves
 
 if __name__ == '__main__':
     sns.set_style("darkgrid")
-
+    start_simulation()
     n_simulations = 1
     #
     # for i in range(n_simulations):
