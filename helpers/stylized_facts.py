@@ -165,11 +165,15 @@ def observe_antileverage_effect(price_history):
         volatility_list.append(vol_i)
     fig, ax = plt.subplots(figsize=(8, 8))
     ax.plot(returns, 'g-', label="Returns")
-    ax.set_xlabel("Trading Day", fontsize=15)
-    ax.set_ylabel("Log Returns", fontsize=15)
+    ax.set_xlabel("Trading Day", fontsize=19)
+    ax.set_ylabel("Log Returns", fontsize=19)
+    ax.yaxis.set_tick_params(labelsize=15)
+    ax.xaxis.set_tick_params(labelsize=15)
     ax2 = ax.twinx()
     ax2.plot(volatility_list, 'r-', label="Volatility")
-    ax2.set_ylabel("Volatility", fontsize=15)
+    ax2.set_ylabel("Volatility", fontsize=19)
+    ax2.yaxis.set_tick_params(labelsize=15)
+
 
     handles, labels = [], []
     for ax in fig.axes:

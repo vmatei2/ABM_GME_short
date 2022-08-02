@@ -83,7 +83,7 @@ class RegularRedditTrader(RedditTrader):
             else:
                 self.demand -= self.commitment_scaler * self.commitment
         elif self.investor_type == RedditInvestorTypes.LONGTERM:
-            expected_price = 10  # introduce fundamentalist pricing formula calculation here
+            expected_price = 30  # introduce fundamentalist pricing formula calculation here
             if expected_price < current_price:
                 self.demand = -self.commitment * self.commitment_scaler
             elif expected_price > current_price:
