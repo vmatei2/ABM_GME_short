@@ -20,12 +20,12 @@ class MarketEnvironment:
         self.price_history.append(self.current_price)
         demand_from_retail, demand_from_hf = self.update_excess_demand(retail_traders, institutional_investors)
         updated_price = self.current_price + self.tau * self.excess_demand
-        print("Previous Price: ", self.current_price)
+        if updated_price < 0:
+            updated_price = random.uniform(0, 0.5) + self.tau
         self.current_price = updated_price
         # if new_date.weekday() == 5:  # this means that it is a Friday
         #     new_date = new_date + datetime.timedelta(days=2)
         print("Updated Price: ", self.current_price)
-        print("Date is: ", self.date)
         self.update_simulation_history()
         self.update_day()
         return demand_from_retail, demand_from_hf

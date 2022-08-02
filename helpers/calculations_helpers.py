@@ -1,4 +1,12 @@
+from datetime import datetime
+
 import numpy as np
+
+
+def print_current_time():
+    now = datetime.now()
+    current_time = now.strftime("%H:%M:%S")
+    print("Current Time = ", current_time)
 
 
 def calculate_subscriber_monthly_growth(numbers):
@@ -43,6 +51,4 @@ def check_and_convert_imaginary_number(number):
 
 
 if __name__ == '__main__':
-    subscribers_numbers = [1580000, 1700000, 2060000, 8060000, 9620000, 10500000]
-    growth_percentages = calculate_subscriber_monthly_growth(subscribers_numbers)
-    print(growth_percentages)
+    print_current_time()
