@@ -88,13 +88,15 @@ def plot_gamma_variation(all_gammas, stock_prices):
     plt.ylabel("Gamma ($\Gamma$)", fontsize=18)
     plt.xticks([i for i in stock_prices if i % 10 == 0], fontsize=15)
     plt.yticks(fontsize=15)
+    plt.xlim(0, 140)
     plt.title("Variation of $\Gamma$ with stock price for an option with $K=60$", fontsize=20)
+    plt.savefig("../images/variation_of_gamma")
     plt.show()
 
 
 if __name__ == '__main__':
-    all_gammas, stock_prices = gamma_variation(K=60, r=0.05, volatility=0.2, T=0.5)
+    all_gammas, stock_prices = gamma_variation(K=60, r=0.05, volatility=0.2, T=0.19) # 0.19 = fraction 10 weeks of a year
     plot_gamma_variation(all_gammas, stock_prices)
 
-    test_gamma = calculate_gamma(S=49, K=50, r=0.05, volatility=0.2, T=0.3846)
+    test_gamma = calculate_gamma(S=49, K=50, r=0.05, volatility=0.2, T=0.19)
     print(test_gamma)
