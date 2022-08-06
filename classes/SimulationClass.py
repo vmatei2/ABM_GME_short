@@ -226,9 +226,9 @@ class SimulationClass:
                     print("Trading halted")
                 print()
 
-        self.run_all_plots(self.market_environment, all_commitments_each_round, average_commitment_history,
-                           commitment_changes, hedge_fund_decision_dict, demand_dict, df_data,
-                           options_bought_history, agent_network_evolution_dict)
+        # self.run_all_plots(self.market_environment, all_commitments_each_round, average_commitment_history,
+        #                    commitment_changes, hedge_fund_decision_dict, demand_dict, df_data,
+        #                    options_bought_history, agent_network_evolution_dict)
         simulated_price = list(self.market_environment.simulation_history.values())
 
         return simulated_price, average_commitment_history, hedge_fund_decision_dict
@@ -355,17 +355,17 @@ def one_factor_at_a_time_sensitivity_analysis(n_reddit_agents_list, n_inst_inves
     for index, parameter_list in enumerate(all_lists):
         for parameter in parameter_list:
             if index == 0:  # update n reddit agents list
-                prices, market_object, simulation_object = start_simulation(n_agents=parameter)
+                prices, market_object, simulation_object, avg_commitment_history, hf_decision_dict = start_simulation(n_agents=parameter)
             elif index == 1:  # update n inst investors
-                prices, market_object, simulation_object = start_simulation(n_institutional_investors=parameter)
+                prices, market_object, simulation_object, avg_commitment_history, hf_decision_dict = start_simulation(n_institutional_investors=parameter)
             elif index == 2:
-                prices, market_object, simulation_object = start_simulation(fundamental_price_inst_inv=parameter)
+                prices, market_object, simulation_object, avg_commitment_history, hf_decision_dict = start_simulation(fundamental_price_inst_inv=parameter)
             elif index == 3:
-                prices, market_object, simulation_object = start_simulation(commitment_scaler=parameter)
+                prices, market_object, simulation_object, avg_commitment_history, hf_decision_dict = start_simulation(commitment_scaler=parameter)
             elif index == 4:
-                prices, market_object, simulation_object = start_simulation(volume_threshold=parameter)
+                prices, market_object, simulation_object, avg_commitment_history, hf_decision_dict = start_simulation(volume_threshold=parameter)
             elif index == 5:
-                prices, market_object, simulation_object = start_simulation(miu=parameter)
+                prices, market_object, simulation_object, avg_commitment_history, hf_decision_dict = start_simulation(miu=parameter)
             results_dict[iteration] = {}
             results_dict[iteration]["N_agents"] = simulation_object.N_agents
             results_dict[iteration]["N_inst_investors"] = simulation_object.N_institutional_investors
@@ -394,7 +394,7 @@ if __name__ == '__main__':
     #  Sensitivity Analysis Section
     # sensitivty_analyis_mu_theta()
     # sensitivty_analysis_ofat()
-    start_simulation(time_steps=100)
+    sensitivty_analysis_ofat()
 
 
 
