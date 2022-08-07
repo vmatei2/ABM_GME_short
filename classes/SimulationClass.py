@@ -164,10 +164,10 @@ class SimulationClass:
             institutional_inv_decision_dict[trading_day].append(decision)
         will_hedge = random.choices([False, True], [self.market_maker.risk_tolerance, 1-self.market_maker.risk_tolerance])
         demand_from_retail, demand_from_hf = self.market_environment.update_market(participating_agents,
-                                                                                   self.institutional_investors, self.market_maker)
-        if will_hedge[0]:
-            self.market_maker.hedge_all_positions(self.market_environment.current_price,
-                                                  self.market_environment.price_history)
+                                                                                   self.institutional_investors)
+        # if will_hedge[0]:
+        #     self.market_maker.hedge_all_positions(self.market_environment.current_price,
+        #                                           self.market_environment.price_history)
 
         return volume, demand_from_retail, demand_from_hf, options_bought
 
@@ -234,9 +234,9 @@ class SimulationClass:
                     print("Trading halted")
                 print()
 
-        # self.run_all_plots(self.market_environment, all_commitments_each_round, average_commitment_history,
-        #                    commitment_changes, hedge_fund_decision_dict, demand_dict, df_data,
-        #                    options_bought_history, agent_network_evolution_dict)
+        self.run_all_plots(self.market_environment, all_commitments_each_round, average_commitment_history,
+                           commitment_changes, hedge_fund_decision_dict, demand_dict, df_data,
+                           options_bought_history, agent_network_evolution_dict)
         simulated_price = list(self.market_environment.simulation_history.values())
 
         return simulated_price, average_commitment_history, hedge_fund_decision_dict

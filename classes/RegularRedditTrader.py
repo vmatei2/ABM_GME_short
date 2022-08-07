@@ -74,7 +74,6 @@ class RegularRedditTrader(RedditTrader):
             self.demand = -current_demand
             self.has_trading_been_halted = True
 
-
     def decision_based_on_personal_strategy(self, current_price, price_history, white_noise):
         if self.investor_type == RedditInvestorTypes.RATIONAL_SHORT_TERM:
             expected_price = self.compute_price_expectation_chartist(current_price, price_history, white_noise)
@@ -83,15 +82,14 @@ class RegularRedditTrader(RedditTrader):
             else:
                 self.demand -= self.commitment_scaler * self.commitment
         elif self.investor_type == RedditInvestorTypes.LONGTERM:
-            expected_price = 30  # introduce fundamentalist pricing formula calculation here
+            expected_price = 10  # introduce fundamentalist pricing formula calculation here
             if expected_price < current_price:
                 self.demand = -self.commitment * self.commitment_scaler
             elif expected_price > current_price:
                 self.demand += self.commitment * self.commitment_scaler
 
-
-
-    def make_decision(self, average_network_commitment, current_price, price_history, white_noise, trading_halted, market_maker, trading_day):
+    def make_decision(self, average_network_commitment, current_price, price_history, white_noise, trading_halted,
+                      market_maker, trading_day):
 
         if trading_halted:
             self.act_if_trading_halted(current_price, price_history, white_noise)
@@ -99,8 +97,10 @@ class RegularRedditTrader(RedditTrader):
         if self.bought_option:  # not doing anything if we have bought an option already
             return
         if self.commitment > 0.6 and average_network_commitment > 0.624:
-            option_id = market_maker.sell_option(current_price, trading_day=trading_day)
-            market_maker.hedge_position(option_id, current_price, price_history)
+            option = market_maker.sell_option(current_price, trading_day=trading_day, id=self.id)
+            hedge = market_maker.hedge_position(option, current_price, price_history, trading_day)
+            number_of_contracts = random.randint(1, 10)
+            self.demand = hedge * number_of_contracts
             self.bought_option = True
             return
         elif self.commitment > 0.5:
