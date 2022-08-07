@@ -91,7 +91,7 @@ class RegularRedditTrader(RedditTrader):
 
 
 
-    def make_decision(self, average_network_commitment, current_price, price_history, white_noise, trading_halted):
+    def make_decision(self, average_network_commitment, current_price, price_history, white_noise, trading_halted, market_maker):
 
         if trading_halted:
             self.act_if_trading_halted(current_price, price_history, white_noise)

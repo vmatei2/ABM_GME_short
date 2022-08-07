@@ -95,8 +95,8 @@ def plot_gamma_variation(all_gammas, stock_prices):
 
 
 if __name__ == '__main__':
-    all_gammas, stock_prices = gamma_variation(K=60, r=0.05, volatility=0.2, T=0.19) # 0.19 = fraction 10 weeks of a year
+    all_gammas, stock_prices = gamma_variation(K=60, r=0.05, volatility=0.2, T=0.054) # 0.19 = fraction 10 weeks of a year
     plot_gamma_variation(all_gammas, stock_prices)
 
-    test_gamma = calculate_gamma(S=49, K=50, r=0.05, volatility=0.2, T=0.19)
+    test_gamma = calculate_gamma(S=49, K=50, r=0.05, volatility=0.2, T=0.053)
     print(test_gamma)

@@ -6,6 +6,7 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 import yfinance as yf
 
+from classes.MarketMaker import MarketMaker
 from classes.RedditInvestorTypes import RedditInvestorTypes
 from classes.SensitivityAnalysis import calculate_rmse, plot_sens_analysis_results, write_results_dict_to_file
 from helpers.calculations_helpers import split_commitment_into_groups, print_current_time
@@ -50,6 +51,7 @@ class SimulationClass:
         # simulation
         self.institutional_investors = self.create_institutional_investors()
         self.trading_halted = False
+        self.market_maker = MarketMaker()
 
     def create_initial_network(self):
         barabasi_albert_network = nx.barabasi_albert_graph(n=self.N_agents, m=self.m, seed=2)
@@ -152,7 +154,7 @@ class SimulationClass:
                 agent.make_decision(average_network_commitment, threshold)
             else:
                 decision = agent.make_decision(average_network_commitment, self.market_environment.current_price,
-                                               self.market_environment.price_history, white_noise, self.trading_halted)
+                                               self.market_environment.price_history, white_noise, self.trading_halted, self.market_maker)
                 if decision == 1:  # above function returns 1 when agent buys option
                     options_bought += 1
         for i in range(int(len(self.institutional_investors) / 2)):
