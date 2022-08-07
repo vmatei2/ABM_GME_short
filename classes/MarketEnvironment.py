@@ -16,9 +16,9 @@ class MarketEnvironment:
         self.simulation_history = {}
         self.date = start_date
 
-    def update_market(self, retail_traders, institutional_investors):
+    def update_market(self, retail_traders, institutional_investors, market_maker):
         self.price_history.append(self.current_price)
-        demand_from_retail, demand_from_hf = self.update_excess_demand(retail_traders, institutional_investors)
+        demand_from_retail, demand_from_hf = self.update_excess_demand(retail_traders, institutional_investors, market_maker)
         updated_price = self.current_price + self.tau * self.excess_demand
         if updated_price < 0:
             updated_price = random.uniform(0, 0.05)
@@ -71,7 +71,7 @@ class MarketEnvironment:
 
         return particpating_agents
 
-    def update_excess_demand(self, retail_traders, institutional_investors):
+    def update_excess_demand(self, retail_traders, institutional_investors, market_maker):
         """
         Updating the excess demand coming from retail trader and instituional investors
         :return:
@@ -82,8 +82,8 @@ class MarketEnvironment:
             demand_from_retail += retail_trader.demand
         for id, hedge_fund in institutional_investors.items():
             demand_from_hf += hedge_fund.demand
-        number_of_agents = len(retail_traders) + len(institutional_investors)
-        normalized_excess_demand = (demand_from_retail + demand_from_hf) / number_of_agents
+        number_of_agents = len(retail_traders) + len(institutional_investors) + len(market_maker.options_sold_dict)
+        normalized_excess_demand = (demand_from_retail + demand_from_hf + market_maker.demand) / number_of_agents
         self.excess_demand = normalized_excess_demand
         print("Market Excess Demand is: ", self.excess_demand)
         return demand_from_retail, demand_from_hf

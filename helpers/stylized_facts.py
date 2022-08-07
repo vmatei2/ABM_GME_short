@@ -3,7 +3,7 @@ import numpy as np
 import seaborn as sns
 from statsmodels.graphics.tsaplots import plot_acf
 from statsmodels.api import qqplot, qqplot_2samples
-from helpers.calculations_helpers import rescale_array
+from helpers.calculations_helpers import rescale_array, calculate_volatility
 
 
 def extract_weekend_data_effect(simulation_history):
@@ -160,8 +160,7 @@ def observe_antileverage_effect(price_history):
     window_length = 5
     for timestep in range(len(price_history)):
         sub_price_history = price_history[timestep: timestep + window_length]
-        mean_i = np.mean(sub_price_history)
-        vol_i = (np.sum((sub_price_history - mean_i)**2)/len(sub_price_history))**0.5
+        vol_i = calculate_volatility(sub_price_history)
         volatility_list.append(vol_i)
     fig, ax = plt.subplots(figsize=(8, 8))
     ax.plot(returns, 'g-', label="Returns")

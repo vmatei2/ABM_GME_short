@@ -94,6 +94,12 @@ def plot_gamma_variation(all_gammas, stock_prices):
     plt.show()
 
 
+def calculate_volatility(price_history):
+    mean = np.mean(price_history)
+    vol = (np.sum((price_history - mean) ** 2)/len(price_history)) ** 0.5
+    return vol
+
+
 if __name__ == '__main__':
     all_gammas, stock_prices = gamma_variation(K=60, r=0.05, volatility=0.2, T=0.054) # 0.19 = fraction 10 weeks of a year
     plot_gamma_variation(all_gammas, stock_prices)

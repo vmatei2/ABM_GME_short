@@ -1,14 +1,16 @@
 class Option:
-    def __init__(self, id, K, volatility, T, option_type):
+    def __init__(self, id, K, expiry_date, option_type, date_sold):
         """
 
         :param id:
         :param K: strike price
         :param volatility:
-        :param T: expiration date
+        :param T: days to expiration
+        :param date_sold: trading day when sold
         """
         self.id = id
         self.K = K
-        self.volatility = volatility
-        self.T = T
+        self.expiry_date = expiry_date
         self.option_type = option_type
+        self.date_sold = date_sold
+        self.expired = False

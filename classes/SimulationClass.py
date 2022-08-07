@@ -154,7 +154,7 @@ class SimulationClass:
                 agent.make_decision(average_network_commitment, threshold)
             else:
                 decision = agent.make_decision(average_network_commitment, self.market_environment.current_price,
-                                               self.market_environment.price_history, white_noise, self.trading_halted, self.market_maker)
+                                               self.market_environment.price_history, white_noise, self.trading_halted, self.market_maker, trading_day)
                 if decision == 1:  # above function returns 1 when agent buys option
                     options_bought += 1
         for i in range(int(len(self.institutional_investors) / 2)):
@@ -162,8 +162,13 @@ class SimulationClass:
             decision = institutional_inv_agent.make_decision(self.market_environment.current_price,
                                                              self.market_environment.price_history)
             institutional_inv_decision_dict[trading_day].append(decision)
+        will_hedge = random.choices([False, True], [self.market_maker.risk_tolerance, 1-self.market_maker.risk_tolerance])
         demand_from_retail, demand_from_hf = self.market_environment.update_market(participating_agents,
-                                                                                   self.institutional_investors)
+                                                                                   self.institutional_investors, self.market_maker)
+        if will_hedge[0]:
+            self.market_maker.hedge_all_positions(self.market_environment.current_price,
+                                                  self.market_environment.price_history)
+
         return volume, demand_from_retail, demand_from_hf, options_bought
 
     def run_simulation(self, halt_trading):
@@ -215,6 +220,7 @@ class SimulationClass:
                     volume_history.append(volume)
                     options_bought_history.append(options_bought)
                 except TypeError as e:
+                    print(e)
                     # Exception being hit when it is a weekend and the market is closed in the simulation
                     # the market_interaction function returns nothing in this case
                     pass
@@ -396,7 +402,7 @@ if __name__ == '__main__':
     #  Sensitivity Analysis Section
     # sensitivty_analyis_mu_theta()
     # sensitivty_analysis_ofat()
-    sensitivty_analysis_ofat()
+    start_simulation()
 
 
 

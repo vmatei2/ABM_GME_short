@@ -91,7 +91,7 @@ class RegularRedditTrader(RedditTrader):
 
 
 
-    def make_decision(self, average_network_commitment, current_price, price_history, white_noise, trading_halted, market_maker):
+    def make_decision(self, average_network_commitment, current_price, price_history, white_noise, trading_halted, market_maker, trading_day):
 
         if trading_halted:
             self.act_if_trading_halted(current_price, price_history, white_noise)
@@ -99,7 +99,8 @@ class RegularRedditTrader(RedditTrader):
         if self.bought_option:  # not doing anything if we have bought an option already
             return
         if self.commitment > 0.6 and average_network_commitment > 0.624:
-            self.demand = 100 * self.commitment  # buys options
+            option_id = market_maker.sell_option(current_price, trading_day=trading_day)
+            market_maker.hedge_position(option_id, current_price, price_history)
             self.bought_option = True
             return
         elif self.commitment > 0.5:
