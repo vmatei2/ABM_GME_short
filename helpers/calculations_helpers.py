@@ -63,6 +63,11 @@ def calculate_pdf(d1):
     pdf = (math.e ** (-math.pow(d1, 2) / 2)) / (np.sqrt(2 * np.pi))
     return pdf
 
+def calculate_delta(S, K, r, volatility, T):
+    d1 = calculate_d1(S, K, r, volatility, T)
+    delta = calculate_pdf(d1)
+    return delta
+
 
 def calculate_gamma(S, K, r, volatility, T):
     d1 = calculate_d1(S, K, r, volatility, T)

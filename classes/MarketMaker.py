@@ -1,7 +1,7 @@
 import random
 
 from classes.Option import Option
-from helpers.calculations_helpers import calculate_gamma, calculate_volatility
+from helpers.calculations_helpers import calculate_gamma, calculate_volatility, calculate_delta
 
 
 class MarketMaker:
@@ -19,8 +19,8 @@ class MarketMaker:
         r = 0.05
         days_in_a_year = 365
         T = (option.expiry_date - trading_day) / days_in_a_year
-        gamma = calculate_gamma(current_price, option.K, r, volatility, T)
-        hedge = gamma * 100
+        delta = calculate_delta(current_price, option.K, r, volatility, T)
+        hedge = delta * 100
         return hedge
 
     def sell_option(self, current_price, trading_day, id):
@@ -34,10 +34,9 @@ class MarketMaker:
         self.options_sold += 1
         return option
 
-    def hedge_all_positions(self, current_price, price_history, trading_day):
+    def hedge_all_positions(self, current_price, price_history, trading_day, retail_agents):
         for option_id, option in self.options_sold_dict.items():
             if trading_day > option.expiry_date:
                 option.expired = True
             else:
-                option.T = trading_day - option.date_sold
-            self.hedge_position(option, current_price, price_history)
+                self.hedge_position(option, current_price, price_history)
