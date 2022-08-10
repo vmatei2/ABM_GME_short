@@ -10,9 +10,9 @@ class MarketMaker:
         self.demand = 0
         self.options_sold = 1
         self.options_sold_dict = {}
-        self.risk_tolerance = random.choice([0, 0.25, 0.5, 0.75, 1])  # 1 - high risk-tolerance, 0 - low risk-tolerance
+        self.risk_tolerance = 0.75 #random.choice([0, 0.25, 0.5, 0.75, 1])  # 1 - high risk-tolerance, 0 - low risk-tolerance
 
-    def hedge_position(self, option, current_price, price_history, trading_day):
+    def hedge_position(self, option, current_price, price_history, trading_day, retail_agents=None):
         if option.expired:
             return
         volatility = calculate_volatility(price_history) / 100
@@ -20,7 +20,11 @@ class MarketMaker:
         days_in_a_year = 365
         T = (option.expiry_date - trading_day) / days_in_a_year
         delta = calculate_delta(current_price, option.K, r, volatility, T)
-        hedge = delta * 100
+        difference = delta - option.delta
+        hedge = difference * 100
+        option.delta = delta
+        if retail_agents and option.date_sold != trading_day:  # check to avoid re-hedging against option just sold
+            retail_agents[option.id].demand += hedge
         return hedge
 
     def sell_option(self, current_price, trading_day, id):
@@ -30,7 +34,7 @@ class MarketMaker:
         type = "call"
         expiry_date = trading_day + random.choice(maturities)
         option = Option(id=id, K=K, expiry_date=expiry_date, option_type=type, date_sold=trading_day)
-        self.options_sold_dict[id] = [option, 0]
+        self.options_sold_dict[id] = option
         self.options_sold += 1
         return option
 
@@ -38,5 +42,7 @@ class MarketMaker:
         for option_id, option in self.options_sold_dict.items():
             if trading_day > option.expiry_date:
                 option.expired = True
+            elif trading_day == option.date_sold:
+                return
             else:
-                self.hedge_position(option, current_price, price_history)
+                self.hedge_position(option, current_price, price_history, trading_day, retail_agents)

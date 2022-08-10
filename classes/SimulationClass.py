@@ -154,7 +154,8 @@ class SimulationClass:
                 agent.make_decision(average_network_commitment, threshold)
             else:
                 decision = agent.make_decision(average_network_commitment, self.market_environment.current_price,
-                                               self.market_environment.price_history, white_noise, self.trading_halted, self.market_maker, trading_day)
+                                               self.market_environment.price_history, white_noise, self.trading_halted,
+                                               self.market_maker, trading_day)
                 if decision == 1:  # above function returns 1 when agent buys option
                     options_bought += 1
         for i in range(int(len(self.institutional_investors) / 2)):
@@ -162,12 +163,16 @@ class SimulationClass:
             decision = institutional_inv_agent.make_decision(self.market_environment.current_price,
                                                              self.market_environment.price_history)
             institutional_inv_decision_dict[trading_day].append(decision)
-        will_hedge = random.choices([False, True], [self.market_maker.risk_tolerance, 1-self.market_maker.risk_tolerance])
+        will_hedge = random.choices([False, True],
+                                    [self.market_maker.risk_tolerance, 1 - self.market_maker.risk_tolerance])
+        if not self.trading_halted:
+            if will_hedge[0]:
+                self.market_maker.hedge_all_positions(self.market_environment.current_price,
+                                                      self.market_environment.price_history, trading_day,
+                                                      retail_agents=self.social_media_agents)
+
         demand_from_retail, demand_from_hf = self.market_environment.update_market(participating_agents,
                                                                                    self.institutional_investors)
-        # if will_hedge[0]:
-        #     self.market_maker.hedge_all_positions(self.market_environment.current_price,
-        #                                           self.market_environment.price_history)
 
         return volume, demand_from_retail, demand_from_hf, options_bought
 
@@ -230,7 +235,7 @@ class SimulationClass:
                 print_current_time()
                 if volume >= self.volume_threshold * self.N_agents and halt_trading:
                     agent_ids_to_be_deleted = self.halt_trading(commitment_threshold=0.65,
-                                                                commitment_lower_upper=[0.12, 0.2])
+                                                                commitment_lower_upper=[0.1, 0.2])
                     print("Trading halted")
                 print()
 
@@ -263,9 +268,7 @@ class SimulationClass:
 
         plot_commitment_into_groups(df_data, title="Evolution of agent commitments in the network through each 20 days")
 
-        market_environment.plot_price_history("Price evolution during simulation")
-
-        barplot_options_bought(list(market_environment.simulation_history.keys()), options_bought_history)
+        market_environment.plot_price_history("Price evolution during simulation, market maker risk tolerance = " + str(self.market_maker.risk_tolerance))
 
         observe_fat_tails_returns_distribution(list(market_environment.simulation_history.values()))
 
@@ -280,14 +283,15 @@ class SimulationClass:
 
 def start_simulation(miu=0.17, commitment_scaler=1.5, n_agents=10000,
                      n_institutional_investors=200, fundamental_price_inst_inv=1,
-                     volume_threshold=0.97, lambda_parameter=1.75, time_steps=100):
+                     volume_threshold=0.98, lambda_parameter=1.75, time_steps=100):
     gme = yf.Ticker("GME")
     gme_price_history = get_price_history(gme, "2020-11-15", "2020-12-08")
     gme_price_history = select_closing_prices(gme_price_history)
     start_date = datetime.datetime(2020, 12, 7)
     market_environment = MarketEnvironment(initial_price=16.35, name="GME Market Environment",
                                            price_history=gme_price_history, start_date=start_date)
-    simulation = SimulationClass(time_steps=time_steps, N_agents=n_agents, N_institutional_investors=n_institutional_investors,
+    simulation = SimulationClass(time_steps=time_steps, N_agents=n_agents,
+                                 N_institutional_investors=n_institutional_investors,
                                  m=4,
                                  market_environment=market_environment, miu=miu,
                                  commitment_scaler=commitment_scaler, volume_threshold=volume_threshold,
@@ -350,12 +354,16 @@ def sensitivty_analysis_ofat():
     commitment_scaler_list = np.linspace(0.1, 5, 50)
     volume_threshold_list = np.linspace(0.6, 1, 11)
     miu_parameter_list = np.linspace(0.1, 2, 20)
-    sa_results_dict = one_factor_at_a_time_sensitivity_analysis(n_reddit_agents_list, n_inst_investors_list, fund_prices_list, commitment_scaler_list, volume_threshold_list,
+    sa_results_dict = one_factor_at_a_time_sensitivity_analysis(n_reddit_agents_list, n_inst_investors_list,
+                                                                fund_prices_list, commitment_scaler_list,
+                                                                volume_threshold_list,
                                                                 miu_parameter_list, gme_price_history)
     write_results_dict_to_file(sa_results_dict, "ofat_sa_results")
 
+
 def one_factor_at_a_time_sensitivity_analysis(n_reddit_agents_list, n_inst_investors_list, fund_prices_list,
-                                              commitment_scaler_list, volume_threshold_list, miu_list, gme_history_copy):
+                                              commitment_scaler_list, volume_threshold_list, miu_list,
+                                              gme_history_copy):
     all_lists = [n_reddit_agents_list, n_inst_investors_list, fund_prices_list, commitment_scaler_list,
                  volume_threshold_list, miu_list]
     results_dict = {}
@@ -363,17 +371,23 @@ def one_factor_at_a_time_sensitivity_analysis(n_reddit_agents_list, n_inst_inves
     for index, parameter_list in enumerate(all_lists):
         for parameter in parameter_list:
             if index == 0:  # update n reddit agents list
-                prices, market_object, simulation_object, avg_commitment_history, hf_decision_dict = start_simulation(n_agents=parameter)
+                prices, market_object, simulation_object, avg_commitment_history, hf_decision_dict = start_simulation(
+                    n_agents=parameter)
             elif index == 1:  # update n inst investors
-                prices, market_object, simulation_object, avg_commitment_history, hf_decision_dict = start_simulation(n_institutional_investors=parameter)
+                prices, market_object, simulation_object, avg_commitment_history, hf_decision_dict = start_simulation(
+                    n_institutional_investors=parameter)
             elif index == 2:
-                prices, market_object, simulation_object, avg_commitment_history, hf_decision_dict = start_simulation(fundamental_price_inst_inv=parameter)
+                prices, market_object, simulation_object, avg_commitment_history, hf_decision_dict = start_simulation(
+                    fundamental_price_inst_inv=parameter)
             elif index == 3:
-                prices, market_object, simulation_object, avg_commitment_history, hf_decision_dict = start_simulation(commitment_scaler=parameter)
+                prices, market_object, simulation_object, avg_commitment_history, hf_decision_dict = start_simulation(
+                    commitment_scaler=parameter)
             elif index == 4:
-                prices, market_object, simulation_object, avg_commitment_history, hf_decision_dict = start_simulation(volume_threshold=parameter)
+                prices, market_object, simulation_object, avg_commitment_history, hf_decision_dict = start_simulation(
+                    volume_threshold=parameter)
             elif index == 5:
-                prices, market_object, simulation_object, avg_commitment_history, hf_decision_dict = start_simulation(miu=parameter)
+                prices, market_object, simulation_object, avg_commitment_history, hf_decision_dict = start_simulation(
+                    miu=parameter)
             results_dict[iteration] = {}
             results_dict[iteration]["N_agents"] = simulation_object.N_agents
             results_dict[iteration]["N_inst_investors"] = simulation_object.N_institutional_investors
@@ -391,18 +405,15 @@ def one_factor_at_a_time_sensitivity_analysis(n_reddit_agents_list, n_inst_inves
     return results_dict
 
 
+def run_x_simulations(n_simulations):
+    simulation_prices = []
+    for i in range(n_simulations):
+        prices, market_env, sim_obj, avg_commitment_history, hf_decision_dict = start_simulation()
+        simulation_prices.append(prices)
+    return simulation_prices
+
+
 if __name__ == '__main__':
     sns.set_style("darkgrid")
     n_simulations = 1
-    #
-    # for i in range(n_simulations):
-    #     prices, market_environment = start_simulation(simulation_prices)
-    #     simulation_prices.append(prices)
-
-    #  Sensitivity Analysis Section
-    # sensitivty_analyis_mu_theta()
-    # sensitivty_analysis_ofat()
-    start_simulation()
-
-
-
+    run_x_simulations(n_simulations)

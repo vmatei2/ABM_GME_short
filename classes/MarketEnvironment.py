@@ -46,6 +46,7 @@ class MarketEnvironment:
         plt.xlabel("Date", fontsize=15)
         plt.ylabel("Price", fontsize=15)
         plt.title(title, fontsize=19)
+        plt.savefig(title+ ".jpg")
         plt.show()
 
 

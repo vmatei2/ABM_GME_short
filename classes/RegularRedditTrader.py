@@ -102,7 +102,7 @@ class RegularRedditTrader(RedditTrader):
             number_of_contracts = random.randint(1, 10)
             self.demand = hedge * number_of_contracts
             self.bought_option = True
-            return
+            return 1
         elif self.commitment > 0.5:
             self.demand = self.commitment_scaler * self.commitment  # slightly committed, still considers technical analysis
         elif self.commitment < 0.5:

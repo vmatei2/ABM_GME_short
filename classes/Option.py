@@ -14,3 +14,4 @@ class Option:
         self.option_type = option_type
         self.date_sold = date_sold
         self.expired = False
+        self.delta = 0
