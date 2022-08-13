@@ -279,7 +279,8 @@ def start_simulation(miu=0.17, commitment_scaler=1.5, n_agents=10000,
     start_date = datetime.datetime(2020, 12, 7)
     market_environment = MarketEnvironment(initial_price=16.35, name="GME Market Environment",
                                            price_history=gme_price_history, start_date=start_date)
-    simulation = SimulationClass(time_steps=time_steps, N_agents=n_agents, N_institutional_investors=n_institutional_investors,
+    simulation = SimulationClass(time_steps=time_steps, N_agents=n_agents,
+                                 N_institutional_investors=n_institutional_investors,
                                  m=4,
                                  market_environment=market_environment, miu=miu,
                                  commitment_scaler=commitment_scaler, volume_threshold=volume_threshold,
@@ -342,12 +343,16 @@ def sensitivty_analysis_ofat():
     commitment_scaler_list = np.linspace(0.1, 5, 50)
     volume_threshold_list = np.linspace(0.6, 1, 11)
     miu_parameter_list = np.linspace(0.1, 2, 20)
-    sa_results_dict = one_factor_at_a_time_sensitivity_analysis(n_reddit_agents_list, n_inst_investors_list, fund_prices_list, commitment_scaler_list, volume_threshold_list,
+    sa_results_dict = one_factor_at_a_time_sensitivity_analysis(n_reddit_agents_list, n_inst_investors_list,
+                                                                fund_prices_list, commitment_scaler_list,
+                                                                volume_threshold_list,
                                                                 miu_parameter_list, gme_price_history)
     write_results_dict_to_file(sa_results_dict, "ofat_sa_results")
 
+
 def one_factor_at_a_time_sensitivity_analysis(n_reddit_agents_list, n_inst_investors_list, fund_prices_list,
-                                              commitment_scaler_list, volume_threshold_list, miu_list, gme_history_copy):
+                                              commitment_scaler_list, volume_threshold_list, miu_list,
+                                              gme_history_copy):
     all_lists = [n_reddit_agents_list, n_inst_investors_list, fund_prices_list, commitment_scaler_list,
                  volume_threshold_list, miu_list]
     results_dict = {}
@@ -355,17 +360,23 @@ def one_factor_at_a_time_sensitivity_analysis(n_reddit_agents_list, n_inst_inves
     for index, parameter_list in enumerate(all_lists):
         for parameter in parameter_list:
             if index == 0:  # update n reddit agents list
-                prices, market_object, simulation_object, avg_commitment_history, hf_decision_dict = start_simulation(n_agents=parameter)
+                prices, market_object, simulation_object, avg_commitment_history, hf_decision_dict = start_simulation(
+                    n_agents=parameter)
             elif index == 1:  # update n inst investors
-                prices, market_object, simulation_object, avg_commitment_history, hf_decision_dict = start_simulation(n_institutional_investors=parameter)
+                prices, market_object, simulation_object, avg_commitment_history, hf_decision_dict = start_simulation(
+                    n_institutional_investors=parameter)
             elif index == 2:
-                prices, market_object, simulation_object, avg_commitment_history, hf_decision_dict = start_simulation(fundamental_price_inst_inv=parameter)
+                prices, market_object, simulation_object, avg_commitment_history, hf_decision_dict = start_simulation(
+                    fundamental_price_inst_inv=parameter)
             elif index == 3:
-                prices, market_object, simulation_object, avg_commitment_history, hf_decision_dict = start_simulation(commitment_scaler=parameter)
+                prices, market_object, simulation_object, avg_commitment_history, hf_decision_dict = start_simulation(
+                    commitment_scaler=parameter)
             elif index == 4:
-                prices, market_object, simulation_object, avg_commitment_history, hf_decision_dict = start_simulation(volume_threshold=parameter)
+                prices, market_object, simulation_object, avg_commitment_history, hf_decision_dict = start_simulation(
+                    volume_threshold=parameter)
             elif index == 5:
-                prices, market_object, simulation_object, avg_commitment_history, hf_decision_dict = start_simulation(miu=parameter)
+                prices, market_object, simulation_object, avg_commitment_history, hf_decision_dict = start_simulation(
+                    miu=parameter)
             results_dict[iteration] = {}
             results_dict[iteration]["N_agents"] = simulation_object.N_agents
             results_dict[iteration]["N_inst_investors"] = simulation_object.N_institutional_investors
@@ -383,9 +394,15 @@ def one_factor_at_a_time_sensitivity_analysis(n_reddit_agents_list, n_inst_inves
     return results_dict
 
 
+def run_x_simulations(n_simulations):
+    simulation_prices = []
+    for i in range(n_simulations):
+        prices, market_env, sim_obj, avg_commitment_history, hf_decision_dict = start_simulation()
+        simulation_prices.append(prices)
+    return simulation_prices
+
+
 if __name__ == '__main__':
     sns.set_style("darkgrid")
     n_simulations = 1
-    start_simulation()
-
-
+    run_x_simulations(n_simulations)

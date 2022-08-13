@@ -1,10 +1,9 @@
 import json
-
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 from IPython.core.display import display
-from mpl_toolkits import mplot3d
+
 
 def calculate_rmse(simulation_price_history, gme_price_history):
     mse_array = np.square(np.subtract(simulation_price_history, gme_price_history))
@@ -12,6 +11,7 @@ def calculate_rmse(simulation_price_history, gme_price_history):
     rmse = np.mean(rmse_array)
     print("RMSE between values is: ", rmse)
     return rmse
+
 
 def plot_sens_analysis_results(rmse_dict):
     rmse_vals = []
@@ -32,7 +32,7 @@ def plot_sens_analysis_results(rmse_dict):
 
     my_cmap = plt.get_cmap('hot')
     trisurf = ax.plot_trisurf(miu_vals, commitment_scaler_vals, rmse_vals,
-                    cmap=my_cmap, linewidth=0.2, antialiased=True, edgecolor="none")
+                              cmap=my_cmap, linewidth=0.2, antialiased=True, edgecolor="none")
 
     fig.colorbar(trisurf, ax=ax, shrink=0.5, aspect=5)
     ax.set_title(r"Sensitivity Analysis of $\mu$ and $\theta$", fontsize=18)
@@ -77,6 +77,7 @@ def analyse_results(sa_df):
     print()
     display(sa_df.loc[min_price_idx])
 
+
 def extract_statistics(list_, title):
     mean = np.mean(list_)
     std_dev = np.std(list_)
@@ -91,6 +92,7 @@ def extract_statistics(list_, title):
     print(f"Interquantile range of {title} is: {iqr}")
 
     print()
+
 
 if __name__ == '__main__':
     sa_df = load_results("ofat_sa_results")

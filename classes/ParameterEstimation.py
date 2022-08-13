@@ -11,6 +11,7 @@ from helpers.plotting_helpers import get_price_history, select_closing_prices
 
 sns.set_style('darkgrid')
 
+
 class ParameterEstimation:
     def __init__(self):
         self.commitment_histories = []
@@ -39,7 +40,6 @@ class ParameterEstimation:
         plt.title(r"Parameter Estimation of $\mu$", fontsize=20)
         plt.show()
 
-
     def estimate_lambda(self):
         lambdas = np.linspace(1, 2.5, 20)
         for lambda_ in lambdas:
@@ -63,6 +63,7 @@ class ParameterEstimation:
 
         plt.legend(legend_entries, fontsize=14)
         plt.show()
+
 
 if __name__ == '__main__':
     start_date = datetime.datetime(2020, 12, 7)

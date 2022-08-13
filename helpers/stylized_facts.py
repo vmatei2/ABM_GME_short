@@ -2,8 +2,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import seaborn as sns
 from statsmodels.graphics.tsaplots import plot_acf
-from statsmodels.api import qqplot, qqplot_2samples
-from helpers.calculations_helpers import rescale_array
+from statsmodels.api import qqplot
 
 
 def extract_weekend_data_effect(simulation_history):
@@ -19,7 +18,6 @@ def extract_weekend_data_effect(simulation_history):
     # return for first entry
     i = 0
     for date, price in simulation_history.items():
-
         returns_dictionary[date.date()] = returns_history[i]
         i += 1
     plt.figure(figsize=(8, 8))
@@ -64,8 +62,6 @@ def extract_weekend_data_effect(simulation_history):
     return returns_dictionary
 
 
-
-
 def pct_change(nparray):
     pct = np.zeros_like(nparray)
     pct[1:] = np.diff(nparray) / np.abs(nparray[:-1])
@@ -98,7 +94,6 @@ def observe_fat_tails_returns_distribution(price_history, real_gme_price=False):
     plt.title(title, fontsize=16)
     plt.savefig(save_path)
     plt.show()
-
 
 
 def plot_simulation_against_real_values(simulation_values, real_values):
@@ -161,7 +156,7 @@ def observe_antileverage_effect(price_history):
     for timestep in range(len(price_history)):
         sub_price_history = price_history[timestep: timestep + window_length]
         mean_i = np.mean(sub_price_history)
-        vol_i = (np.sum((sub_price_history - mean_i)**2)/len(sub_price_history))**0.5
+        vol_i = (np.sum((sub_price_history - mean_i) ** 2) / len(sub_price_history)) ** 0.5
         volatility_list.append(vol_i)
     fig, ax = plt.subplots(figsize=(8, 8))
     ax.plot(returns, 'g-', label="Returns")
@@ -173,7 +168,6 @@ def observe_antileverage_effect(price_history):
     ax2.plot(volatility_list, 'r-', label="Volatility")
     ax2.set_ylabel("Volatility", fontsize=19)
     ax2.yaxis.set_tick_params(labelsize=15)
-
 
     handles, labels = [], []
     for ax in fig.axes:

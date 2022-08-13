@@ -6,6 +6,11 @@ import numpy as np
 import datetime
 
 class MarketEnvironment:
+    """
+    Artificial market environment where prices are getting updated according to agent excess demand
+    Volume calculated through select_participating_agents
+    date is tracked, market gets closed at the weekend
+    """
     def __init__(self, initial_price, name, price_history, start_date):
         self.name = name
         self.initial_price = initial_price

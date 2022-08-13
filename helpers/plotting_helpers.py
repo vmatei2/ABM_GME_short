@@ -1,5 +1,4 @@
 import collections
-
 import networkx as nx
 import numpy as np
 import pandas as pd
@@ -20,6 +19,7 @@ def get_price_history(ticker, start_date, end_date):
     # getting the historical data
     price_history = ticker.history(start=start_date, end=end_date)
     return price_history
+
 
 def select_closing_prices(price_history_df):
     closing_prices = price_history_df["Close"].to_list()
@@ -191,9 +191,9 @@ def plot_institutional_investors_decisions(decision_dict, dates):
     plt.xlabel("Trading Day", fontsize=17)
     plt.ylabel("Count", fontsize=17)
     plt.title("Institutional Investor Decisions at each trading day", fontsize=20)
-    plt.legend(['Short GME Stock(Take Gamble)', 'Close Short Position(Accept Sure Loss)'], fontsize=12, loc=6) # 6 = center left location
+    plt.legend(['Short GME Stock(Take Gamble)', 'Close Short Position(Accept Sure Loss)'], fontsize=12,
+               loc=6)  # 6 = center left location
     plt.savefig("../images/institutional_inv_decisions")
-
 
 
 ####  NETWORK PLOTTING HELPERS
