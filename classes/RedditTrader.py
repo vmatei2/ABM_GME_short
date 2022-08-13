@@ -15,8 +15,7 @@ class RedditTrader:
             self.demand = demand
         self.investor_type = investor_type
 
-    def print_agent_demand(self):
-        print("The demand of agent %d is %d" % (self.id, self.demand))
+
 
 
 

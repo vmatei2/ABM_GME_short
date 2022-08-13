@@ -5,6 +5,9 @@ import numpy as np
 
 
 class RegularRedditTrader(RedditTrader):
+    """
+    Child class of "RedditTradder" parent class implementing the behaviour of such agents in the market and inheriting the common properties of the reddit trader
+    """
     def __init__(self, id, neighbours_ids, commitment=None, investor_type=None, commitment_scaler=None):
         demand = 0  # an agent's initial demand
         if commitment is None:
@@ -12,12 +15,12 @@ class RegularRedditTrader(RedditTrader):
         self.d = random.uniform(0.1, 0.3)  # threshold for difference in commitment to be too high - or confidence
         # interval value - random choice rather than set values as all agents will be slightly different,
         # hence we want thought processes to be heterogeneous
-        self.b = random.uniform(-1, 1)  # a parameter which gives the strength of the force calculated as simply (
+        self.b = random.uniform(-1, 1)  # gives the strength of the force calculated as simply (
         # current price - moving_average)
         self.expected_price = 0
         self.commitment_scaler = commitment_scaler
         self.has_closed_position = False  # variable to replicate how, after commitment going down, if the agent sells
-        # then he is completely out, believing the market to be rigged
+        # then he is completely out
         self.demand_history = []
         self.bought_option = False
         self.has_trading_been_halted = False
@@ -109,7 +112,7 @@ class RegularRedditTrader(RedditTrader):
 
     def compute_price_expectation_chartist(self, current_price, price_history, white_noise):
         """
-        Taken from - minimal agent based model for financial markets
+        Insipred from - minimal agent based model for financial markets
 
         Chartists agents detect a trend through looking at the distance between the price and its smoothed profile (
         given by moving average in this case) :param current_price: :param current_trading_day: :param price_history:
@@ -131,5 +134,15 @@ class RegularRedditTrader(RedditTrader):
         return rolling_average
 
     def compute_price_expectation_fundamentalist(self, current_price, price_history, white_noise):
-        expected_price = current_price + self.b * (self.fundamental_price - current_price)
+        """
+        Inspired from - mininal agent based model for financial markets
+
+        Long-term view agents are modelled through a stochastic equation written in terms of a random walk
+
+        :param current_price:
+        :param price_history:
+        :param white_noise:
+        :return:
+        """
+        expected_price = current_price + self.b * (self.fundamental_price - current_price) + white_noise
         return expected_price

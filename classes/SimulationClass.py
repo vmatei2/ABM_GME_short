@@ -386,15 +386,6 @@ def one_factor_at_a_time_sensitivity_analysis(n_reddit_agents_list, n_inst_inves
 if __name__ == '__main__':
     sns.set_style("darkgrid")
     n_simulations = 1
-    #
-    # for i in range(n_simulations):
-    #     prices, market_environment = start_simulation(simulation_prices)
-    #     simulation_prices.append(prices)
-
-    #  Sensitivity Analysis Section
-    # sensitivty_analyis_mu_theta()
-    # sensitivty_analysis_ofat()
     start_simulation()
-
 
 

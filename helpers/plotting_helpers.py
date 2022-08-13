@@ -324,9 +324,6 @@ if __name__ == '__main__':
     gme_ticker = "GME"
     gme = yf.Ticker(gme_ticker)
     gme_price_history = get_price_history(gme, "2020-12-08", "2021-02-04")
-    # plot_two_df_columns_together(gme_price_history, "Close", "Volume", "Open", "area", title="Closing and Opening "
-    #                                                                                          "Price Against Traded "
-    #                                                                                          "Volume")
     plot_multiple_figures(gme_price_history)
     gme_institutional_holders = gme.institutional_holders
     gme_dates = gme_price_history.index
