@@ -164,7 +164,7 @@ class SimulationClass:
                                                                                    self.institutional_investors)
         return volume, demand_from_retail, demand_from_hf, options_bought
 
-    def run_simulation(self, halt_trading):
+    def run_simulation(self, halt_trading, gme_copy=None):
         trading_day = 0
         step = 0  # we are splitting the 100 days into 20 days steps
         threshold = 0.65
@@ -228,7 +228,7 @@ class SimulationClass:
 
         self.run_all_plots(self.market_environment, all_commitments_each_round, average_commitment_history,
                            commitment_changes, hedge_fund_decision_dict, demand_dict, df_data,
-                           options_bought_history, agent_network_evolution_dict)
+                           options_bought_history, agent_network_evolution_dict, gme_copy)
         simulated_price = list(self.market_environment.simulation_history.values())
 
         return simulated_price, average_commitment_history, hedge_fund_decision_dict
@@ -236,7 +236,7 @@ class SimulationClass:
     def run_all_plots(self, market_environment, all_commitments_each_round, average_commitment_history,
                       commitment_changes, hedge_fund_decision_dict,
                       demand_dict, df_data, options_bought_history,
-                      agent_network_evolution_dict):
+                      agent_network_evolution_dict, gme_copy):
         ### PLOTTING FUNCTIONS
         plot_all_commitments(all_commitments_each_round, self.N_agents, average_commitment_history,
                              "Evolution of all agent commitments")
@@ -257,7 +257,8 @@ class SimulationClass:
 
         market_environment.plot_price_history("Price evolution during simulation")
 
-        barplot_options_bought(list(market_environment.simulation_history.keys()), options_bought_history)
+        if gme_copy is not None:
+            plot_simulation_against_real_values(market_environment.simulation_history.values(), gme_copy)
 
         observe_fat_tails_returns_distribution(list(market_environment.simulation_history.values()))
 
@@ -276,6 +277,8 @@ def start_simulation(miu=0.17, commitment_scaler=1.5, n_agents=10000,
     gme = yf.Ticker("GME")
     gme_price_history = get_price_history(gme, "2020-11-15", "2020-12-08")
     gme_price_history = select_closing_prices(gme_price_history)
+    gme_empirical_data_simulation = get_price_history(gme, "2020-11-15", "2021-02-07")
+    gme_empirical_data_simulation = select_closing_prices(gme_empirical_data_simulation)
     start_date = datetime.datetime(2020, 12, 7)
     market_environment = MarketEnvironment(initial_price=16.35, name="GME Market Environment",
                                            price_history=gme_price_history, start_date=start_date)

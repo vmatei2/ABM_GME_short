@@ -28,7 +28,7 @@ class RegularRedditTrader(RedditTrader):
         self.post_halting_decisions['over 0.5 commitment'] = 0
         self.post_halting_decisions['long-term'] = 0
         self.post_halting_decisions['short-term-price-go-up'] = 0
-        self.fundamental_price = random.uniform(10, 15)
+        self.fundamental_price = random.uniform(10, 50)
         super().__init__(id, neighbours_ids, demand, commitment, investor_type)
 
     def update_commitment(self, agents, miu):
@@ -145,5 +145,5 @@ class RegularRedditTrader(RedditTrader):
         :param white_noise:
         :return:
         """
-        expected_price = current_price + self.b * (self.fundamental_price - current_price) + white_noise
+        expected_price = current_price + abs(self.b) * (self.fundamental_price - current_price) + white_noise
         return expected_price
