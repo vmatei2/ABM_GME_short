@@ -226,9 +226,9 @@ class SimulationClass:
                     print("Trading halted")
                 print()
 
-        # self.run_all_plots(self.market_environment, all_commitments_each_round, average_commitment_history,
-        #                    commitment_changes, hedge_fund_decision_dict, demand_dict, df_data,
-        #                    options_bought_history, agent_network_evolution_dict)
+        self.run_all_plots(self.market_environment, all_commitments_each_round, average_commitment_history,
+                           commitment_changes, hedge_fund_decision_dict, demand_dict, df_data,
+                           options_bought_history, agent_network_evolution_dict)
         simulated_price = list(self.market_environment.simulation_history.values())
 
         return simulated_price, average_commitment_history, hedge_fund_decision_dict
@@ -394,7 +394,7 @@ if __name__ == '__main__':
     #  Sensitivity Analysis Section
     # sensitivty_analyis_mu_theta()
     # sensitivty_analysis_ofat()
-    sensitivty_analysis_ofat()
+    start_simulation()
 
 
 

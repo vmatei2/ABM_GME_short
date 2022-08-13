@@ -25,6 +25,7 @@ class RegularRedditTrader(RedditTrader):
         self.post_halting_decisions['over 0.5 commitment'] = 0
         self.post_halting_decisions['long-term'] = 0
         self.post_halting_decisions['short-term-price-go-up'] = 0
+        self.fundamental_price = random.uniform(10, 15)
         super().__init__(id, neighbours_ids, demand, commitment, investor_type)
 
     def update_commitment(self, agents, miu):
@@ -74,7 +75,6 @@ class RegularRedditTrader(RedditTrader):
             self.demand = -current_demand
             self.has_trading_been_halted = True
 
-
     def decision_based_on_personal_strategy(self, current_price, price_history, white_noise):
         if self.investor_type == RedditInvestorTypes.RATIONAL_SHORT_TERM:
             expected_price = self.compute_price_expectation_chartist(current_price, price_history, white_noise)
@@ -83,13 +83,11 @@ class RegularRedditTrader(RedditTrader):
             else:
                 self.demand -= self.commitment_scaler * self.commitment
         elif self.investor_type == RedditInvestorTypes.LONGTERM:
-            expected_price = 30  # introduce fundamentalist pricing formula calculation here
+            expected_price = self.compute_price_expectation_fundamentalist(current_price, price_history, white_noise)  # introduce fundamentalist pricing formula calculation here
             if expected_price < current_price:
                 self.demand = -self.commitment * self.commitment_scaler
             elif expected_price > current_price:
                 self.demand += self.commitment * self.commitment_scaler
-
-
 
     def make_decision(self, average_network_commitment, current_price, price_history, white_noise, trading_halted):
 
@@ -131,3 +129,7 @@ class RegularRedditTrader(RedditTrader):
             total_prices += price_history[i]
         rolling_average = total_prices / rolling_average_window_length
         return rolling_average
+
+    def compute_price_expectation_fundamentalist(self, current_price, price_history, white_noise):
+        expected_price = current_price + self.b * (self.fundamental_price - current_price)
+        return expected_price
