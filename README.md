@@ -1,6 +1,6 @@
 This zipped folder contains all code used in generating the outcomes presented in the thesis.
 
-The main file that generates results is SimulationClass. 
+The main file that generates results is SimulationClass.
 
 Supporting files are as follows:
 

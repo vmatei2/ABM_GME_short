@@ -391,6 +391,12 @@ def one_factor_at_a_time_sensitivity_analysis(n_reddit_agents_list, n_inst_inves
 
 
 def run_x_simulations(n_simulations):
+    """
+    Main function to run x number of simulations, and store simulation prices time series array of each simulation
+    start_simulation can take in model parameter values, otherwise these are set to base values
+    :param n_simulations:
+    :return:
+    """
     simulation_prices = []
     for i in range(n_simulations):
         prices, market_env, sim_obj, avg_commitment_history, hf_decision_dict = start_simulation()
