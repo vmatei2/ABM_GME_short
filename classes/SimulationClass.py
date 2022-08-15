@@ -180,9 +180,6 @@ class SimulationClass:
         for i in range(self.tau):
             self.update_agent_commitment()
             if i % np.int(self.N_agents / 2) == 0:
-
-                #  here we update the number of agents in the network, and the number of agents to be added will be a
-                #  a function of the percentage change in commitment value
                 average_network_commitment = calculate_average_commitment(self.social_media_agents)
                 average_commitment_history.append(average_network_commitment)
                 commitment_this_round = gather_commitment_values(self.social_media_agents)
@@ -191,14 +188,10 @@ class SimulationClass:
                     # in this case we have more than one previous average commitment, hence we can calculate the
                     # percentage change
                     if trading_day % 7 == 0:
-                        # add new agents at the end of each weekly step
                         previous_average_commitment = average_commitment_history[-7]
                         percentage_change_in_commitment = (
                                                                   average_network_commitment - previous_average_commitment) / previous_average_commitment
                         commitment_changes.append(percentage_change_in_commitment)
-                        number_of_agents_to_be_added = int(percentage_change_in_commitment * self.N_agents)
-                        # for i in range(number_of_agents_to_be_added):
-                        #     self.add_new_agents_to_network(average_network_commitment)
                 if trading_day % 20 == 0:
                     df_data = store_commitment_values_split_into_groups(commitment_this_round, trading_day, df_data)
                     agent_network = create_network_from_agent_dictionary(self.social_media_agents, threshold=threshold)
