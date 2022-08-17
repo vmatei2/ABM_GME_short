@@ -10,7 +10,7 @@ class MarketMaker:
         self.demand = 0
         self.options_sold = 1
         self.options_sold_dict = {}
-        self.risk_tolerance = 0.75 #random.choice([0, 0.25, 0.5, 0.75, 1])  # 1 - high risk-tolerance, 0 - low risk-tolerance
+        self.risk_tolerance = random.choice([0, 0.25, 0.5, 0.75, 1])  # 1 - high risk-tolerance, 0 - low risk-tolerance
 
     def hedge_position(self, option, current_price, price_history, trading_day, retail_agents=None):
         if option.expired:
