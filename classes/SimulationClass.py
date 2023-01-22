@@ -235,7 +235,7 @@ class SimulationClass:
                              "Evolution of all agent commitments")
 
         network_evolution_threshold = 0.6
-        self.plot_agent_network_evolution(agent_network_evolution_dict, network_evolution_threshold)
+        # self.plot_agent_network_evolution(agent_network_evolution_dict, network_evolution_threshold)
 
         simple_line_plot(average_commitment_history, "Trading Day", "Average Commitment",
                          "Average Commitment Evolution")
@@ -282,7 +282,8 @@ def start_simulation(miu=0.17, commitment_scaler=1.5, n_agents=10000,
                                  commitment_scaler=commitment_scaler, volume_threshold=volume_threshold,
                                  fundamental_price_inst_inv=fundamental_price_inst_inv,
                                  lambda_parameter=lambda_parameter)
-    prices, average_commitment_history, hf_decision_dict = simulation.run_simulation(halt_trading=True)
+    halt_trading = True
+    prices, average_commitment_history, hf_decision_dict = simulation.run_simulation(halt_trading=halt_trading)
     return prices, market_environment, simulation, average_commitment_history, hf_decision_dict
 
 
