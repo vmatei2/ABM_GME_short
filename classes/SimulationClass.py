@@ -265,7 +265,7 @@ class SimulationClass:
 
 
 def start_simulation(miu=0.17, commitment_scaler=1.5, n_agents=10000,
-                     n_institutional_investors=200, fundamental_price_inst_inv=1,
+                     n_institutional_investors=10, fundamental_price_inst_inv=1,
                      volume_threshold=0.97, lambda_parameter=1.75, time_steps=100):
     gme = yf.Ticker("GME")
     gme_price_history = get_price_history(gme, "2020-11-15", "2020-12-08")

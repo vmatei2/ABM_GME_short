@@ -63,12 +63,12 @@ class RegularRedditTrader(RedditTrader):
             # otherwise, let's update this agent's opinion (being influenced)
             updated_commitment = average_neighbour_commitment + miu * abs(
                 self.commitment - average_neighbour_commitment)
-            if neighbour.investor_type == RedditInvestorTypes.FANATICAL:
-                # fanatical / influential traders do not update their opinion
-                pass
-            else:
-                neighbour.commitment = self.commitment + miu * abs(self.commitment - neighbour.commitment)
-            neighbour.commitment = min(neighbour.commitment, 1)
+            # if neighbour.investor_type == RedditInvestorTypes.FANATICAL:
+            #     # fanatical / influential traders do not update their opinion
+            #     pass
+            # else:
+            #     neighbour.commitment = self.commitment + miu * abs(self.commitment - neighbour.commitment)
+            # neighbour.commitment = min(neighbour.commitment, 1)
             self.commitment = min(updated_commitment, 1)
 
     def act_if_trading_halted(self, current_price, price_history, white_noise):
