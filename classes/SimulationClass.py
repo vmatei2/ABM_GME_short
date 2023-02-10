@@ -33,7 +33,7 @@ def store_commitment_values_split_into_groups(commitment_this_round, trading_day
 
 class SimulationClass:
     def __init__(self, time_steps, N_agents, N_institutional_investors, m, market_environment, miu,
-                 commitment_scaler, volume_threshold, fundamental_price_inst_inv, lambda_parameter):
+                 commitment_scaler, volume_threshold, fundamental_price_inst_inv, lambda_parameter, d_parameter=None):
         self.N_agents = int(N_agents)  # number of participating retail traders in the simulation
         self.N_institutional_investors = int(N_institutional_investors)
         self.m = m  # number of edges to attach from a new node to existing nodes
@@ -45,13 +45,13 @@ class SimulationClass:
         self.volume_threshold = volume_threshold
         self.lambda_parameter = lambda_parameter
         self.fundamental_price_inst_inv = fundamental_price_inst_inv
-        self.social_media_agents, self.average_degree = self.create_initial_network()  # the initial network of social media agents,
+        self.social_media_agents, self.average_degree = self.create_initial_network(d_parameter)  # the initial network of social media agents,
         # we already have a few central nodes network is set to increase in size and add new agents throughout the
         # simulation
         self.institutional_investors = self.create_institutional_investors()
         self.trading_halted = False
 
-    def create_initial_network(self):
+    def create_initial_network(self, d=None):
         barabasi_albert_network = nx.barabasi_albert_graph(n=self.N_agents, m=self.m, seed=2)
         sorted_node_degree_pairs = get_sorted_degree_values(barabasi_albert_network)
         social_media_agents = {}
@@ -67,7 +67,7 @@ class SimulationClass:
                 investor_type_probabilities = [0.5, 0.5]
                 agent = RegularRedditTrader(id=node_id, neighbours_ids=node_neighbours,
                                             investor_type=random.choices(investor_type, investor_type_probabilities)[0],
-                                            commitment_scaler=self.commitment_scaler)
+                                            commitment_scaler=self.commitment_scaler, d=d)
             social_media_agents[node_id] = agent
         degree_values = [v for k, v in sorted_node_degree_pairs]
         average_degree = sum(degree_values) / barabasi_albert_network.number_of_nodes()
@@ -218,7 +218,8 @@ class SimulationClass:
                                                                 commitment_lower_upper=[0.12, 0.2])
                     print("Trading halted")
                 print()
-
+        print("Final pcgt volume is: ")
+        print(volume_history[-1])
         self.run_all_plots(self.market_environment, all_commitments_each_round, average_commitment_history,
                            commitment_changes, hedge_fund_decision_dict, demand_dict, df_data,
                            options_bought_history, agent_network_evolution_dict, gme_copy)
@@ -264,9 +265,9 @@ class SimulationClass:
         extract_weekend_data_effect(market_environment.simulation_history)
 
 
-def start_simulation(miu=0.17, commitment_scaler=1.5, n_agents=10000,
-                     n_institutional_investors=10, fundamental_price_inst_inv=1,
-                     volume_threshold=0.97, lambda_parameter=1.75, time_steps=100):
+def start_simulation(miu=0.5, commitment_scaler=1.5, n_agents=10000,
+                     n_institutional_investors=500, fundamental_price_inst_inv=1,
+                     volume_threshold=0.93, lambda_parameter=1.75, time_steps=120, d_parameter=0.6):
     gme = yf.Ticker("GME")
     gme_price_history = get_price_history(gme, "2020-11-15", "2020-12-08")
     gme_price_history = select_closing_prices(gme_price_history)
@@ -281,8 +282,8 @@ def start_simulation(miu=0.17, commitment_scaler=1.5, n_agents=10000,
                                  market_environment=market_environment, miu=miu,
                                  commitment_scaler=commitment_scaler, volume_threshold=volume_threshold,
                                  fundamental_price_inst_inv=fundamental_price_inst_inv,
-                                 lambda_parameter=lambda_parameter)
-    halt_trading = True
+                                 lambda_parameter=lambda_parameter, d_parameter=d_parameter)
+    halt_trading = False
     prices, average_commitment_history, hf_decision_dict = simulation.run_simulation(halt_trading=halt_trading)
     return prices, market_environment, simulation, average_commitment_history, hf_decision_dict
 
@@ -310,7 +311,7 @@ def sensitivty_analyis_mu_theta():
     Calling the run function for this specific sensitivity analysis work and setting up all the prerequisites
     :return:
     """
-    rmse_dict = {}  # key = Run, Value = [0-RMSE, 1-Miu, 2-commitment_scaler]
+    rmse_dict = {}  # key = Run, Value = [0-RMSE,  1-Miu, 2-commitment_scaler]
     price_dict = {}
     i = 0
     print("Start")
@@ -391,7 +392,7 @@ def one_factor_at_a_time_sensitivity_analysis(n_reddit_agents_list, n_inst_inves
     return results_dict
 
 
-def run_x_simulations(n_simulations):
+def run_x_simulations(n_simulations, d_parameters):
     """
     Main function to run x number of simulations, and store simulation prices time series array of each simulation
     start_simulation can take in model parameter values, otherwise these are set to base values
@@ -400,7 +401,7 @@ def run_x_simulations(n_simulations):
     """
     simulation_prices = []
     for i in range(n_simulations):
-        prices, market_env, sim_obj, avg_commitment_history, hf_decision_dict = start_simulation()
+        prices, market_env, sim_obj, avg_commitment_history, hf_decision_dict = start_simulation(d_parameter=d_parameters[i])
         simulation_prices.append(prices)
     return simulation_prices
 
@@ -408,4 +409,17 @@ def run_x_simulations(n_simulations):
 if __name__ == '__main__':
     sns.set_style("darkgrid")
     n_simulations = 1
-    run_x_simulations(n_simulations)
+    d_parameters = np.linspace(0.3, 0.8, n_simulations)
+    all_simulations = run_x_simulations(n_simulations, d_parameters=d_parameters)
+    # plot aimulations results
+    cmap = plt.get_cmap('gnuplot')
+    colors = [cmap(i) for i in np.linspace(0, 1, n_simulations)]
+    plt.figure(figsize=(12,12))
+    for i, prices in enumerate(all_simulations):
+        plt.plot(prices, color=colors[i], label='opinion threshold={0}'.format(d_parameters[i]))
+        plt.legend(loc='upper left')
+        plt.title("Varying trigger threshold for trading halt", fontsize=20)
+        plt.xlabel("Simulation step", fontsize=15)
+        plt.ylabel("Simulation price", fontsize=15)
+    plt.show()
+    stop_here = 10

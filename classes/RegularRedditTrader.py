@@ -8,11 +8,14 @@ class RegularRedditTrader(RedditTrader):
     """
     Child class of "RedditTradder" parent class implementing the behaviour of such agents in the market and inheriting the common properties of the reddit trader
     """
-    def __init__(self, id, neighbours_ids, commitment=None, investor_type=None, commitment_scaler=None):
+    def __init__(self, id, neighbours_ids, commitment=None, investor_type=None, commitment_scaler=None, d=None):
         demand = 0  # an agent's initial demand
         if commitment is None:
-            commitment = random.uniform(0.3, 0.5)  # normal random distribution with mean = 0 and std deviation = 1
-        self.d = random.uniform(0.1, 0.3)  # threshold for difference in commitment to be too high - or confidence
+            commitment = random.uniform(0.3, 0.6)  # normal random distribution with mean = 0 and std deviation = 1
+        if d is None:
+            self.d = 0.6 #random.uniform(0.3, 0.6)  # threshold for difference in commitment to be too high - or confidence
+        else:
+            self.d = d
         # interval value - random choice rather than set values as all agents will be slightly different,
         # hence we want thought processes to be heterogeneous
         self.b = random.uniform(-1, 1)  # gives the strength of the force calculated as simply (
@@ -61,14 +64,13 @@ class RegularRedditTrader(RedditTrader):
         else:
 
             # otherwise, let's update this agent's opinion (being influenced)
-            updated_commitment = average_neighbour_commitment + miu * abs(
-                self.commitment - average_neighbour_commitment)
-            # if neighbour.investor_type == RedditInvestorTypes.FANATICAL:
-            #     # fanatical / influential traders do not update their opinion
-            #     pass
-            # else:
-            #     neighbour.commitment = self.commitment + miu * abs(self.commitment - neighbour.commitment)
-            # neighbour.commitment = min(neighbour.commitment, 1)
+            updated_commitment = self.commitment + miu * (average_neighbour_commitment - self.commitment)
+            if neighbour.investor_type == RedditInvestorTypes.FANATICAL:
+                # fanatical / influential traders do not update their opinion
+                pass
+            else:
+                neighbour.commitment = neighbour.commitment + miu * (self.commitment - neighbour.commitment)
+            neighbour.commitment = min(neighbour.commitment, 1)
             self.commitment = min(updated_commitment, 1)
 
     def act_if_trading_halted(self, current_price, price_history, white_noise):
@@ -105,7 +107,7 @@ class RegularRedditTrader(RedditTrader):
             return
         if self.bought_option:  # not doing anything if we have bought an option already
             return
-        if self.commitment > 0.6 and average_network_commitment > 0.624:
+        if self.commitment > 0.6 and average_network_commitment > 0.55:
             self.demand = 100 * self.commitment  # buys options
             self.bought_option = True
             return
