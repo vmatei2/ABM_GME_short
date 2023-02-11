@@ -58,13 +58,13 @@ class SimulationClass:
         for i, node_id_degree_pair in enumerate(sorted_node_degree_pairs):
             node_id = node_id_degree_pair[0]
             node_neighbours = list(barabasi_albert_network.neighbors(node_id))
-            if i < 5:  # defining 5 largest nodes as being the influential ones in the network
+            if i < 0:  # defining 5 largest nodes as being the influential ones in the network
                 agent = InfluentialRedditUser(id=node_id, neighbours_ids=node_neighbours,
                                               market_first_price=self.market_environment.initial_price,
                                               investor_type=RedditInvestorTypes.FANATICAL)
             else:
                 investor_type = [RedditInvestorTypes.LONGTERM, RedditInvestorTypes.RATIONAL_SHORT_TERM]
-                investor_type_probabilities = [0.5, 0.5]
+                investor_type_probabilities = [0.8, 0.2]
                 agent = RegularRedditTrader(id=node_id, neighbours_ids=node_neighbours,
                                             investor_type=random.choices(investor_type, investor_type_probabilities)[0],
                                             commitment_scaler=self.commitment_scaler, d=d)
@@ -267,7 +267,7 @@ class SimulationClass:
 
 def start_simulation(miu=0.5, commitment_scaler=1.5, n_agents=10000,
                      n_institutional_investors=500, fundamental_price_inst_inv=1,
-                     volume_threshold=0.93, lambda_parameter=1.75, time_steps=120, d_parameter=0.6):
+                     volume_threshold=0.93, lambda_parameter=1.75, time_steps=300, d_parameter=0.6):
     gme = yf.Ticker("GME")
     gme_price_history = get_price_history(gme, "2020-11-15", "2020-12-08")
     gme_price_history = select_closing_prices(gme_price_history)

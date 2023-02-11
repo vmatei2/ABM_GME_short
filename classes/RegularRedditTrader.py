@@ -31,7 +31,7 @@ class RegularRedditTrader(RedditTrader):
         self.post_halting_decisions['over 0.5 commitment'] = 0
         self.post_halting_decisions['long-term'] = 0
         self.post_halting_decisions['short-term-price-go-up'] = 0
-        self.fundamental_price = random.uniform(10, 50)
+        self.fundamental_price = 50  # used to be random.uniform, however fixating to see difference, remove unnecessary complexity
         super().__init__(id, neighbours_ids, demand, commitment, investor_type)
 
     def update_commitment(self, agents, miu):
