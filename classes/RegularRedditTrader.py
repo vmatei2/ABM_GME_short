@@ -13,7 +13,7 @@ class RegularRedditTrader(RedditTrader):
         if commitment is None:
             commitment = random.uniform(0.3, 0.6)  # normal random distribution with mean = 0 and std deviation = 1
         if d is None:
-            self.d = 0.6 #random.uniform(0.3, 0.6)  # threshold for difference in commitment to be too high - or confidence
+            self.d = 0 #random.uniform(0.3, 0.6)  # threshold for difference in commitment to be too high - or confidence
         else:
             self.d = d
         # interval value - random choice rather than set values as all agents will be slightly different,
@@ -31,7 +31,7 @@ class RegularRedditTrader(RedditTrader):
         self.post_halting_decisions['over 0.5 commitment'] = 0
         self.post_halting_decisions['long-term'] = 0
         self.post_halting_decisions['short-term-price-go-up'] = 0
-        self.fundamental_price = 50  # used to be random.uniform, however fixating to see difference, remove unnecessary complexity
+        self.fundamental_price = 10  # used to be random.uniform, however fixating to see difference, remove unnecessary complexity
         super().__init__(id, neighbours_ids, demand, commitment, investor_type)
 
     def update_commitment(self, agents, miu):
@@ -57,7 +57,7 @@ class RegularRedditTrader(RedditTrader):
         for id in self.neighbours_ids:
             neighbour_commitment_value += agents[id].commitment
         average_neighbour_commitment = neighbour_commitment_value / len(self.neighbours_ids)
-        if abs(neighbour.commitment - self.commitment) >= self.d:
+        if neighbour.commitment - self.commitment >= self.d:
             # this happens in the case when the difference in commitment between the agent and its neighbours is too
             # big - therefore we do not update opinion at this time point
             pass
@@ -69,7 +69,8 @@ class RegularRedditTrader(RedditTrader):
                 # fanatical / influential traders do not update their opinion
                 pass
             else:
-                neighbour.commitment = neighbour.commitment + miu * (self.commitment - neighbour.commitment)
+                pass
+                # neighbour.commitment = neighbour.commitment + miu * (self.commitment - neighbour.commitment)
             neighbour.commitment = min(neighbour.commitment, 1)
             self.commitment = min(updated_commitment, 1)
 
