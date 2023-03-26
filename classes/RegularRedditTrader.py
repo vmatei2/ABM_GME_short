@@ -13,7 +13,7 @@ class RegularRedditTrader(RedditTrader):
         if commitment is None:
             commitment = random.uniform(0.3, 0.6)  # normal random distribution with mean = 0 and std deviation = 1
         if d is None:
-            self.d = 0 #random.uniform(0.3, 0.6)  # threshold for difference in commitment to be too high - or confidence
+            self.d = 0.4 #random.uniform(0.3, 0.6)  # threshold for difference in commitment to be too high - or confidence
         else:
             self.d = d
         # interval value - random choice rather than set values as all agents will be slightly different,
@@ -69,8 +69,8 @@ class RegularRedditTrader(RedditTrader):
                 # fanatical / influential traders do not update their opinion
                 pass
             else:
-                pass
-                # neighbour.commitment = neighbour.commitment + miu * (self.commitment - neighbour.commitment)
+                # pass
+                neighbour.commitment = neighbour.commitment + miu * (self.commitment - neighbour.commitment)
             neighbour.commitment = min(neighbour.commitment, 1)
             self.commitment = min(updated_commitment, 1)
 
@@ -97,7 +97,7 @@ class RegularRedditTrader(RedditTrader):
         elif self.investor_type == RedditInvestorTypes.LONGTERM:
             expected_price = self.compute_price_expectation_fundamentalist(current_price, price_history, white_noise)  # introduce fundamentalist pricing formula calculation here
             if expected_price < current_price:
-                self.demand = -self.commitment * self.commitment_scaler
+                self.demand -= self.commitment * self.commitment_scaler
             elif expected_price > current_price:
                 self.demand += self.commitment * self.commitment_scaler
 

@@ -58,13 +58,13 @@ class SimulationClass:
         for i, node_id_degree_pair in enumerate(sorted_node_degree_pairs):
             node_id = node_id_degree_pair[0]
             node_neighbours = list(barabasi_albert_network.neighbors(node_id))
-            if i < 3 :  # defining 5 largest nodes as being the influential ones in the network
+            if i < 0:  # defining 5 largest nodes as being the influential ones in the network
                 agent = InfluentialRedditUser(id=node_id, neighbours_ids=node_neighbours,
                                               market_first_price=self.market_environment.initial_price,
                                               investor_type=RedditInvestorTypes.FANATICAL)
             else:
                 investor_type = [RedditInvestorTypes.LONGTERM, RedditInvestorTypes.RATIONAL_SHORT_TERM]
-                investor_type_probabilities = [0.8, 0.2]
+                investor_type_probabilities = [0.7, 0.3]
                 agent = RegularRedditTrader(id=node_id, neighbours_ids=node_neighbours,
                                             investor_type=random.choices(investor_type, investor_type_probabilities)[0],
                                             commitment_scaler=self.commitment_scaler, d=d)
@@ -267,7 +267,7 @@ class SimulationClass:
 
 def start_simulation(miu=0.5, commitment_scaler=1.5, n_agents=10000,
                      n_institutional_investors=2000, fundamental_price_inst_inv=1,
-                     volume_threshold=0.93, lambda_parameter=1.75, time_steps=120, d_parameter=0.6):
+                     volume_threshold=0.91, lambda_parameter=1.75, time_steps=160, d_parameter=0.6):
     gme = yf.Ticker("GME")
     gme_price_history = get_price_history(gme, "2020-11-15", "2020-12-08")
     gme_price_history = select_closing_prices(gme_price_history)
@@ -283,7 +283,7 @@ def start_simulation(miu=0.5, commitment_scaler=1.5, n_agents=10000,
                                  commitment_scaler=commitment_scaler, volume_threshold=volume_threshold,
                                  fundamental_price_inst_inv=fundamental_price_inst_inv,
                                  lambda_parameter=lambda_parameter, d_parameter=d_parameter)
-    halt_trading = False
+    halt_trading = True
     prices, average_commitment_history, hf_decision_dict = simulation.run_simulation(halt_trading=halt_trading)
     return prices, market_environment, simulation, average_commitment_history, hf_decision_dict
 
@@ -377,7 +377,8 @@ def one_factor_at_a_time_sensitivity_analysis(n_reddit_agents_list, n_inst_inves
                     miu=parameter)
             results_dict[iteration] = {}
             results_dict[iteration]["N_agents"] = simulation_object.N_agents
-            results_dict[iteration]["N_inst_investors"] = simulation_object.N_institutional_investors
+            results_dict[iteration]["N_inst_investors"] = simulatio
+            object.N_institutional_investors
             results_dict[iteration]["fundamental_price_inst_inv"] = simulation_object.fundamental_price_inst_inv
             results_dict[iteration]["commitment_scaler"] = simulation_object.commitment_scaler
             results_dict[iteration]["volume_threshold"] = simulation_object.volume_threshold
@@ -422,4 +423,3 @@ if __name__ == '__main__':
         plt.xlabel("Simulation step", fontsize=15)
         plt.ylabel("Simulation price", fontsize=15)
     plt.show()
-    stop_here = 10

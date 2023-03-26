@@ -246,6 +246,7 @@ def plot_demand_dictionary(demand_dict, trading_period):
     plt.ylabel("Demand Evolution")
     legend_ = ["Demand from retail agents", "Demand from institutional investor agents"]
     plt.legend(legend_)
+    plt.ylim(-10000, 10000)
     plt.show()
 
 
