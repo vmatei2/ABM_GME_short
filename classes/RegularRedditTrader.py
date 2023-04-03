@@ -13,7 +13,7 @@ class RegularRedditTrader(RedditTrader):
         if commitment is None:
             commitment = random.uniform(0.3, 0.6)  # normal random distribution with mean = 0 and std deviation = 1
         if d is None:
-            self.d = 0.4 #random.uniform(0.3, 0.6)  # threshold for difference in commitment to be too high - or confidence
+            self.d = 0 #random.uniform(0.3, 0.6)  # threshold for difference in commitment to be too high - or confidence
         else:
             self.d = d
         # interval value - random choice rather than set values as all agents will be slightly different,

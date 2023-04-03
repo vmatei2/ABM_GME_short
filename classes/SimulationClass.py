@@ -8,7 +8,7 @@ import yfinance as yf
 
 from classes.RedditInvestorTypes import RedditInvestorTypes
 from classes.SensitivityAnalysis import calculate_rmse, plot_sens_analysis_results, write_results_dict_to_file
-from helpers.calculations_helpers import split_commitment_into_groups, print_current_time
+from helpers.calculations_helpers import split_commitment_into_groups, print_current_time, rescale_array
 from helpers.stylized_facts import *
 from helpers.network_helpers import get_sorted_degree_values, gather_commitment_values, \
     create_network_from_agent_dictionary
@@ -64,7 +64,7 @@ class SimulationClass:
                                               investor_type=RedditInvestorTypes.FANATICAL)
             else:
                 investor_type = [RedditInvestorTypes.LONGTERM, RedditInvestorTypes.RATIONAL_SHORT_TERM]
-                investor_type_probabilities = [0.7, 0.3]
+                investor_type_probabilities = [0.3, 0.7]
                 agent = RegularRedditTrader(id=node_id, neighbours_ids=node_neighbours,
                                             investor_type=random.choices(investor_type, investor_type_probabilities)[0],
                                             commitment_scaler=self.commitment_scaler, d=d)
@@ -249,6 +249,22 @@ class SimulationClass:
 
         plot_commitment_into_groups(df_data, title="Evolution of agent commitments in the network through each 20 days")
 
+        # plot average commitment along with price evolution
+        plt.figure(figsize=(8, 8))
+        # before plotting, we need to rescale the arrays
+        average_commitment_history = rescale_array(average_commitment_history)
+        price_history = market_environment.simulation_history.values()
+        # convert price history to float values
+        price_history = [float(x) for x in price_history]
+        price_history = rescale_array(price_history)
+        plt.plot(average_commitment_history, 'bo', label='Average commitment across the network')
+        plt.plot(price_history,'rx', label='Price evolution')
+        plt.title('Normalized commitment and price evolution through simulation', fontsize=18)
+        plt.legend()
+        plt.xlabel('Trading day', fontsize=16)
+        plt.ylabel('Rescaled values', fontsize=16)
+        plt.show()
+
         market_environment.plot_price_history("Price evolution during simulation")
 
         if gme_copy is not None:
@@ -283,7 +299,7 @@ def start_simulation(miu=0.5, commitment_scaler=1.5, n_agents=10000,
                                  commitment_scaler=commitment_scaler, volume_threshold=volume_threshold,
                                  fundamental_price_inst_inv=fundamental_price_inst_inv,
                                  lambda_parameter=lambda_parameter, d_parameter=d_parameter)
-    halt_trading = True
+    halt_trading = False
     prices, average_commitment_history, hf_decision_dict = simulation.run_simulation(halt_trading=halt_trading)
     return prices, market_environment, simulation, average_commitment_history, hf_decision_dict
 
