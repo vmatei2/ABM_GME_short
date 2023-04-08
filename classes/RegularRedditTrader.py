@@ -82,7 +82,8 @@ class RegularRedditTrader(RedditTrader):
                 self.decision_based_on_personal_strategy(current_price, price_history, white_noise)
 
         if not self.has_trading_been_halted:
-            current_demand = self.demand / (1 / self.commitment)  # demand becomes a function of the agent's current
+            # if 0.5 as multiplier, then we halfen the demand
+            current_demand =  0 # 0.05 * self.demand  # self.demand / (1 / 0.5 * self.commitment)  # demand becomes a function of the agent's current
             # commitmemnt
             self.demand = -current_demand
             self.has_trading_been_halted = True

@@ -19,7 +19,7 @@ from classes.InstitutionalInvestor import InstitutionalInvestor
 from classes.MarketEnvironment import MarketEnvironment
 from helpers.plotting_helpers import plot_all_commitments, plot_commitment_into_groups, \
     simple_line_plot, visualise_network, get_price_history, scale_and_plot, plot_institutional_investors_decisions, \
-    plot_demand_dictionary, barplot_options_bought, select_closing_prices
+    plot_demand_dictionary, barplot_options_bought, select_closing_prices, plot_hedge_funds_involvment
 
 
 def store_commitment_values_split_into_groups(commitment_this_round, trading_day, df_data):
@@ -58,13 +58,13 @@ class SimulationClass:
         for i, node_id_degree_pair in enumerate(sorted_node_degree_pairs):
             node_id = node_id_degree_pair[0]
             node_neighbours = list(barabasi_albert_network.neighbors(node_id))
-            if i < 0:  # defining 5 largest nodes as being the influential ones in the network
+            if i < 10:  # defining 5 largest nodes as being the influential ones in the network
                 agent = InfluentialRedditUser(id=node_id, neighbours_ids=node_neighbours,
                                               market_first_price=self.market_environment.initial_price,
                                               investor_type=RedditInvestorTypes.FANATICAL)
             else:
                 investor_type = [RedditInvestorTypes.LONGTERM, RedditInvestorTypes.RATIONAL_SHORT_TERM]
-                investor_type_probabilities = [0.3, 0.7]
+                investor_type_probabilities = [0.5, 0.5]
                 agent = RegularRedditTrader(id=node_id, neighbours_ids=node_neighbours,
                                             investor_type=random.choices(investor_type, investor_type_probabilities)[0],
                                             commitment_scaler=self.commitment_scaler, d=d)
@@ -85,7 +85,7 @@ class SimulationClass:
     def create_institutional_investors(self):
         institutional_investors = {}
         for i in range(self.N_institutional_investors):
-            institutional_investors[i] = InstitutionalInvestor(i, demand=-500,
+            institutional_investors[i] = InstitutionalInvestor(i, demand=-15,
                                                                fundamental_price=self.fundamental_price_inst_inv,
                                                                lambda_parameter=self.lambda_parameter)
         return institutional_investors
@@ -146,6 +146,7 @@ class SimulationClass:
                                                                                    self.social_media_agents)
         volume = len(participating_agents)
         institutional_inv_decision_dict[trading_day] = []
+
         options_bought = 0
         for id, agent in participating_agents.items():
             if isinstance(agent, InfluentialRedditUser):
@@ -173,6 +174,7 @@ class SimulationClass:
         all_commitments_each_round = []
         commitment_changes = []
         volume_history = []
+        hf_involved_dict = {'involved': [], 'closed': []}  # dictionary used for plotting the evolution of hedge funds participaitng in the market, and how they close their positions
         options_bought_history = []
         demand_dict = {'retail': [], 'institutional': []}
         hedge_fund_decision_dict = {}
@@ -180,6 +182,12 @@ class SimulationClass:
         for i in range(self.tau):
             self.update_agent_commitment()
             if i % np.int(self.N_agents / 2) == 0:
+                investors_still_involved = 0
+                for key, investor in self.institutional_investors.items():
+                    if investor.still_involed:
+                        investors_still_involved += 1
+                hf_involved_dict['involved'].append(investors_still_involved)
+                hf_involved_dict['closed'].append(len(self.institutional_investors) - investors_still_involved)
                 average_network_commitment = calculate_average_commitment(self.social_media_agents)
                 average_commitment_history.append(average_network_commitment)
                 commitment_this_round = gather_commitment_values(self.social_media_agents)
@@ -213,7 +221,7 @@ class SimulationClass:
                 trading_day += 1
                 print("Average Network Commitment: ", average_network_commitment)
                 print_current_time()
-                if volume >= self.volume_threshold * self.N_agents and halt_trading:
+                if volume >= (self.volume_threshold * self.N_agents) and halt_trading:
                     agent_ids_to_be_deleted = self.halt_trading(commitment_threshold=0.65,
                                                                 commitment_lower_upper=[0.12, 0.2])
                     print("Trading halted")
@@ -222,7 +230,7 @@ class SimulationClass:
         print(volume_history[-1])
         self.run_all_plots(self.market_environment, all_commitments_each_round, average_commitment_history,
                            commitment_changes, hedge_fund_decision_dict, demand_dict, df_data,
-                           options_bought_history, agent_network_evolution_dict, gme_copy)
+                           options_bought_history, agent_network_evolution_dict, hf_involved_dict, gme_copy)
         simulated_price = list(self.market_environment.simulation_history.values())
 
         return simulated_price, average_commitment_history, hedge_fund_decision_dict
@@ -230,7 +238,7 @@ class SimulationClass:
     def run_all_plots(self, market_environment, all_commitments_each_round, average_commitment_history,
                       commitment_changes, hedge_fund_decision_dict,
                       demand_dict, df_data, options_bought_history,
-                      agent_network_evolution_dict, gme_copy):
+                      agent_network_evolution_dict, hf_involved_dict, gme_copy):
         ### PLOTTING FUNCTIONS
         plot_all_commitments(all_commitments_each_round, self.N_agents, average_commitment_history,
                              "Evolution of all agent commitments")
@@ -267,6 +275,8 @@ class SimulationClass:
 
         market_environment.plot_price_history("Price evolution during simulation")
 
+        plot_hedge_funds_involvment(hf_involved_dict)
+
         if gme_copy is not None:
             plot_simulation_against_real_values(market_environment.simulation_history.values(), gme_copy)
 
@@ -299,7 +309,7 @@ def start_simulation(miu=0.5, commitment_scaler=1.5, n_agents=10000,
                                  commitment_scaler=commitment_scaler, volume_threshold=volume_threshold,
                                  fundamental_price_inst_inv=fundamental_price_inst_inv,
                                  lambda_parameter=lambda_parameter, d_parameter=d_parameter)
-    halt_trading = False
+    halt_trading = True
     prices, average_commitment_history, hf_decision_dict = simulation.run_simulation(halt_trading=halt_trading)
     return prices, market_environment, simulation, average_commitment_history, hf_decision_dict
 

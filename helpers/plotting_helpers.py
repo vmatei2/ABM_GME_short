@@ -196,6 +196,7 @@ def plot_institutional_investors_decisions(decision_dict, dates):
     plt.savefig("../images/institutional_inv_decisions")
 
 
+
 ####  NETWORK PLOTTING HELPERS
 
 
@@ -246,9 +247,18 @@ def plot_demand_dictionary(demand_dict, trading_period):
     plt.ylabel("Demand Evolution")
     legend_ = ["Demand from retail agents", "Demand from institutional investor agents"]
     plt.legend(legend_)
-    plt.ylim(-10000, 10000)
     plt.show()
 
+
+def plot_hedge_funds_involvment(hf_involved_dict):
+    plt.figure(figsize=(10, 10))
+    plt.plot(hf_involved_dict['involved'], 'g')
+    plt.plot(hf_involved_dict['closed'], 'r')
+    plt.grid()
+    plt.xlabel('Trading Day')
+    plt.ylabel('Number of hedge funds')
+    plt.title('Hedge funds involvement throughout simulation')
+    plt.show()
 
 def plot_multiple_figures(gme_price_history):
     fig, ax = plt.subplots(2, 2, figsize=(16, 12))

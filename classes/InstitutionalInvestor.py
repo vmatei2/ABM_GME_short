@@ -21,6 +21,7 @@ class InstitutionalInvestor:
         self.fundamental_price = fundamental_price
         self.risk_loving = self.assign_risk_type()
         self.lambda_parameter = lambda_parameter
+        self.still_involed = True
         self.alpha, self.betta = self.assign_risk_variables()
 
     def make_decision(self, current_price, price_history):
@@ -30,14 +31,17 @@ class InstitutionalInvestor:
         :return:
         """
         short_gme = self.utility_function(current_price, price_history)
-        if short_gme:
-            if self.demand != 0:
-                self.demand -= self.demand
+        multiplier = 0.1 # parameter to multiply hf opinion when updating in face of risk
+        if short_gme and self.still_involed:
+            if self.demand < 0:
+                updated_value = self.demand - (multiplier * abs(self.demand))
+                self.demand = updated_value
             else:
-                self.demand = -1  # start shorting again after closing position
+                self.demand = -50  # start shorting again after closing position
 
         else:
-            self.demand = 0
+            self.still_involed = False
+            self.demand = 0  # closes position, so should no longer influence the market
         return short_gme
 
     def utility_function(self, current_price, price_history):
