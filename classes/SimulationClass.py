@@ -19,7 +19,7 @@ from classes.InstitutionalInvestor import InstitutionalInvestor
 from classes.MarketEnvironment import MarketEnvironment
 from helpers.plotting_helpers import plot_all_commitments, plot_commitment_into_groups, \
     simple_line_plot, visualise_network, get_price_history, scale_and_plot, plot_institutional_investors_decisions, \
-    plot_demand_dictionary, barplot_options_bought, select_closing_prices, plot_hedge_funds_involvment
+    plot_demand_dictionary, barplot_options_bought, select_closing_prices, plot_hedge_funds_involvment, stacked_plots
 
 
 def store_commitment_values_split_into_groups(commitment_this_round, trading_day, df_data):
@@ -58,7 +58,7 @@ class SimulationClass:
         for i, node_id_degree_pair in enumerate(sorted_node_degree_pairs):
             node_id = node_id_degree_pair[0]
             node_neighbours = list(barabasi_albert_network.neighbors(node_id))
-            if i < 10:  # defining 5 largest nodes as being the influential ones in the network
+            if i < 5:  # defining 5 largest nodes as being the influential ones in the network
                 agent = InfluentialRedditUser(id=node_id, neighbours_ids=node_neighbours,
                                               market_first_price=self.market_environment.initial_price,
                                               investor_type=RedditInvestorTypes.FANATICAL)
@@ -82,10 +82,11 @@ class SimulationClass:
                 agent.commitment = random.uniform(commitment_lower_upper[0], commitment_lower_upper[1])
         return ids_to_be_deleted
 
+
     def create_institutional_investors(self):
         institutional_investors = {}
         for i in range(self.N_institutional_investors):
-            institutional_investors[i] = InstitutionalInvestor(i, demand=-15,
+            institutional_investors[i] = InstitutionalInvestor(i, demand=-1,
                                                                fundamental_price=self.fundamental_price_inst_inv,
                                                                lambda_parameter=self.lambda_parameter)
         return institutional_investors
@@ -104,6 +105,7 @@ class SimulationClass:
             if week % 2 != 0:
                 i += 1  # only increase row number after visualising the network
         fig.delaxes(axs[i, 1])
+        fig.delaxes(axs[i, 0])
         plt.savefig("agent_network_evolution")
         plt.show()
 
@@ -246,16 +248,18 @@ class SimulationClass:
         network_evolution_threshold = 0.6
         # self.plot_agent_network_evolution(agent_network_evolution_dict, network_evolution_threshold)
 
-        simple_line_plot(average_commitment_history, "Trading Day", "Average Commitment",
-                         "Average Commitment Evolution")
-        simple_line_plot(commitment_changes, "Trading Week", "Change in commitment", "Percentage Changes in Average "
-                                                                                     "Commitment")
+        # simple_line_plot(average_commitment_history, "Trading Day", "Average Commitment",
+        #                  "Average Commitment Evolution")
+        # simple_line_plot(commitment_changes, "Trading Week", "Change in commitment", "Percentage Changes in Average "
+        #                                                                              "Commitment")
 
         plot_institutional_investors_decisions(hedge_fund_decision_dict, market_environment.simulation_history.keys())
 
         plot_demand_dictionary(demand_dict, market_environment.simulation_history.keys())
 
-        plot_commitment_into_groups(df_data, title="Evolution of agent commitments in the network through each 20 days")
+        grouped_commitment = plot_commitment_into_groups(df_data, title="Evolution of agent commitments in the network through each 20 days")
+
+        stacked_plots(df_data, market_environment)
 
         # plot average commitment along with price evolution
         plt.figure(figsize=(8, 8))
@@ -292,8 +296,8 @@ class SimulationClass:
 
 
 def start_simulation(miu=0.5, commitment_scaler=1.5, n_agents=10000,
-                     n_institutional_investors=2000, fundamental_price_inst_inv=1,
-                     volume_threshold=0.91, lambda_parameter=1.75, time_steps=160, d_parameter=0.6):
+                     n_institutional_investors=2000, fundamental_price_inst_inv=2,
+                     volume_threshold=0.93, lambda_parameter=1.75, time_steps=160, d_parameter=0.6):
     gme = yf.Ticker("GME")
     gme_price_history = get_price_history(gme, "2020-11-15", "2020-12-08")
     gme_price_history = select_closing_prices(gme_price_history)
@@ -403,7 +407,7 @@ def one_factor_at_a_time_sensitivity_analysis(n_reddit_agents_list, n_inst_inves
                     miu=parameter)
             results_dict[iteration] = {}
             results_dict[iteration]["N_agents"] = simulation_object.N_agents
-            results_dict[iteration]["N_inst_investors"] = simulatio
+            results_dict[iteration]["N_inst_investors"] = simulation_object.N_institutional_investors
             object.N_institutional_investors
             results_dict[iteration]["fundamental_price_inst_inv"] = simulation_object.fundamental_price_inst_inv
             results_dict[iteration]["commitment_scaler"] = simulation_object.commitment_scaler

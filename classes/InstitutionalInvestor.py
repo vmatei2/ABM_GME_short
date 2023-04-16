@@ -31,7 +31,7 @@ class InstitutionalInvestor:
         :return:
         """
         short_gme = self.utility_function(current_price, price_history)
-        multiplier = 0.1 # parameter to multiply hf opinion when updating in face of risk
+        multiplier = 0.2 # parameter to multiply hf opinion when updating in face of risk
         if short_gme and self.still_involed:
             if self.demand < 0:
                 updated_value = self.demand - (multiplier * abs(self.demand))

@@ -15,7 +15,7 @@ class RegularRedditTrader(RedditTrader):
         if d is None:
             self.d = 0 #random.uniform(0.3, 0.6)  # threshold for difference in commitment to be too high - or confidence
         else:
-            self.d = d
+            self.d = 0.3
         # interval value - random choice rather than set values as all agents will be slightly different,
         # hence we want thought processes to be heterogeneous
         self.b = random.uniform(-1, 1)  # gives the strength of the force calculated as simply (

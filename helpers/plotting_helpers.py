@@ -176,6 +176,30 @@ def plot_commitment_into_groups(commitment_this_round, title):
     plt.title(title, fontsize=20)
     plt.savefig("../images/" + title)
     plt.show()
+    return ax
+
+
+def stacked_plots(commitment_this_round, market_env):
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(17, 15))
+    columns = ["Number of agents in group", "Trading day", "Commitment group"]
+    commitment_df = pd.DataFrame(commitment_this_round, columns=columns)
+    sns.barplot(ax=ax1, x="Trading day", y="Number of agents in group", hue="Commitment group", data=commitment_df)
+    for container in ax1.containers:
+        ax1.bar_label(container, fontsize=15)
+    ax1.set_title("Commitment evolution throughout simulation", fontsize=16)
+    ax1.xaxis.label.set_size(15)
+    ax1.yaxis.label.set_size(15)
+    ax1.xaxis.set_tick_params(labelsize=15)
+    ax1.yaxis.set_tick_params(labelsize=15)
+    sns.lineplot(ax=ax2, x=market_env.simulation_history.keys(), y=market_env.simulation_history.values())
+    ax2.xaxis.set_tick_params(labelsize=15)
+    ax2.yaxis.set_tick_params(labelsize=15)
+    ax2.set_xlabel('Simulation date', fontsize=15)
+    ax2.set_ylabel('Price', fontsize=15)
+    ax2.set_title("Price Evolution", fontsize=16)
+
+    plt.show()
+
 
 
 def plot_institutional_investors_decisions(decision_dict, dates):
@@ -254,10 +278,10 @@ def plot_hedge_funds_involvment(hf_involved_dict):
     plt.figure(figsize=(10, 10))
     plt.plot(hf_involved_dict['involved'], 'g')
     plt.plot(hf_involved_dict['closed'], 'r')
-    plt.grid()
-    plt.xlabel('Trading Day')
-    plt.ylabel('Number of hedge funds')
-    plt.title('Hedge funds involvement throughout simulation')
+    plt.xlabel('Trading Day', fontsize=12)
+    plt.ylabel('Number of hedge funds', fontsize=12)
+    plt.title('Hedge funds involvement throughout simulation', fontsize=15)
+    plt.legend(['Hedge funds still participating', 'Hedge funds exited'], fontsize=12)
     plt.show()
 
 def plot_multiple_figures(gme_price_history):
