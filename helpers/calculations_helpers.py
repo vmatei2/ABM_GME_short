@@ -1,4 +1,5 @@
 import math
+import random
 from datetime import datetime
 import seaborn as sns
 sns.set_style("darkgrid")
@@ -92,6 +93,16 @@ def plot_gamma_variation(all_gammas, stock_prices):
     plt.title("Variation of $\Gamma$ with stock price for an option with $K=60$", fontsize=20)
     plt.savefig("../images/variation_of_gamma")
     plt.show()
+
+
+def probably(chance):
+    """
+    Function to return True / False based on given proability
+    :param chance: has to be in [0,1] interval
+    e.g. we want 10% probability --> probably(0.1)
+    :return:
+    """
+    return random.random() < chance
 
 
 if __name__ == '__main__':
