@@ -160,10 +160,41 @@ def plot_all_commitments(all_commitments_each_round, number_of_agents, average_c
 def simple_line_plot(values_to_be_plotted, xlabel, ylabel, title):
     plt.figure(figsize=(10, 10))
     plt.plot(values_to_be_plotted)
-    plt.xlabel(xlabel)
-    plt.ylabel(ylabel)
-    plt.title(title)
+    plt.xlabel(xlabel, fontsize=12)
+    plt.ylabel(ylabel, fontsize=12)
+    plt.title(title, fontsize=14)
+    plt.ylim(0,1)
     plt.show()
+
+
+def two_y_axis_plots(y1, y2, x=None, xlabel=None, ylabel1=None, ylabel2=None, color1='tab:blue', color2='tab:red', title=None):
+    # no x passed in, then extract it
+    if x is None:
+        x = range(len(y1))
+
+    fig, ax1= plt.subplots()
+
+    # plot the first data series on the left y-axis
+    ax1.plot(x, y1, color=color1)
+    ax1.set_ylabel(ylabel1, color=color1, fontsize=12)
+    ax1.tick_params(axis='y', labelcolor=color1)
+
+    # create a second y-axis on the right side
+    ax2=ax1.twinx()
+
+    ax2.plot(x, y2, color=color2)
+    ax2.set_ylabel(ylabel2, color=color2)
+    ax2.tick_params(axis='y', labelcolor=color2)
+
+    # set the x-axis label
+    ax1.set_xlabel(xlabel)
+
+    if title:
+        plt.title(title, fontsize=14)
+
+    plt.show()
+
+
 
 
 def plot_commitment_into_groups(commitment_this_round, title):

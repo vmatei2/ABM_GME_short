@@ -19,7 +19,8 @@ from classes.InstitutionalInvestor import InstitutionalInvestor
 from classes.MarketEnvironment import MarketEnvironment
 from helpers.plotting_helpers import plot_all_commitments, plot_commitment_into_groups, \
     simple_line_plot, visualise_network, get_price_history, scale_and_plot, plot_institutional_investors_decisions, \
-    plot_demand_dictionary, barplot_options_bought, select_closing_prices, plot_hedge_funds_involvment, stacked_plots
+    plot_demand_dictionary, barplot_options_bought, select_closing_prices, plot_hedge_funds_involvment, stacked_plots, \
+    two_y_axis_plots
 
 
 def store_commitment_values_split_into_groups(commitment_this_round, trading_day, df_data):
@@ -58,7 +59,7 @@ class SimulationClass:
         for i, node_id_degree_pair in enumerate(sorted_node_degree_pairs):
             node_id = node_id_degree_pair[0]
             node_neighbours = list(barabasi_albert_network.neighbors(node_id))
-            if i < 5:  # defining 5 largest nodes as being the influential ones in the network
+            if i > 9970:  # defining 5 largest nodes as being the influential ones in the network
                 agent = InfluentialRedditUser(id=node_id, neighbours_ids=node_neighbours,
                                               market_first_price=self.market_environment.initial_price,
                                               investor_type=RedditInvestorTypes.FANATICAL)
@@ -248,12 +249,15 @@ class SimulationClass:
         network_evolution_threshold = 0.6
         # self.plot_agent_network_evolution(agent_network_evolution_dict, network_evolution_threshold)
 
-        # simple_line_plot(average_commitment_history, "Trading Day", "Average Commitment",
-        #                  "Average Commitment Evolution")
+        two_y_axis_plots(y1=average_commitment_history, y2=hf_involved_dict['involved'], xlabel='Simulation Day',
+                         ylabel1='Average Commitment', ylabel2='Hedge Funds Involved',title='Average Commitment '
+                                                                                            'Evolution and Hedge Fund'
+                                                                                            ' Participation')
+
+        simple_line_plot(average_commitment_history, "Trading Day", "Average Commitment",
+                       "Average Commitment Evolution")
         # simple_line_plot(commitment_changes, "Trading Week", "Change in commitment", "Percentage Changes in Average "
         #                                                                              "Commitment")
-
-        plot_institutional_investors_decisions(hedge_fund_decision_dict, market_environment.simulation_history.keys())
 
         plot_demand_dictionary(demand_dict, market_environment.simulation_history.keys())
 
@@ -284,15 +288,15 @@ class SimulationClass:
         if gme_copy is not None:
             plot_simulation_against_real_values(market_environment.simulation_history.values(), gme_copy)
 
-        observe_fat_tails_returns_distribution(list(market_environment.simulation_history.values()))
-
-        observe_volatility_clustering(list(market_environment.simulation_history.values()))
-
-        observe_autocorrelation_abs_returns(list(market_environment.simulation_history.values()))
-
-        observe_antileverage_effect(list(market_environment.simulation_history.values()))
-
-        extract_weekend_data_effect(market_environment.simulation_history)
+        # observe_fat_tails_returns_distribution(list(market_environment.simulation_history.values()))
+        #
+        # observe_volatility_clustering(list(market_environment.simulation_history.values()))
+        #
+        # observe_autocorrelation_abs_returns(list(market_environment.simulation_history.values()))
+        #
+        # observe_antileverage_effect(list(market_environment.simulation_history.values()))
+        #
+        # extract_weekend_data_effect(market_environment.simulation_history)
 
 
 def start_simulation(miu=0.5, commitment_scaler=1.5, n_agents=10000,
@@ -313,7 +317,7 @@ def start_simulation(miu=0.5, commitment_scaler=1.5, n_agents=10000,
                                  commitment_scaler=commitment_scaler, volume_threshold=volume_threshold,
                                  fundamental_price_inst_inv=fundamental_price_inst_inv,
                                  lambda_parameter=lambda_parameter, d_parameter=d_parameter)
-    halt_trading = True
+    halt_trading = False
     prices, average_commitment_history, hf_decision_dict = simulation.run_simulation(halt_trading=halt_trading)
     return prices, market_environment, simulation, average_commitment_history, hf_decision_dict
 
