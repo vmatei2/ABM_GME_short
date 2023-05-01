@@ -76,6 +76,7 @@ class RegularRedditTrader(RedditTrader):
                 # pass
                 neighbour.commitment = neighbour.commitment + miu * (self.commitment - neighbour.commitment)
             neighbour.commitment = min(neighbour.commitment, 1)
+            updated_commitment = updated_commitment * 0.995  # multiply commitment by a small factor so it decreases exponentially in the scenario with no influencers
             self.commitment = min(updated_commitment, 1)
 
     def act_if_trading_halted(self, current_price, price_history, white_noise):

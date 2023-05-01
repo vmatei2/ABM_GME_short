@@ -80,6 +80,9 @@ class InstitutionalInvestor:
 
         should_gamble = V_gain > V_loss
 
+        if not should_gamble:
+            break_here = 0;
+
         return should_gamble
 
     def compute_expected_price(self, fundamentalist_weight, chartist_weight, noise_weight, current_price,
