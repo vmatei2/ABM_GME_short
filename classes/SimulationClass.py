@@ -189,10 +189,10 @@ class SimulationClass:
                 for key, investor in self.institutional_investors.items():
                     if investor.still_involed:
                         investors_still_involved += 1
-                hf_involved_dict['involved'].append(investors_still_involved)
-                hf_involved_dict['closed'].append(len(self.institutional_investors) - investors_still_involved)
                 average_network_commitment = calculate_average_commitment(self.social_media_agents)
                 average_commitment_history.append(average_network_commitment)
+                hf_involved_dict['involved'].append(investors_still_involved)
+                hf_involved_dict['closed'].append(len(self.institutional_investors) - investors_still_involved)
                 commitment_this_round = gather_commitment_values(self.social_media_agents)
                 all_commitments_each_round.append(commitment_this_round)
                 if len(average_commitment_history) > 1:
@@ -226,7 +226,7 @@ class SimulationClass:
                 print_current_time()
                 if volume >= (self.volume_threshold * self.N_agents) and halt_trading:
                     agent_ids_to_be_deleted = self.halt_trading(commitment_threshold=0.65,
-                                                                commitment_lower_upper=[0.12, 0.2])
+                                                                commitment_lower_upper=[0.2, 0.2])
                     print("Trading halted")
                 print()
         print("Final pcgt volume is: ")
@@ -300,7 +300,7 @@ class SimulationClass:
 
 
 def start_simulation(miu=0.5, commitment_scaler=1.5, n_agents=10000,
-                     n_institutional_investors=2000, fundamental_price_inst_inv=2,
+                     n_institutional_investors=2000, fundamental_price_inst_inv=0.1,
                      volume_threshold=0.93, lambda_parameter=1.75, time_steps=160, d_parameter=0.6):
     gme = yf.Ticker("GME")
     gme_price_history = get_price_history(gme, "2020-11-15", "2020-12-08")
@@ -317,7 +317,7 @@ def start_simulation(miu=0.5, commitment_scaler=1.5, n_agents=10000,
                                  commitment_scaler=commitment_scaler, volume_threshold=volume_threshold,
                                  fundamental_price_inst_inv=fundamental_price_inst_inv,
                                  lambda_parameter=lambda_parameter, d_parameter=d_parameter)
-    halt_trading = False
+    halt_trading = True
     prices, average_commitment_history, hf_decision_dict = simulation.run_simulation(halt_trading=halt_trading)
     return prices, market_environment, simulation, average_commitment_history, hf_decision_dict
 

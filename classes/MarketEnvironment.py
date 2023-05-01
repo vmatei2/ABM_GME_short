@@ -47,8 +47,9 @@ class MarketEnvironment:
         :return:
         """
         plt.figure(figsize=(10, 10))
-        plt.plot(self.simulation_history.keys(), self.simulation_history.values(), 'r')
-        plt.xlabel("Date", fontsize=15)
+        #  plt.plot(self.simulation_history.keys(), self.simulation_history.values(), 'r')
+        plt.plot([i for i in range(len(self.simulation_history.keys()))], self.simulation_history.values(), 'r')
+        plt.xlabel("Day", fontsize=15)
         plt.ylabel("Price", fontsize=15)
         plt.title(title, fontsize=19)
         plt.xticks(fontsize=14)
@@ -80,7 +81,7 @@ class MarketEnvironment:
 
     def update_excess_demand(self, retail_traders, institutional_investors):
         """
-        Updating the excess demand coming from retail trader and instituional investors
+        Updating the excess demand coming from retail trader and institutional investors
         :return:
         """
         demand_from_retail = 0
