@@ -3,6 +3,8 @@ import random
 import networkx as nx
 import numpy as np
 import matplotlib.pyplot as plt
+import pandas as pd
+import os
 import seaborn as sns
 import yfinance as yf
 
@@ -59,7 +61,7 @@ class SimulationClass:
         for i, node_id_degree_pair in enumerate(sorted_node_degree_pairs):
             node_id = node_id_degree_pair[0]
             node_neighbours = list(barabasi_albert_network.neighbors(node_id))
-            if i < 0:  # defining 5 largest nodes as being the influential ones in the network
+            if i < 5:  # defining 5 largest nodes as being the influential ones in the network
                 agent = InfluentialRedditUser(id=node_id, neighbours_ids=node_neighbours,
                                               market_first_price=self.market_environment.initial_price,
                                               investor_type=RedditInvestorTypes.FANATICAL)
@@ -299,14 +301,27 @@ class SimulationClass:
         # extract_weekend_data_effect(market_environment.simulation_history)
 
 
+
 def start_simulation(miu=0.5, commitment_scaler=1.5, n_agents=10000,
                      n_institutional_investors=2000, fundamental_price_inst_inv=0.1,
                      volume_threshold=0.93, lambda_parameter=1.75, time_steps=160, d_parameter=0.6):
     gme = yf.Ticker("GME")
-    gme_price_history = get_price_history(gme, "2020-11-15", "2020-12-08")
+
+    gme_price_history_path = '../data/gme_price_history.csv'
+    gme_empirical_data_simulation_path = '../data/gme_empirical_data_simulation'
+    if os.path.exists(gme_price_history_path) and os.path.exists(gme_empirical_data_simulation_path):
+        # if the path exists, then load in the CSVs
+        gme_price_history = pd.read_csv("../data/gme_price_history.csv")
+        gme_empirical_data_simulation = pd.read_csv('../data/gme_empirical_data_simulation')
+    else:
+        gme_price_history = get_price_history(gme, "2020-11-15", "2020-12-08")
+        # gme_price_history.to_csv("../data/gme_price_history.csv", index=False)
+        gme_empirical_data_simulation = get_price_history(gme, "2020-11-15", "2021-02-07")
+        # gme_empirical_data_simulation.to_csv("../data/gme_empirical_data_simulation", index=False)
+
     gme_price_history = select_closing_prices(gme_price_history)
-    gme_empirical_data_simulation = get_price_history(gme, "2020-11-15", "2021-02-07")
     gme_empirical_data_simulation = select_closing_prices(gme_empirical_data_simulation)
+
     start_date = datetime.datetime(2020, 12, 7)
     market_environment = MarketEnvironment(initial_price=16.35, name="GME Market Environment",
                                            price_history=gme_price_history, start_date=start_date)
@@ -441,9 +456,11 @@ def run_x_simulations(n_simulations, d_parameters):
     return simulation_prices
 
 
+
+
 if __name__ == '__main__':
     sns.set_style("darkgrid")
-    n_simulations = 1
+    n_simulations = 2
     d_parameters = np.linspace(0.3, 0.8, n_simulations)
     all_simulations = run_x_simulations(n_simulations, d_parameters=d_parameters)
     # plot aimulations results
