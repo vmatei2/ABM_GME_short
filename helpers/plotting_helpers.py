@@ -293,7 +293,7 @@ def scale_and_plot(first_array, second_array, title):
     plt.show()
 
 
-def plot_demand_dictionary(demand_dict, market_environment, demand_color='g', hf_demand_color='y', price_color='b'):
+def plot_demand_dictionary(demand_dict, market_environment,average_commitment_history, hf_involved_numbers, demand_color='g', hf_demand_color='y', price_color='b'):
     # Input validation
     if not isinstance(demand_dict, dict):
         raise ValueError("demand_dict must be dictionary")
@@ -309,34 +309,36 @@ def plot_demand_dictionary(demand_dict, market_environment, demand_color='g', hf
     price_evolution = list(market_environment.simulation_history.values())
 
     # Create Figure and Subplots
-    fig, ax1 = plt.subplots(figsize=(12, 12))
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(13, 10))
 
     # Plot demand
-    demand_retail, = ax1.plot(trading_period, all_retail_demand, color=demand_color)
-    demand_hf, = ax1.plot(trading_period, all_hf_demand, color=hf_demand_color)
-    ax1.set_ylabel("Demand Evolution")
-
+    demand_retail, = ax1.plot(trading_period, all_retail_demand, color=demand_color, label="Demand from retail agents")
+    demand_hf, = ax1.plot(trading_period, all_hf_demand, color=hf_demand_color, label="Demand from inst investor agents")
+    ax1.set_ylabel("Demand Evolution", fontsize=12)
+    ax1.legend(loc='upper left')
     # Create a second y-axis for price
-    ax2 = ax1.twinx()
-    price, = ax2.plot(trading_period, price_evolution, color=price_color)
-    ax2.set_ylabel("Price Evolution")
+    ax1_2 = ax1.twinx()
+    ax1_2.plot(trading_period, price_evolution, color=price_color, label="Price evoolution")
+    ax1_2.set_ylabel("Price Evolution", fontsize=12)
+    ax1_2.legend(loc='upper right')
 
     # Set x-axis label
-    ax1.set_xlabel("Trading day")
+    ax1.set_xlabel("Trading day", fontsize=12)
 
-    # Set plot title
-    plt.title("Agent Demand and Price Evolution", fontsize=14)
 
-    # Create custom legend handles
-    legend_handles = [
-        Line2D([0], [0], color=demand_color, label="Demand from retail agents"),
-        Line2D([0], [0], color=hf_demand_color, label="Demand from institutional investor agents"),
-        Line2D([0], [0], color=price_color, label="Price evolution")
-    ]
+    #  second figure on right sub-plot
+    x = range(len(average_commitment_history))
 
-    # Create legend
-    plt.legend(handles=legend_handles)
+    ax2.plot(x, average_commitment_history, color='r', label='Average commitment')
+    ax2.set_ylabel('Average Commitment', fontsize=12)
+    ax2.legend(loc='upper left')
+    ax2_2 = ax2.twinx()
+    ax2_2.plot(x, hf_involved_numbers, color='b', label='HFs involved')
+    ax2_2.set_ylabel('Hedge funds involved', fontsize=12)
+    ax2_2.legend(loc='upper right')
+    ax2.set_xlabel('Simulation day', fontsize=12)
 
+    plt.subplots_adjust(wspace=0.4)
     # Show the plot
     plt.show()
 

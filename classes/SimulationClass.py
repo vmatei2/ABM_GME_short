@@ -261,7 +261,7 @@ class SimulationClass:
         # simple_line_plot(commitment_changes, "Trading Week", "Change in commitment", "Percentage Changes in Average "
         #                                                                              "Commitment")
 
-        plot_demand_dictionary(demand_dict, market_environment)
+        plot_demand_dictionary(demand_dict, market_environment, average_commitment_history, hf_involved_dict['involved'])
 
         grouped_commitment = plot_commitment_into_groups(df_data, title="Evolution of agent commitments in the network through each 20 days")
 
@@ -510,6 +510,7 @@ if __name__ == '__main__':
 
 
 def two_y_axis_plots(y1, y2, x=None, xlabel=None, ylabel1=None, ylabel2=None, color1='tab:blue', color2='tab:red', title=None):
+    #  1=average_commitment_history, y2=hf_involved_dict['involved'],
     # no x passed in, then extract it
     if x is None:
         x = range(len(y1))
