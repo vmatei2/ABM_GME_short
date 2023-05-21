@@ -135,7 +135,7 @@ class RegularRedditTrader(RedditTrader):
         """
         # below if statement considers whether the agent is simply looking for a quick profit, get in-get out or
         # believe in GME
-        rolling_average_window_length = 15
+        rolling_average_window_length = 5
         rolling_average = self.compute_rolling_average(price_history, rolling_average_window_length)
         expected_price = current_price + self.b * (current_price - rolling_average) + white_noise
         self.expected_price = expected_price

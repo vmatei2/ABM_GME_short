@@ -6,6 +6,8 @@ import yfinance as yf
 import matplotlib.pyplot as plt
 import seaborn as sns
 import graph_tool.all as gt
+from matplotlib.lines import Line2D
+
 from helpers.calculations_helpers import extract_values_counts_as_lists, rescale_array
 from helpers.network_helpers import nx2gt
 
@@ -291,17 +293,51 @@ def scale_and_plot(first_array, second_array, title):
     plt.show()
 
 
-def plot_demand_dictionary(demand_dict, trading_period):
+def plot_demand_dictionary(demand_dict, market_environment, demand_color='g', hf_demand_color='y', price_color='b'):
+    # Input validation
+    if not isinstance(demand_dict, dict):
+        raise ValueError("demand_dict must be dictionary")
+
+    required_keys = ['retail', 'institutional']
+    if any(key not in demand_dict for key in required_keys):
+        raise ValueError("demand_dict must contain keys 'retail' and 'institutional'.")
+
+    # Extract data
+    trading_period = list(market_environment.simulation_history.keys())
     all_retail_demand = demand_dict['retail']
     all_hf_demand = demand_dict['institutional']
-    plt.figure(figsize=(10, 10))
-    plt.plot(trading_period, all_retail_demand, 'g')
-    plt.plot(trading_period, all_hf_demand, 'y')
+    price_evolution = list(market_environment.simulation_history.values())
 
-    plt.xlabel("Trading Day")
-    plt.ylabel("Demand Evolution")
-    legend_ = ["Demand from retail agents", "Demand from institutional investor agents"]
-    plt.legend(legend_)
+    # Create Figure and Subplots
+    fig, ax1 = plt.subplots(figsize=(12, 12))
+
+    # Plot demand
+    demand_retail, = ax1.plot(trading_period, all_retail_demand, color=demand_color)
+    demand_hf, = ax1.plot(trading_period, all_hf_demand, color=hf_demand_color)
+    ax1.set_ylabel("Demand Evolution")
+
+    # Create a second y-axis for price
+    ax2 = ax1.twinx()
+    price, = ax2.plot(trading_period, price_evolution, color=price_color)
+    ax2.set_ylabel("Price Evolution")
+
+    # Set x-axis label
+    ax1.set_xlabel("Trading day")
+
+    # Set plot title
+    plt.title("Agent Demand and Price Evolution", fontsize=14)
+
+    # Create custom legend handles
+    legend_handles = [
+        Line2D([0], [0], color=demand_color, label="Demand from retail agents"),
+        Line2D([0], [0], color=hf_demand_color, label="Demand from institutional investor agents"),
+        Line2D([0], [0], color=price_color, label="Price evolution")
+    ]
+
+    # Create legend
+    plt.legend(handles=legend_handles)
+
+    # Show the plot
     plt.show()
 
 
