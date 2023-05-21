@@ -302,6 +302,7 @@ def plot_demand_dictionary(demand_dict, market_environment,average_commitment_hi
     if any(key not in demand_dict for key in required_keys):
         raise ValueError("demand_dict must contain keys 'retail' and 'institutional'.")
 
+    x1 = range(len(market_environment.simulation_history.keys()))
     # Extract data
     trading_period = list(market_environment.simulation_history.keys())
     all_retail_demand = demand_dict['retail']
@@ -312,13 +313,13 @@ def plot_demand_dictionary(demand_dict, market_environment,average_commitment_hi
     fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(13, 10))
 
     # Plot demand
-    demand_retail, = ax1.plot(trading_period, all_retail_demand, color=demand_color, label="Demand from retail agents")
-    demand_hf, = ax1.plot(trading_period, all_hf_demand, color=hf_demand_color, label="Demand from inst investor agents")
+    demand_retail, = ax1.plot(x1, all_retail_demand, color=demand_color, label="Demand from retail agents")
+    demand_hf, = ax1.plot(x1, all_hf_demand, color=hf_demand_color, label="Demand from inst investor agents")
     ax1.set_ylabel("Demand Evolution", fontsize=12)
     ax1.legend(loc='upper left')
     # Create a second y-axis for price
     ax1_2 = ax1.twinx()
-    ax1_2.plot(trading_period, price_evolution, color=price_color, label="Price evoolution")
+    ax1_2.plot(x1, price_evolution, color=price_color, label="Price evoolution")
     ax1_2.set_ylabel("Price Evolution", fontsize=12)
     ax1_2.legend(loc='upper right')
 
@@ -333,7 +334,7 @@ def plot_demand_dictionary(demand_dict, market_environment,average_commitment_hi
     ax2.set_ylabel('Average Commitment', fontsize=12)
     ax2.legend(loc='upper left')
     ax2_2 = ax2.twinx()
-    ax2_2.plot(x, hf_involved_numbers, color='b', label='HFs involved')
+    ax2_2.plot(x, hf_involved_numbers, color='y', label='HFs involved')
     ax2_2.set_ylabel('Hedge funds involved', fontsize=12)
     ax2_2.legend(loc='upper right')
     ax2.set_xlabel('Simulation day', fontsize=12)

@@ -143,9 +143,9 @@ class SimulationClass:
             self.social_media_agents[new_id] = new_agent
 
     def market_interactions(self, average_network_commitment, threshold, institutional_inv_decision_dict, trading_day):
-        if self.market_environment.date.weekday() in [5, 6]:  # Saturday or Sunday:
-            self.market_environment.update_day()
-            return
+        # if self.market_environment.date.weekday() in [5, 6]:  # Saturday or Sunday:
+        #     self.market_environment.update_day()
+        #     return
         white_noise = random.uniform(-1, 1)
         participating_agents = self.market_environment.select_participating_agents(average_network_commitment,
                                                                                    self.social_media_agents)
@@ -482,7 +482,7 @@ if __name__ == '__main__':
     sns.set_style("darkgrid")
     n_simulations = 1
     d_parameters = np.linspace(0.3, 0.8, n_simulations)
-    n_influencers = 15
+    n_influencers = 16
     all_simulations = run_x_simulations(n_simulations, d_parameters=d_parameters, n_influencers=n_influencers)
     statistics_title = "../data/" + str(n_influencers) + "_influencers_statistics.csv"
     statistics_dataframe = extract_statistics(all_simulations)
