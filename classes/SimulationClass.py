@@ -36,7 +36,8 @@ def store_commitment_values_split_into_groups(commitment_this_round, trading_day
 
 class SimulationClass:
     def __init__(self, time_steps, N_agents, N_institutional_investors, m, market_environment, miu,
-                 commitment_scaler, volume_threshold, fundamental_price_inst_inv, lambda_parameter, n_influencers, d_parameter=None):
+                 commitment_scaler, volume_threshold, fundamental_price_inst_inv, lambda_parameter, n_influencers,
+                 d_parameter=None):
         self.N_agents = int(N_agents)  # number of participating retail traders in the simulation
         self.N_institutional_investors = int(N_institutional_investors)
         self.m = m  # number of edges to attach from a new node to existing nodes
@@ -48,7 +49,8 @@ class SimulationClass:
         self.volume_threshold = volume_threshold
         self.lambda_parameter = lambda_parameter
         self.fundamental_price_inst_inv = fundamental_price_inst_inv
-        self.social_media_agents, self.average_degree = self.create_initial_network(n_influencers, d_parameter)  # the initial network of social media agents,
+        self.social_media_agents, self.average_degree = self.create_initial_network(n_influencers,
+                                                                                    d_parameter)  # the initial network of social media agents,
         # we already have a few central nodes network is set to increase in size and add new agents throughout the
         # simulation
         self.institutional_investors = self.create_institutional_investors()
@@ -61,6 +63,7 @@ class SimulationClass:
         for i, node_id_degree_pair in enumerate(sorted_node_degree_pairs):
             node_id = node_id_degree_pair[0]
             node_neighbours = list(barabasi_albert_network.neighbors(node_id))
+            print(n_influencers)
             if i < n_influencers:  # defining 5 largest nodes as being the influential ones in the network
                 agent = InfluentialRedditUser(id=node_id, neighbours_ids=node_neighbours,
                                               market_first_price=self.market_environment.initial_price,
@@ -84,7 +87,6 @@ class SimulationClass:
             if agent.commitment <= commitment_threshold:
                 agent.commitment = random.uniform(commitment_lower_upper[0], commitment_lower_upper[1])
         return ids_to_be_deleted
-
 
     def create_institutional_investors(self):
         institutional_investors = {}
@@ -179,7 +181,8 @@ class SimulationClass:
         all_commitments_each_round = []
         commitment_changes = []
         volume_history = []
-        hf_involved_dict = {'involved': [], 'closed': []}  # dictionary used for plotting the evolution of hedge funds participaitng in the market, and how they close their positions
+        hf_involved_dict = {'involved': [],
+                            'closed': []}  # dictionary used for plotting the evolution of hedge funds participaitng in the market, and how they close their positions
         options_bought_history = []
         demand_dict = {'retail': [], 'institutional': []}
         hedge_fund_decision_dict = {}
@@ -252,18 +255,20 @@ class SimulationClass:
         # self.plot_agent_network_evolution(agent_network_evolution_dict, network_evolution_threshold)
 
         two_y_axis_plots(y1=average_commitment_history, y2=hf_involved_dict['involved'], xlabel='Simulation Day',
-                         ylabel1='Average Commitment', ylabel2='Hedge Funds Involved',title='Average Commitment '
-                                                                                            'Evolution and Hedge Fund'
-                                                                                            ' Participation')
+                         ylabel1='Average Commitment', ylabel2='Hedge Funds Involved', title='Average Commitment '
+                                                                                             'Evolution and Hedge Fund'
+                                                                                             ' Participation')
 
         simple_line_plot(average_commitment_history, "Trading Day", "Average Commitment",
-                       "Average Commitment Evolution")
+                         "Average Commitment Evolution")
         # simple_line_plot(commitment_changes, "Trading Week", "Change in commitment", "Percentage Changes in Average "
         #                                                                              "Commitment")
 
-        plot_demand_dictionary(demand_dict, market_environment, average_commitment_history, hf_involved_dict['involved'])
+        plot_demand_dictionary(demand_dict, market_environment, average_commitment_history,
+                               hf_involved_dict['involved'])
 
-        grouped_commitment = plot_commitment_into_groups(df_data, title="Evolution of agent commitments in the network through each 20 days")
+        grouped_commitment = plot_commitment_into_groups(df_data,
+                                                         title="Evolution of agent commitments in the network through each 20 days")
 
         stacked_plots(df_data, market_environment)
 
@@ -276,7 +281,7 @@ class SimulationClass:
         price_history = [float(x) for x in price_history]
         price_history = rescale_array(price_history)
         plt.plot(average_commitment_history, 'bo', label='Average commitment across the network')
-        plt.plot(price_history,'rx', label='Price evolution')
+        plt.plot(price_history, 'rx', label='Price evolution')
         plt.title('Normalized commitment and price evolution through simulation', fontsize=18)
         plt.legend()
         plt.xlabel('Trading day', fontsize=16)
@@ -301,10 +306,9 @@ class SimulationClass:
         # extract_weekend_data_effect(market_environment.simulation_history)
 
 
-
 def start_simulation(miu=0.5, commitment_scaler=1.5, n_agents=10000,
                      n_institutional_investors=2000, fundamental_price_inst_inv=0.1,
-                     volume_threshold=0.93, lambda_parameter=1.75, time_steps=160, n_influenecrs=15, d_parameter=0.6):
+                     volume_threshold=0.93, lambda_parameter=1.75, time_steps=160, n_influencers=15, d_parameter=0.6):
     gme = yf.Ticker("GME")
 
     gme_price_history_path = '../data/gme_price_history.csv'
@@ -331,7 +335,8 @@ def start_simulation(miu=0.5, commitment_scaler=1.5, n_agents=10000,
                                  market_environment=market_environment, miu=miu,
                                  commitment_scaler=commitment_scaler, volume_threshold=volume_threshold,
                                  fundamental_price_inst_inv=fundamental_price_inst_inv,
-                                 lambda_parameter=lambda_parameter,n_influencers=n_influencers, d_parameter=d_parameter)
+                                 lambda_parameter=lambda_parameter, n_influencers=n_influencers,
+                                 d_parameter=d_parameter)
     halt_trading = True
     prices, average_commitment_history, hf_decision_dict = simulation.run_simulation(halt_trading=halt_trading)
     return prices, market_environment, simulation, average_commitment_history, hf_decision_dict
@@ -450,10 +455,20 @@ def run_x_simulations(n_simulations, d_parameters, n_influencers):
     :return:
     """
     simulation_prices = []
+    simulation_commitments = []
+    squeeze_triggered = []
     for i in range(n_simulations):
-        prices, market_env, sim_obj, avg_commitment_history, hf_decision_dict = start_simulation(d_parameter=d_parameters[i], n_influenecrs=n_influencers)
+        prices, market_env, sim_obj, avg_commitment_history, hf_decision_dict = start_simulation(
+            d_parameter=d_parameters[i], n_influencers=n_influencers)
         simulation_prices.append(prices)
-    return simulation_prices
+        simulation_commitments.append(avg_commitment_history)
+        squeeze_triggered.append(check_squeeze_triggered(prices))
+    return simulation_prices, simulation_commitments, squeeze_triggered
+
+
+def check_squeeze_triggered(simulation_prices):
+    max_price = max(simulation_prices)
+    return True if max_price > 250 else False
 
 
 def extract_statistics(simulation_values):
@@ -472,26 +487,61 @@ def extract_statistics(simulation_values):
     std_vals = [np.std(sim) for sim in simulation_values]
     statistics = [min_vals, max_vals, mean_vals, median_vals, std_vals]
 
-    statistics_dataframe = pd.DataFrame(data=statistics, columns=['Min', 'Max', 'Mean', 'Median', 'Standard Deviation']).T # transpose the dataframe so the lists in statistics are presented column-wise rather than row-wise
+    statistics_dataframe = pd.DataFrame(data=statistics, columns=['Min', 'Max', 'Mean', 'Median',
+                                                                  'Standard Deviation']).T  # transpose the dataframe so the lists in statistics are presented column-wise rather than row-wise
     return statistics_dataframe
 
 
+def create_plot_pct_change(commitment_evos, squeezes_triggered, influencer_vals):
+    plt.figure(figsize=(10, 10))
+    pct_changes = []
+    flattened_list = [item for sublist in squeezes_triggered for item in
+                      sublist]  # code to flatten the list on the assumption that we only have one simulation
+    colors = ['b', 'g', 'r', 'c', 'm', 'y', 'k']
+    for commitment_hist in commitment_evos:
+        pct_changes.append(calculate_percentage_change(commitment_hist[0]))
+    for i, sublist in enumerate(pct_changes):
+        if flattened_list[i]:
+            plt.plot(sublist[:80], color=colors[i % len(colors)],
+                     label=('Squeeze Triggered - ') + str(influencer_vals[i]) + ' influencers')
+        else:
+            plt.plot(sublist[:80], linestyle='dotted', color=colors[i % len(colors)],
+                     label='Squeeze Not Triggered - ' + str(influencer_vals[i]) + ' influencers')
+    plt.title('Commitment Evolution - pct changes')
+    plt.legend()
+    plt.show()
+
+
+def calculate_percentage_change(data):
+    series = pd.Series(data)
+    percentage_change = series.pct_change()
+    return percentage_change.tolist()
 
 
 if __name__ == '__main__':
     sns.set_style("darkgrid")
     n_simulations = 1
     d_parameters = np.linspace(0.3, 0.8, n_simulations)
-    n_influencers = 16
-    all_simulations = run_x_simulations(n_simulations, d_parameters=d_parameters, n_influencers=n_influencers)
-    statistics_title = "../data/" + str(n_influencers) + "_influencers_statistics.csv"
-    statistics_dataframe = extract_statistics(all_simulations)
-    print(statistics_dataframe)
-    statistics_dataframe.to_csv(statistics_title)
+    influencer_vals = [16]
+    commitment_evolutions = []
+    squeezes_triggered = []
+    for total_infl in influencer_vals:
+        all_simulations, all_commitments, squeeze_triggered = run_x_simulations(n_simulations,
+                                                                                d_parameters=d_parameters,
+                                                                                n_influencers=total_infl)
+        commitment_evolutions.append(all_commitments)
+        squeezes_triggered.append(squeeze_triggered)
+
+    create_plot_pct_change(commitment_evolutions, squeezes_triggered, influencer_vals)
+    # all_simulations = run_x_simulations(n_simulations, d_parameters=d_parameters, n_influencers=n_influencers)
+    statistics_title = "../data/" + str(influencer_vals) + "_influencers_statistics.csv"
+    # statistics_dataframe = extract_statistics(all_simulations)
+    # print(statistics_dataframe)
+    # statistics_dataframe.to_csv(statistics_title)
     # plot aimulations results
     cmap = plt.get_cmap('gnuplot')
     colors = [cmap(i) for i in np.linspace(0, 1, n_simulations)]
-    plt.figure(figsize=(12,12))
+    plt.figure(figsize=(12, 12))
     for i, prices in enumerate(all_simulations):
         plt.plot(prices, color=colors[i], label='opinion threshold={0}'.format(d_parameters[i]))
         plt.legend(loc='upper left')
@@ -501,21 +551,14 @@ if __name__ == '__main__':
     plt.show()
 
 
-
-
-
-
-
-
-
-
-def two_y_axis_plots(y1, y2, x=None, xlabel=None, ylabel1=None, ylabel2=None, color1='tab:blue', color2='tab:red', title=None):
+def two_y_axis_plots(y1, y2, x=None, xlabel=None, ylabel1=None, ylabel2=None, color1='tab:blue', color2='tab:red',
+                     title=None):
     #  1=average_commitment_history, y2=hf_involved_dict['involved'],
     # no x passed in, then extract it
     if x is None:
         x = range(len(y1))
 
-    fig, ax1= plt.subplots()
+    fig, ax1 = plt.subplots()
 
     # plot the first data series on the left y-axis
     ax1.plot(x, y1, color=color1)
@@ -523,7 +566,7 @@ def two_y_axis_plots(y1, y2, x=None, xlabel=None, ylabel1=None, ylabel2=None, co
     ax1.tick_params(axis='y', labelcolor=color1)
 
     # create a second y-axis on the right side
-    ax2=ax1.twinx()
+    ax2 = ax1.twinx()
 
     ax2.plot(x, y2, color=color2)
     ax2.set_ylabel(ylabel2, color=color2)

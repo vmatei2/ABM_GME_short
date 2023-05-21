@@ -55,9 +55,9 @@ class RegularRedditTrader(RedditTrader):
         neighbour_choice_id = random.choice(self.neighbours_ids)  # randomly pick one neighbour for the interaction
         neighbour = agents[neighbour_choice_id]
         neighbour_commitment_value = 0
-        if probably(0.001): # with a 10% probability, each agent randomly decreases his commitment to 0.2 and exits the function
-            self.commitment = 0.2
-            return
+        # if probably(0.001): # with a 10% probability, each agent randomly decreases his commitment to 0.2 and exits the function
+        #     self.commitment = 0.2
+        #     return
         for id in self.neighbours_ids:
             neighbour_commitment_value += agents[id].commitment
         average_neighbour_commitment = neighbour_commitment_value / len(self.neighbours_ids)

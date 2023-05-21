@@ -319,12 +319,12 @@ def plot_demand_dictionary(demand_dict, market_environment,average_commitment_hi
     ax1.legend(loc='upper left')
     # Create a second y-axis for price
     ax1_2 = ax1.twinx()
-    ax1_2.plot(x1, price_evolution, color=price_color, label="Price evoolution")
+    ax1_2.plot(x1, price_evolution, color=price_color, label="Price evolution")
     ax1_2.set_ylabel("Price Evolution", fontsize=12)
     ax1_2.legend(loc='upper right')
 
     # Set x-axis label
-    ax1.set_xlabel("Trading day", fontsize=12)
+    ax1.set_xlabel("Simulation day", fontsize=12)
 
 
     #  second figure on right sub-plot
