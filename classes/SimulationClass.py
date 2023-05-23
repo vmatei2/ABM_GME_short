@@ -471,7 +471,7 @@ def check_squeeze_triggered(simulation_prices):
     return True if max_price > 250 else False
 
 
-def extract_statistics(simulation_values):
+def extract_statistics(simulation_values, commitment_values, squeezes_triggered):
     """
     :param simulation_values: a list of lists - each list contains float values representing prices at different points in the simulation
     :return: dataframe containing calculated metrics
@@ -485,11 +485,13 @@ def extract_statistics(simulation_values):
     mean_vals = [np.mean(sim) for sim in simulation_values]
     median_vals = [np.median(sim) for sim in simulation_values]
     std_vals = [np.std(sim) for sim in simulation_values]
-    statistics = [min_vals, max_vals, mean_vals, median_vals, std_vals]
-
-    statistics_dataframe = pd.DataFrame(data=statistics, columns=['Min', 'Max', 'Mean', 'Median',
-                                                                  'Standard Deviation']).T  # transpose the dataframe so the lists in statistics are presented column-wise rather than row-wise
-    return statistics_dataframe
+    max_com = [np.max(sim) for sim in commitment_values]
+    statistics = [min_vals, max_vals, mean_vals, median_vals, std_vals, max_com, squeezes_triggered]
+    cols = ['Min', 'Max', 'Mean', 'Median', 'Standard Deviation', 'Maximum Average Commitment', 'Squeeze triggered?']
+    assert len(statistics) == len(cols), "Lengths of the lists are different"
+    stats_df = pd.DataFrame(data=statistics, columns=cols).T  # transpose the dataframe
+    # so the lists in statistics are presented column-wise rather than row-wise
+    return stats_df
 
 
 def create_plot_pct_change(commitment_evos, squeezes_triggered, influencer_vals):
@@ -520,24 +522,21 @@ def calculate_percentage_change(data):
 
 if __name__ == '__main__':
     sns.set_style("darkgrid")
-    n_simulations = 1
+    n_simulations = 2
     d_parameters = np.linspace(0.3, 0.8, n_simulations)
     influencer_vals = [16]
     commitment_evolutions = []
     squeezes_triggered = []
-    for total_infl in influencer_vals:
-        all_simulations, all_commitments, squeeze_triggered = run_x_simulations(n_simulations,
-                                                                                d_parameters=d_parameters,
-                                                                                n_influencers=total_infl)
-        commitment_evolutions.append(all_commitments)
-        squeezes_triggered.append(squeeze_triggered)
+    all_simulations, all_commitments, squeeze_triggered = run_x_simulations(n_simulations,
+                                                                            d_parameters=d_parameters,
+                                                                            n_influencers=16)
 
     create_plot_pct_change(commitment_evolutions, squeezes_triggered, influencer_vals)
     # all_simulations = run_x_simulations(n_simulations, d_parameters=d_parameters, n_influencers=n_influencers)
     statistics_title = "../data/" + str(influencer_vals) + "_influencers_statistics.csv"
-    # statistics_dataframe = extract_statistics(all_simulations)
-    # print(statistics_dataframe)
-    # statistics_dataframe.to_csv(statistics_title)
+    statistics_dataframe = extract_statistics(all_simulations, all_commitments, squeeze_triggered)
+    print(statistics_dataframe)
+    statistics_dataframe.to_csv(statistics_title)
     # plot aimulations results
     cmap = plt.get_cmap('gnuplot')
     colors = [cmap(i) for i in np.linspace(0, 1, n_simulations)]
@@ -551,31 +550,3 @@ if __name__ == '__main__':
     plt.show()
 
 
-def two_y_axis_plots(y1, y2, x=None, xlabel=None, ylabel1=None, ylabel2=None, color1='tab:blue', color2='tab:red',
-                     title=None):
-    #  1=average_commitment_history, y2=hf_involved_dict['involved'],
-    # no x passed in, then extract it
-    if x is None:
-        x = range(len(y1))
-
-    fig, ax1 = plt.subplots()
-
-    # plot the first data series on the left y-axis
-    ax1.plot(x, y1, color=color1)
-    ax1.set_ylabel(ylabel1, color=color1, fontsize=12)
-    ax1.tick_params(axis='y', labelcolor=color1)
-
-    # create a second y-axis on the right side
-    ax2 = ax1.twinx()
-
-    ax2.plot(x, y2, color=color2)
-    ax2.set_ylabel(ylabel2, color=color2)
-    ax2.tick_params(axis='y', labelcolor=color2)
-
-    # set the x-axis label
-    ax1.set_xlabel(xlabel)
-
-    if title:
-        plt.title(title, fontsize=14)
-
-    plt.show()
