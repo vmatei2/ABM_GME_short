@@ -424,6 +424,30 @@ def barplot_options_bought(dates, options_bought):
     plt.show()
 
 
+def plot_results_analysis(xvals, yvals, xlabel, ylabel, title):
+    """
+    Function to plot the results when looking for the tipping points
+    :param xvals:
+    :param yvals: list of simulation prices for each iteration
+    :param xlabel:
+    :param ylabel:
+    :param title:
+    :return:
+    """
+    plt.figure(figsize=(8, 8))
+    yvals = extract_max_price(yvals)
+    plt.plot(xvals, yvals, 'rx')
+    fsize=12
+    plt.xlabel(xlabel, fontsize=fsize)
+    plt.ylabel(ylabel, fontsize=fsize)
+    plt.title(title, fontsize=(fsize + 2))
+    plt.show()
+
+def extract_max_price(prices):
+    maxprices = [np.max(sim_prices) for sim_prices in prices]
+    return maxprices
+
+
 if __name__ == '__main__':
     sns.set_style("darkgrid")
     gme_ticker = "GME"

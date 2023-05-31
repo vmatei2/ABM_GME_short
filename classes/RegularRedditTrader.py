@@ -9,14 +9,16 @@ class RegularRedditTrader(RedditTrader):
     """
     Child class of "RedditTradder" parent class implementing the behaviour of such agents in the market and inheriting the common properties of the reddit trader
     """
-    def __init__(self, id, neighbours_ids, commitment=None, investor_type=None, commitment_scaler=None, d=None):
+
+    def __init__(self, id, neighbours_ids, commitment, investor_type=None, commitment_scaler=None, d=None):
         demand = 0  # an agent's initial demand
-        if commitment is None:
-            commitment = random.uniform(0.3, 0.6)  # normal random distribution with mean = 0 and std deviation = 1
-        if d is None:
-            self.d = 0 #random.uniform(0.3, 0.6)  # threshold for difference in commitment to be too high - or confidence
-        else:
+        commitment = random.uniform(commitment[0], commitment[1])  # if we pass in the commitment, we want to
+        # randomly choose from lower/upper band
+        if d is not None:
             self.d = 0.3
+        else:
+            self.d = 0  # random.uniform(0.3, 0.6)  # threshold for difference in commitment to be too high - or
+            # confidence
         # interval value - random choice rather than set values as all agents will be slightly different,
         # hence we want thought processes to be heterogeneous
         self.b = random.uniform(-1, 1)  # gives the strength of the force calculated as simply (
@@ -88,7 +90,7 @@ class RegularRedditTrader(RedditTrader):
 
         if not self.has_trading_been_halted:
             # if 0.5 as multiplier, then we halfen the demand
-            current_demand =  0 # 0.05 * self.demand  # self.demand / (1 / 0.5 * self.commitment)  # demand becomes a function of the agent's current
+            current_demand = 0  # 0.05 * self.demand  # self.demand / (1 / 0.5 * self.commitment)  # demand becomes a function of the agent's current
             # commitmemnt
             self.demand = -current_demand
             self.has_trading_been_halted = True
@@ -101,7 +103,8 @@ class RegularRedditTrader(RedditTrader):
             else:
                 self.demand -= self.commitment_scaler * self.commitment
         elif self.investor_type == RedditInvestorTypes.LONGTERM:
-            expected_price = self.compute_price_expectation_fundamentalist(current_price, price_history, white_noise)  # introduce fundamentalist pricing formula calculation here
+            expected_price = self.compute_price_expectation_fundamentalist(current_price, price_history,
+                                                                           white_noise)  # introduce fundamentalist pricing formula calculation here
             if expected_price < current_price:
                 self.demand -= self.commitment * self.commitment_scaler
             elif expected_price > current_price:
