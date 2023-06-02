@@ -424,7 +424,7 @@ def barplot_options_bought(dates, options_bought):
     plt.show()
 
 
-def plot_results_analysis(xvals, yvals, xlabel, ylabel, title):
+def plot_results_analysis(xvals, yvals, xlabel, ylabel, title, extract_commitment=False):
     """
     Function to plot the results when looking for the tipping points
     :param xvals:
@@ -436,9 +436,9 @@ def plot_results_analysis(xvals, yvals, xlabel, ylabel, title):
     """
     plt.figure(figsize=(8, 8))
     yvals = extract_max_price(yvals)
-    if "commitment" in title:
+    if extract_commitment:
         xvals = extract_starting_commitment(xvals)
-    plt.plot(xvals, yvals, 'rx')
+    plt.plot(xvals, yvals, 'rx--')
     fsize=12
     plt.xlabel(xlabel, fontsize=fsize)
     plt.ylabel(ylabel, fontsize=fsize)
@@ -482,19 +482,20 @@ def extract_3d_plot_values(results_dict):
 
 def create_3d_plot(all_prices, all_commitments, influencer_vals):
     commitments = extract_starting_commitment(all_commitments)
-    commitments = extract_starting_commitment(commitments)  # bad code that needs fixing, but need to get graph out so TODO - fix issues with the indexing of the dictionary when loaded
+    commitments = extract_starting_commitment(commitments)  # bad code that needs fixing, but need to get graph out
+    # so TODO - fix issues with the indexing of the dictionary when loaded
     prices = extract_max_price(all_prices)
     fig = plt.figure(figsize=(9, 9))
 
-    influencer_vals = duplicate_vals(influencer_vals)
+    influencer_vals = duplicate_vals(influencer_vals, factor=len(influencer_vals))
     ax = plt.axes(projection='3d')
-    my_cmap = plt.get_cmap('hot')
+    my_cmap = plt.get_cmap('copper')
     trisurf = ax.plot_trisurf(commitments, influencer_vals, prices, cmap=my_cmap, linewidth=0.2, antialiased=True, edgecolor="none")
     fig.colorbar(trisurf, ax=ax, shrink=0.5, aspect=5)
-    ax.set_title('Commitments / Prices/ # Influencers', fontsize=14)
+    ax.set_title('Commitments / Max Price / # Influencers', fontsize=14)
     ax.set_xlabel('Starting commitments', fontsize=12)
-    ax.set_ylabel('# Influencer', fontsize=12)
-    ax.set_zlabel('Final Price', fontsize=12)
+    ax.set_ylabel('# Influencers', fontsize=12)
+    ax.set_zlabel('Max Price', fontsize=12)
     plt.tight_layout()
     plt.show()
 

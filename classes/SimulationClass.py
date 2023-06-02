@@ -517,8 +517,9 @@ def create_commitment_infl_price_analysis(results_dict):
     all_prices, all_commitments, influencer_vals = extract_3d_plot_values(results_dict)
     prices_fixed_commitment = extract_prices_fixed_commitment(results_dict)
     commitments_fixed_influencer, prices_fixed_influencer = extract_commitment_fixed_infl(results_dict)
-    plot_results_analysis(influencer_vals, prices_fixed_commitment, '# of influencers', 'Final Price', 'Number of influencers against final price')
-    plot_results_analysis(commitments_fixed_influencer, prices_fixed_influencer, 'Starting commitment', 'Final Price', 'Starting commitment against final price')
+    plot_results_analysis(influencer_vals, prices_fixed_commitment, '# of influencers', 'Max Price', 'Number of influencers against max price (starting commitment=0.45)')
+    plot_results_analysis(commitments_fixed_influencer, prices_fixed_influencer, 'Starting commitment', 'Max Price', 'Starting commitment against max price (n_influencers=16)', True)
+
     create_3d_plot(all_prices, all_commitments, influencer_vals)
 
 
@@ -531,12 +532,12 @@ if __name__ == '__main__':
     create_commitment_infl_price_analysis(results_dict)
 
     d_parameters = np.linspace(0.3, 0.8, n_simulations)
-    influencer_vals = [10, 12, 14, 16, 18]
+    influencer_vals = [10, 12, 14, 16, 18, 20]
     squeezes_triggered = []
     prices_list_varying_infl = []
     prices_list_varying_comm = []
     commitments_list = []
-    commitment_vals = [[0.1, 0.2], [0.2, 0.3], [0.3, 0.4], [0.3, 0.5], [0.3, 0.6]]
+    commitment_vals = [[0.1, 0.2], [0.2, 0.3], [0.3, 0.4], [0.3, 0.5], [0.3, 0.6], [0.2, 0.7]]
     result_dict = {}
 
     for n_influencer in influencer_vals:
@@ -552,8 +553,6 @@ if __name__ == '__main__':
     json.dump(result_dict, open("results_dict.josn", "w"))  # save the dictionary
 
 
-    plot_results_analysis(influencer_vals, prices_list_varying_infl, "Number of influencers", "Maximum sim price",
-                          "Maximum price vs #Influencers")
     statistics_title = "../data/" + str(influencer_vals) + "_influencers_statistics.csv"
     try:
         statistics_dataframe = extract_statistics(all_simulations, all_commitments, squeeze_triggered)
