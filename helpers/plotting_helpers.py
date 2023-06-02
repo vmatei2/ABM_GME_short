@@ -436,6 +436,8 @@ def plot_results_analysis(xvals, yvals, xlabel, ylabel, title):
     """
     plt.figure(figsize=(8, 8))
     yvals = extract_max_price(yvals)
+    if "commitment" in title:
+        xvals = extract_starting_commitment(xvals)
     plt.plot(xvals, yvals, 'rx')
     fsize=12
     plt.xlabel(xlabel, fontsize=fsize)
@@ -446,6 +448,60 @@ def plot_results_analysis(xvals, yvals, xlabel, ylabel, title):
 def extract_max_price(prices):
     maxprices = [np.max(sim_prices) for sim_prices in prices]
     return maxprices
+
+def extract_starting_commitment(commitments):
+    startcommitments = [sim_commitment[0] for sim_commitment in commitments]
+    return startcommitments
+
+def extract_prices_fixed_commitment(results_dict):
+    prices = []
+    for n_influencer, res_dict in results_dict.items():
+        prices.append(res_dict['(0.3, 0.6)'])  # generic starting commitment
+    return prices
+
+def extract_commitment_fixed_infl(results_dict):
+    commitments = []
+    prices = []
+    nested_dict = results_dict['16']  # generic starting influencer number
+    for tuple_pair, prices_commitments in nested_dict.items():
+        commitments.append(prices_commitments[1][0]) # second entry represents commitments, 0 is simply due to some
+        # weird indexing
+        prices.append((prices_commitments[0][0]))
+    return commitments, prices
+
+def extract_3d_plot_values(results_dict):
+    all_prices = []
+    all_commitments = []
+    influencer_vals = list(results_dict.keys())
+    for key, influencer_dict in results_dict.items():
+        for commitment_tuple, results in influencer_dict.items():
+            all_prices.append(results[0])
+            all_commitments.append(results[1])
+    return all_prices, all_commitments, influencer_vals
+
+
+def create_3d_plot(all_prices, all_commitments, influencer_vals):
+    commitments = extract_starting_commitment(all_commitments)
+    commitments = extract_starting_commitment(commitments)  # bad code that needs fixing, but need to get graph out so TODO - fix issues with the indexing of the dictionary when loaded
+    prices = extract_max_price(all_prices)
+    fig = plt.figure(figsize=(9, 9))
+
+    influencer_vals = duplicate_vals(influencer_vals)
+    ax = plt.axes(projection='3d')
+    my_cmap = plt.get_cmap('hot')
+    trisurf = ax.plot_trisurf(commitments, influencer_vals, prices, cmap=my_cmap, linewidth=0.2, antialiased=True, edgecolor="none")
+    fig.colorbar(trisurf, ax=ax, shrink=0.5, aspect=5)
+    ax.set_title('Commitments / Prices/ # Influencers', fontsize=14)
+    ax.set_xlabel('Starting commitments', fontsize=12)
+    ax.set_ylabel('# Influencer', fontsize=12)
+    ax.set_zlabel('Final Price', fontsize=12)
+    plt.tight_layout()
+    plt.show()
+
+def duplicate_vals(entry_list, factor=2):
+    new_list = [entry for entry in entry_list for _ in range(factor)]
+    return new_list
+
 
 
 if __name__ == '__main__':

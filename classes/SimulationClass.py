@@ -1,4 +1,6 @@
 import datetime
+import json
+import pickle
 import random
 import networkx as nx
 import numpy as np
@@ -22,7 +24,8 @@ from classes.MarketEnvironment import MarketEnvironment
 from helpers.plotting_helpers import plot_all_commitments, plot_commitment_into_groups, \
     simple_line_plot, visualise_network, get_price_history, scale_and_plot, plot_institutional_investors_decisions, \
     plot_demand_dictionary, barplot_options_bought, select_closing_prices, plot_hedge_funds_involvment, stacked_plots, \
-    two_y_axis_plots, plot_results_analysis
+    two_y_axis_plots, plot_results_analysis, extract_3d_plot_values, extract_prices_fixed_commitment, \
+    extract_commitment_fixed_infl, create_3d_plot
 
 
 def store_commitment_values_split_into_groups(commitment_this_round, trading_day, df_data):
@@ -37,7 +40,7 @@ def store_commitment_values_split_into_groups(commitment_this_round, trading_day
 class SimulationClass:
     def __init__(self, time_steps, N_agents, N_institutional_investors, m, market_environment, miu,
                  commitment_scaler, volume_threshold, fundamental_price_inst_inv, lambda_parameter, n_influencers,
-                 commitment,d_parameter=None):
+                 commitment, d_parameter=None):
         self.N_agents = int(N_agents)  # number of participating retail traders in the simulation
         self.N_institutional_investors = int(N_institutional_investors)
         self.m = m  # number of edges to attach from a new node to existing nodes
@@ -296,11 +299,10 @@ class SimulationClass:
             plot_simulation_against_real_values(market_environment.simulation_history.values(), gme_copy)
 
 
-
-
 def start_simulation(miu=0.5, commitment_scaler=1.5, n_agents=10000,
                      n_institutional_investors=2000, fundamental_price_inst_inv=0.1,
-                     volume_threshold=0.93, lambda_parameter=1.75, time_steps=160, n_influencers=15, d_parameter=0.6, commitment_vals=(0.3, 0.6)):
+                     volume_threshold=0.93, lambda_parameter=1.75, time_steps=160, n_influencers=15, d_parameter=0.6,
+                     commitment_vals=(0.3, 0.6)):
     gme = yf.Ticker("GME")
 
     gme_price_history_path = '../data/gme_price_history.csv'
@@ -511,35 +513,47 @@ def calculate_percentage_change(data):
     percentage_change = series.pct_change()
     return percentage_change.tolist()
 
+def create_commitment_infl_price_analysis(results_dict):
+    all_prices, all_commitments, influencer_vals = extract_3d_plot_values(results_dict)
+    prices_fixed_commitment = extract_prices_fixed_commitment(results_dict)
+    commitments_fixed_influencer, prices_fixed_influencer = extract_commitment_fixed_infl(results_dict)
+    plot_results_analysis(influencer_vals, prices_fixed_commitment, '# of influencers', 'Final Price', 'Number of influencers against final price')
+    plot_results_analysis(commitments_fixed_influencer, prices_fixed_influencer, 'Starting commitment', 'Final Price', 'Starting commitment against final price')
+    create_3d_plot(all_prices, all_commitments, influencer_vals)
+
 
 if __name__ == '__main__':
     sns.set_style("darkgrid")
     n_simulations = 1
+
+    results_dict = json.load(open("results_dict.josn"))
+
+    create_commitment_infl_price_analysis(results_dict)
+
     d_parameters = np.linspace(0.3, 0.8, n_simulations)
-    influencer_vals = [6, 8, 10, 12, 13, 14, 15, 16, 17, 18, 19, 20]
-    influencer_vals = [16, 20]
+    influencer_vals = [10, 12, 14, 16, 18]
     squeezes_triggered = []
     prices_list_varying_infl = []
     prices_list_varying_comm = []
     commitments_list = []
-    commitment_vals = [[0.1, 0.2]]
+    commitment_vals = [[0.1, 0.2], [0.2, 0.3], [0.3, 0.4], [0.3, 0.5], [0.3, 0.6]]
     result_dict = {}
-    for entry in influencer_vals:
-        result_dict[entry] = {}
+
+    for n_influencer in influencer_vals:
+        result_dict[str(n_influencer)] = {}
         for commitment_pair in commitment_vals:
             all_simulations, all_commitments, squeeze_triggered = run_x_simulations(n_simulations,
-                                                                            d_parameters=d_parameters,
-                                                                            n_influencers=entry, commitment_vals=commitment_pair)
+                                                                                    d_parameters=d_parameters,
+                                                                                    n_influencers=n_influencer,
+                                                                                    commitment_vals=commitment_pair)
 
-            result_dict[entry][tuple(commitment_pair)] = [all_simulations, all_commitments]
+            result_dict[str(n_influencer)][str(tuple(commitment_pair))] = [all_simulations, all_commitments]
+
+    json.dump(result_dict, open("results_dict.josn", "w"))  # save the dictionary
 
 
-    for key, value in result_dict.items():
-        prices_list_varying_infl.append(value[(0.3, 0.6)][0])
-    for key, dict in result_dict.items():
-        if key == 16:
-            prices_list_varying_comm.append()
-    plot_results_analysis(influencer_vals, prices_list_varying_infl, "Number of influencers", "Maximum sim price", "Maximum price vs #Influencers")
+    plot_results_analysis(influencer_vals, prices_list_varying_infl, "Number of influencers", "Maximum sim price",
+                          "Maximum price vs #Influencers")
     statistics_title = "../data/" + str(influencer_vals) + "_influencers_statistics.csv"
     try:
         statistics_dataframe = extract_statistics(all_simulations, all_commitments, squeeze_triggered)
@@ -550,5 +564,3 @@ if __name__ == '__main__':
         colors = [cmap(i) for i in np.linspace(0, 1, n_simulations)]
     except ValueError as e:
         print(e)
-
-
