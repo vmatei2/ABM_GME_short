@@ -8,7 +8,7 @@ import seaborn as sns
 import graph_tool.all as gt
 from matplotlib.lines import Line2D
 
-from helpers.calculations_helpers import extract_values_counts_as_lists, rescale_array
+from helpers.calculations_helpers import extract_values_counts_as_lists, rescale_array, calculate_percentage_change
 from helpers.network_helpers import nx2gt
 
 
@@ -503,6 +503,25 @@ def duplicate_vals(entry_list, factor=2):
     new_list = [entry for entry in entry_list for _ in range(factor)]
     return new_list
 
+
+def create_plot_pct_change(commitment_evos, squeezes_triggered, influencer_vals):
+    plt.figure(figsize=(10, 10))
+    pct_changes = []
+    flattened_list = [item for sublist in squeezes_triggered for item in
+                      sublist]  # code to flatten the list on the assumption that we only have one simulation
+    colors = ['b', 'g', 'r', 'c', 'm', 'y', 'k']
+    for commitment_hist in commitment_evos:
+        pct_changes.append(calculate_percentage_change(commitment_hist[0]))
+    for i, sublist in enumerate(pct_changes):
+        if flattened_list[i]:
+            plt.plot(sublist[:80], color=colors[i % len(colors)],
+                     label=('Squeeze Triggered - ') + str(influencer_vals[i]) + ' influencers')
+        else:
+            plt.plot(sublist[:80], linestyle='dotted', color=colors[i % len(colors)],
+                     label='Squeeze Not Triggered - ' + str(influencer_vals[i]) + ' influencers')
+    plt.title('Commitment Evolution - pct changes')
+    plt.legend()
+    plt.show()
 
 
 if __name__ == '__main__':

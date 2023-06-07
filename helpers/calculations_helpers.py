@@ -4,8 +4,9 @@ from datetime import datetime
 import seaborn as sns
 sns.set_style("darkgrid")
 import matplotlib.pyplot as plt
-import scipy.stats as st
+import pandas as pd
 import numpy as np
+
 
 
 def print_current_time():
@@ -70,6 +71,11 @@ def calculate_gamma(S, K, r, volatility, T):
     pdf = calculate_pdf(d1)
     gamma = pdf / (S * volatility * np.sqrt(T))
     return gamma
+
+def calculate_percentage_change(data):
+    series = pd.Series(data)
+    percentage_change = series.pct_change()
+    return percentage_change.tolist()
 
 
 def gamma_variation(K, r, volatility, T):
