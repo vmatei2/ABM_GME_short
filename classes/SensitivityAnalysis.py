@@ -4,6 +4,9 @@ import numpy as np
 import pandas as pd
 from IPython.core.display import display
 
+from helpers.plotting_helpers import extract_3d_plot_values, extract_prices_fixed_commitment, \
+    extract_commitment_fixed_infl, plot_results_analysis, create_3d_plot
+
 
 def calculate_rmse(simulation_price_history, gme_price_history):
     mse_array = np.square(np.subtract(simulation_price_history, gme_price_history))
@@ -49,9 +52,18 @@ def write_results_dict_to_file(results_dict, file_name):
         file.write(json.dumps(results_dict))
 
 
-def load_results(file_name):
+def load_results(file_name, is_results_dict):
+    """
+    Loading results - in the case of the results dictionary, we do our analysis on the dictionary
+    rather than the dataframe, hence boolean parameter for knowing if return before convert to df
+    :param file_name:
+    :param is_results_dict: see above
+    :return:
+    """
     f = open(file_name)
     data = json.load(f)
+    if results_dict:
+        return data
     df = pd.DataFrame.from_dict(data, orient='index')
     return df
 
@@ -91,9 +103,21 @@ def extract_statistics(list_, title):
     print(f"Std dev of {title} values is:  {std_dev}")
     print(f"Interquantile range of {title} is: {iqr}")
 
-    print()
+
+def create_commitment_infl_price_analysis(results_dict):
+    all_prices, all_commitments, influencer_vals = extract_3d_plot_values(results_dict)
+    prices_fixed_commitment = extract_prices_fixed_commitment(results_dict)
+    commitments_fixed_influencer, prices_fixed_influencer = extract_commitment_fixed_infl(results_dict)
+    plot_results_analysis(influencer_vals, prices_fixed_commitment, '# of influencers', 'Max Price',
+                          'Number of influencers against max price (starting commitment=0.45)')
+    plot_results_analysis(commitments_fixed_influencer, prices_fixed_influencer, 'Starting commitment', 'Max Price',
+                          'Starting commitment against max price (n_influencers=16)', True)
+
+    create_3d_plot(all_prices, all_commitments, influencer_vals)
 
 
 if __name__ == '__main__':
-    sa_df = load_results("ofat_sa_results")
+    sa_df = load_results("ofat_sa_results", is_results_dict=False)
+    results_dict = load_results("results_dict.josn", is_results_dict=True)
     analyse_results(sa_df)
+    create_commitment_infl_price_analysis(results_dict)

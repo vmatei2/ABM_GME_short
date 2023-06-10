@@ -488,14 +488,6 @@ def extract_statistics(simulation_values, commitment_values, squeezes_triggered)
     return stats_df
 
 
-def create_commitment_infl_price_analysis(results_dict):
-    all_prices, all_commitments, influencer_vals = extract_3d_plot_values(results_dict)
-    prices_fixed_commitment = extract_prices_fixed_commitment(results_dict)
-    commitments_fixed_influencer, prices_fixed_influencer = extract_commitment_fixed_infl(results_dict)
-    plot_results_analysis(influencer_vals, prices_fixed_commitment, '# of influencers', 'Max Price', 'Number of influencers against max price (starting commitment=0.45)')
-    plot_results_analysis(commitments_fixed_influencer, prices_fixed_influencer, 'Starting commitment', 'Max Price', 'Starting commitment against max price (n_influencers=16)', True)
-
-    create_3d_plot(all_prices, all_commitments, influencer_vals)
 
 def set_initial_values():
     influencer_vals = [10, 12, 14, 16, 18, 20]
@@ -504,29 +496,22 @@ def set_initial_values():
     return influencer_vals, commitment_vals, results_dict
 
 
-
 if __name__ == '__main__':
     sns.set_style("darkgrid")
     n_simulations = 1
-    run_simulation = False
     d_parameters = np.linspace(0.3, 0.8, n_simulations)
-    if os.path.exists("results_dict.josn") and not run_simulation:
-        results_dict = json.load(open("results_dict.josn"))
-        create_commitment_infl_price_analysis(results_dict)
-    elif run_simulation:
-        influnecer_vals, commitment_vals, results_dict = set_initial_values()
-        for n_influencer in influnecer_vals:
-            results_dict[str(n_influencer)] = {}
-            for commitment_pair in commitment_vals:
-                all_simulations, all_commitments, squeeze_triggered = run_x_simulations(n_simulations,
-                                                                                    d_parameters=d_parameters,
-                                                                                    n_influencers=n_influencer,
-                                                                                    commitment_vals=commitment_pair)
+    influnecer_vals, commitment_vals, results_dict = set_initial_values()
+    for n_influencer in influnecer_vals:
+        results_dict[str(n_influencer)] = {}
+        for commitment_pair in commitment_vals:
+            all_simulations, all_commitments, squeeze_triggered = run_x_simulations(n_simulations,
+                                                                                        d_parameters=d_parameters,
+                                                                                        n_influencers=n_influencer,
+                                                                                        commitment_vals=commitment_pair)
 
-                results_dict[str(n_influencer)][str(tuple(commitment_pair))] = [all_simulations, all_commitments]
+            results_dict[str(n_influencer)][str(tuple(commitment_pair))] = [all_simulations, all_commitments]
 
     json.dump(results_dict, open("results_dict.josn", "w"))  # save the dictionary
-
 
     statistics_title = "../data/" + str(influnecer_vals) + "_influencers_statistics.csv"
     try:
