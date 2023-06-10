@@ -25,7 +25,7 @@ from helpers.plotting_helpers import plot_all_commitments, plot_commitment_into_
     simple_line_plot, visualise_network, get_price_history, scale_and_plot, plot_institutional_investors_decisions, \
     plot_demand_dictionary, barplot_options_bought, select_closing_prices, plot_hedge_funds_involvment, stacked_plots, \
     two_y_axis_plots, plot_results_analysis, extract_3d_plot_values, extract_prices_fixed_commitment, \
-    extract_commitment_fixed_infl, create_3d_plot
+    extract_commitment_fixed_infl, create_3d_plot, plot_normalized_commitment_price_evolution
 
 
 def store_commitment_values_split_into_groups(commitment_this_round, trading_day, df_data):
@@ -130,7 +130,6 @@ class SimulationClass:
         # users in the network
 
     def add_new_agents_to_network(self, average_network_commitment):
-
         #  adding new agents to the network
         new_neighbours = []
         possible_neighbors = list(self.social_media_agents.keys())
@@ -156,7 +155,6 @@ class SimulationClass:
                                                                                    self.social_media_agents)
         volume = len(participating_agents)
         institutional_inv_decision_dict[trading_day] = []
-
         options_bought = 0
         for id, agent in participating_agents.items():
             if isinstance(agent, InfluentialRedditUser):
@@ -193,6 +191,9 @@ class SimulationClass:
         for i in range(self.tau):
             self.update_agent_commitment()
             if i % np.int(self.N_agents / 2) == 0:
+                #  self.tau defined as half of the agents times the number of time steps
+                #  at each time step, a randomly chosen subset of half of the agents gets their opinion updated
+                # once this happens, we start calculating price/decisions/averages etc. as one time step has passed
                 investors_still_involved = 0
                 for key, investor in self.institutional_investors.items():
                     if investor.still_involed:
@@ -274,25 +275,8 @@ class SimulationClass:
                                                          title="Evolution of agent commitments in the network through each 20 days")
 
         stacked_plots(df_data, market_environment)
-
-        # plot average commitment along with price evolution
-        plt.figure(figsize=(8, 8))
-        # before plotting, we need to rescale the arrays
-        average_commitment_history = rescale_array(average_commitment_history)
-        price_history = market_environment.simulation_history.values()
-        # convert price history to float values
-        price_history = [float(x) for x in price_history]
-        price_history = rescale_array(price_history)
-        plt.plot(average_commitment_history, 'bo', label='Average commitment across the network')
-        plt.plot(price_history, 'rx', label='Price evolution')
-        plt.title('Normalized commitment and price evolution through simulation', fontsize=18)
-        plt.legend()
-        plt.xlabel('Trading day', fontsize=16)
-        plt.ylabel('Rescaled values', fontsize=16)
-        plt.show()
-
+        plot_normalized_commitment_price_evolution(average_commitment_history, market_environment)
         market_environment.plot_price_history("Price evolution during simulation")
-
         plot_hedge_funds_involvment(hf_involved_dict)
 
         if gme_copy is not None:
@@ -467,7 +451,7 @@ def check_squeeze_triggered(simulation_prices):
 
 def extract_statistics(simulation_values, commitment_values, squeezes_triggered):
     """
-    :param simulation_values: a list of lists - each list contains float values representing prices at different points in the simulation
+    :param simulation_values: a list of lists - each list contains float values representing prices at all points in the simulation
     :return: dataframe containing calculated metrics
     mean / median - mean is the average value of the data set and is sensitive to outliers, while the median is the middle value and more resistant to outliers
     mean / median - mean is the average value of the data set and is sensitive to outliers, while the median is the middle value and more resistant to outliers
@@ -488,7 +472,6 @@ def extract_statistics(simulation_values, commitment_values, squeezes_triggered)
     return stats_df
 
 
-
 def set_initial_values():
     influencer_vals = [10, 12, 14, 16, 18, 20]
     commitment_vals = [[0.1, 0.2], [0.2, 0.3], [0.3, 0.4], [0.3, 0.5], [0.3, 0.6], [0.2, 0.7]]
@@ -505,21 +488,15 @@ if __name__ == '__main__':
         results_dict[str(n_influencer)] = {}
         for commitment_pair in commitment_vals:
             all_simulations, all_commitments, squeeze_triggered = run_x_simulations(n_simulations,
-                                                                                        d_parameters=d_parameters,
-                                                                                        n_influencers=n_influencer,
-                                                                                        commitment_vals=commitment_pair)
+                                                                                    d_parameters=d_parameters,
+                                                                                    n_influencers=n_influencer,
+                                                                                    commitment_vals=commitment_pair)
 
             results_dict[str(n_influencer)][str(tuple(commitment_pair))] = [all_simulations, all_commitments]
-
+        statistics_title = "../data/" + str(influnecer_vals) + "_influencers_statistics.csv"
+        try:
+            statistics_dataframe = extract_statistics(all_simulations, all_commitments, squeeze_triggered)
+            statistics_dataframe.to_csv(statistics_title)
+        except ValueError as e:
+            print(e)
     json.dump(results_dict, open("results_dict.josn", "w"))  # save the dictionary
-
-    statistics_title = "../data/" + str(influnecer_vals) + "_influencers_statistics.csv"
-    try:
-        statistics_dataframe = extract_statistics(all_simulations, all_commitments, squeeze_triggered)
-        print(statistics_dataframe)
-        statistics_dataframe.to_csv(statistics_title)
-        # plot simulation results
-        cmap = plt.get_cmap('gnuplot')
-        colors = [cmap(i) for i in np.linspace(0, 1, n_simulations)]
-    except ValueError as e:
-        print(e)

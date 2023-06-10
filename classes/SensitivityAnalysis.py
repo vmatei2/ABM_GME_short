@@ -62,7 +62,7 @@ def load_results(file_name, is_results_dict):
     """
     f = open(file_name)
     data = json.load(f)
-    if results_dict:
+    if is_results_dict:
         return data
     df = pd.DataFrame.from_dict(data, orient='index')
     return df

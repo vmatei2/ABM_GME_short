@@ -165,16 +165,17 @@ def simple_line_plot(values_to_be_plotted, xlabel, ylabel, title):
     plt.xlabel(xlabel, fontsize=12)
     plt.ylabel(ylabel, fontsize=12)
     plt.title(title, fontsize=14)
-    plt.ylim(0,1)
+    plt.ylim(0, 1)
     plt.show()
 
 
-def two_y_axis_plots(y1, y2, x=None, xlabel=None, ylabel1=None, ylabel2=None, color1='tab:blue', color2='tab:red', title=None):
+def two_y_axis_plots(y1, y2, x=None, xlabel=None, ylabel1=None, ylabel2=None, color1='tab:blue', color2='tab:red',
+                     title=None):
     # no x passed in, then extract it
     if x is None:
         x = range(len(y1))
 
-    fig, ax1= plt.subplots()
+    fig, ax1 = plt.subplots()
 
     # plot the first data series on the left y-axis
     ax1.plot(x, y1, color=color1)
@@ -182,7 +183,7 @@ def two_y_axis_plots(y1, y2, x=None, xlabel=None, ylabel1=None, ylabel2=None, co
     ax1.tick_params(axis='y', labelcolor=color1)
 
     # create a second y-axis on the right side
-    ax2=ax1.twinx()
+    ax2 = ax1.twinx()
 
     ax2.plot(x, y2, color=color2)
     ax2.set_ylabel(ylabel2, color=color2)
@@ -195,8 +196,6 @@ def two_y_axis_plots(y1, y2, x=None, xlabel=None, ylabel1=None, ylabel2=None, co
         plt.title(title, fontsize=14)
 
     plt.show()
-
-
 
 
 def plot_commitment_into_groups(commitment_this_round, title):
@@ -230,7 +229,23 @@ def stacked_plots(commitment_this_round, market_env):
     ax2.set_xlabel('Simulation date', fontsize=15)
     ax2.set_ylabel('Price', fontsize=15)
     ax2.set_title("Price Evolution", fontsize=16)
+    plt.show()
 
+
+def plot_normalized_commitment_price_evolution(average_commitment_history, market_env):
+    plt.figure(figsize=(8, 8))
+    # before plotting, we need to rescale the arrays
+    average_commitment_history = rescale_array(average_commitment_history)
+    price_history = market_env.simulation_history.values()
+    # convert price history to float values
+    price_history = [float(x) for x in price_history]
+    price_history = rescale_array(price_history)
+    plt.plot(average_commitment_history, 'bo', label='Average commitment across the network')
+    plt.plot(price_history, 'rx', label='Price evolution')
+    plt.title('Normalized commitment and price evolution through the simulation', fonstize=18)
+    plt.legend()
+    plt.xlabel('Trading day', fontsize=16)
+    plt.ylabel('Rescaled values', fonstize=16)
     plt.show()
 
 
@@ -251,7 +266,6 @@ def plot_institutional_investors_decisions(decision_dict, dates):
     plt.legend(['Short GME Stock(Take Gamble)', 'Close Short Position(Accept Sure Loss)'], fontsize=12,
                loc=6)  # 6 = center left location
     plt.savefig("../images/institutional_inv_decisions")
-
 
 
 ####  NETWORK PLOTTING HELPERS
@@ -293,7 +307,8 @@ def scale_and_plot(first_array, second_array, title):
     plt.show()
 
 
-def plot_demand_dictionary(demand_dict, market_environment,average_commitment_history, hf_involved_numbers, demand_color='g', hf_demand_color='y', price_color='b'):
+def plot_demand_dictionary(demand_dict, market_environment, average_commitment_history, hf_involved_numbers,
+                           demand_color='g', hf_demand_color='y', price_color='b'):
     # Input validation
     if not isinstance(demand_dict, dict):
         raise ValueError("demand_dict must be dictionary")
@@ -326,7 +341,6 @@ def plot_demand_dictionary(demand_dict, market_environment,average_commitment_hi
     # Set x-axis label
     ax1.set_xlabel("Simulation day", fontsize=12)
 
-
     #  second figure on right sub-plot
     x = range(len(average_commitment_history))
 
@@ -353,6 +367,7 @@ def plot_hedge_funds_involvment(hf_involved_dict):
     plt.title('Hedge funds involvement throughout simulation', fontsize=15)
     plt.legend(['Hedge funds still participating', 'Hedge funds exited'], fontsize=12)
     plt.show()
+
 
 def plot_multiple_figures(gme_price_history):
     fig, ax = plt.subplots(2, 2, figsize=(16, 12))
@@ -439,19 +454,22 @@ def plot_results_analysis(xvals, yvals, xlabel, ylabel, title, extract_commitmen
     if extract_commitment:
         xvals = extract_starting_commitment(xvals)
     plt.plot(xvals, yvals, 'rx--')
-    fsize=12
+    fsize = 12
     plt.xlabel(xlabel, fontsize=fsize)
     plt.ylabel(ylabel, fontsize=fsize)
     plt.title(title, fontsize=(fsize + 2))
     plt.show()
 
+
 def extract_max_price(prices):
     maxprices = [np.max(sim_prices) for sim_prices in prices]
     return maxprices
 
+
 def extract_starting_commitment(commitments):
     startcommitments = [sim_commitment[0] for sim_commitment in commitments]
     return startcommitments
+
 
 def extract_prices_fixed_commitment(results_dict):
     prices = []
@@ -459,15 +477,17 @@ def extract_prices_fixed_commitment(results_dict):
         prices.append(res_dict['(0.3, 0.6)'])  # generic starting commitment
     return prices
 
+
 def extract_commitment_fixed_infl(results_dict):
     commitments = []
     prices = []
     nested_dict = results_dict['16']  # generic starting influencer number
     for tuple_pair, prices_commitments in nested_dict.items():
-        commitments.append(prices_commitments[1][0]) # second entry represents commitments, 0 is simply due to some
+        commitments.append(prices_commitments[1][0])  # second entry represents commitments, 0 is simply due to some
         # weird indexing
         prices.append((prices_commitments[0][0]))
     return commitments, prices
+
 
 def extract_3d_plot_values(results_dict):
     all_prices = []
@@ -490,7 +510,8 @@ def create_3d_plot(all_prices, all_commitments, influencer_vals):
     influencer_vals = duplicate_vals(influencer_vals, factor=len(influencer_vals))
     ax = plt.axes(projection='3d')
     my_cmap = plt.get_cmap('copper')
-    trisurf = ax.plot_trisurf(commitments, influencer_vals, prices, cmap=my_cmap, linewidth=0.2, antialiased=True, edgecolor="none")
+    trisurf = ax.plot_trisurf(commitments, influencer_vals, prices, cmap=my_cmap, linewidth=0.2, antialiased=True,
+                              edgecolor="none")
     fig.colorbar(trisurf, ax=ax, shrink=0.5, aspect=5)
     ax.set_title('Commitments / Max Price / # Influencers', fontsize=14)
     ax.set_xlabel('Starting commitments', fontsize=12)
@@ -498,6 +519,7 @@ def create_3d_plot(all_prices, all_commitments, influencer_vals):
     ax.set_zlabel('Max Price', fontsize=12)
     plt.tight_layout()
     plt.show()
+
 
 def duplicate_vals(entry_list, factor=2):
     new_list = [entry for entry in entry_list for _ in range(factor)]
