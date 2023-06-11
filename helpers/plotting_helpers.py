@@ -474,7 +474,7 @@ def extract_starting_commitment(commitments):
 def extract_prices_fixed_commitment(results_dict):
     prices = []
     for n_influencer, res_dict in results_dict.items():
-        prices.append(res_dict['(0.3, 0.6)'])  # generic starting commitment
+        prices.append(res_dict['(0.4, 0.5)'])  # generic starting commitment
     return prices
 
 
