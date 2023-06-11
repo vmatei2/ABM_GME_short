@@ -242,10 +242,10 @@ def plot_normalized_commitment_price_evolution(average_commitment_history, marke
     price_history = rescale_array(price_history)
     plt.plot(average_commitment_history, 'bo', label='Average commitment across the network')
     plt.plot(price_history, 'rx', label='Price evolution')
-    plt.title('Normalized commitment and price evolution through the simulation', fonstize=18)
+    plt.title('Normalized commitment and price evolution through the simulation', fontsize=18)
     plt.legend()
     plt.xlabel('Trading day', fontsize=16)
-    plt.ylabel('Rescaled values', fonstize=16)
+    plt.ylabel('Rescaled values', fontsize=16)
     plt.show()
 
 

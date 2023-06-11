@@ -111,6 +111,14 @@ def probably(chance):
     return random.random() < chance
 
 
+def convert_seconds_to_time(seconds):
+    seconds = seconds % (24 * 3600)
+    hour = seconds // 3600
+    seconds %= 3600
+    minutes = seconds // 60
+    seconds %= 60
+    return "%d:%02d:%02d" % (hour, minutes, seconds)
+
 if __name__ == '__main__':
     all_gammas, stock_prices = gamma_variation(K=60, r=0.05, volatility=0.2, T=0.19) # 0.19 = fraction 10 weeks of a year
     plot_gamma_variation(all_gammas, stock_prices)

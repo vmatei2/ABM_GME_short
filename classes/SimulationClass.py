@@ -3,13 +3,13 @@ import json
 import pickle
 import random
 import networkx as nx
-import numpy as np
-import matplotlib.pyplot as plt
+from timeit import default_timer as timer
 import pandas as pd
 import os
 import seaborn as sns
 import yfinance as yf
-
+import logging
+from helpers.calculations_helpers import convert_seconds_to_time
 from classes.RedditInvestorTypes import RedditInvestorTypes
 from classes.SensitivityAnalysis import calculate_rmse, plot_sens_analysis_results, write_results_dict_to_file
 from helpers.calculations_helpers import split_commitment_into_groups, print_current_time, rescale_array
@@ -473,18 +473,33 @@ def extract_statistics(simulation_values, commitment_values, squeezes_triggered)
 
 
 def set_initial_values():
-    influencer_vals = [10, 12, 14, 16, 18, 20]
-    commitment_vals = [[0.1, 0.2], [0.2, 0.3], [0.3, 0.4], [0.3, 0.5], [0.3, 0.6], [0.2, 0.7]]
+    influencer_vals = [6, 8, 10, 12, 14, 16, 18, 20, 22, 24]
+    commitment_vals = [[0.1, 0.2], [0.1, 0.3], [0.2, 0.3], [0.2, 0.4], [0.3, 0.4], [0.3, 0.5], [0.4, 0.5], [0.4, 0.6], [0.5, 0.6], [0.5, 0.7]]
     results_dict = {}
+    logging.basicConfig(filename='../logs/info.log', encoding='utf-8', level=logging.DEBUG)
     return influencer_vals, commitment_vals, results_dict
+
+
+def log(influencer_vals=None, commitment_vals=None, is_start=None, elapsed_time=None):
+    if is_start:
+        logging.info('Start time: ' + datetime.datetime.now().strftime('%d/%m/%Y %H:%M:%S'))
+        logging.info('Influencer vals' + str(influencer_vals))
+        logging.info('Commitment vals' + str(commitment_vals))
+    else:
+        elapsed_time = convert_seconds_to_time(elapsed_time)
+        logging.info('End time: ' + datetime.datetime.now().strftime('%d/%m/%Y %H:%M:%S'))
+        logging.info('Elapsed time: ' + elapsed_time)
+        logging.info(' ')  # add final space
 
 
 if __name__ == '__main__':
     sns.set_style("darkgrid")
     n_simulations = 1
     d_parameters = np.linspace(0.3, 0.8, n_simulations)
-    influnecer_vals, commitment_vals, results_dict = set_initial_values()
-    for n_influencer in influnecer_vals:
+    influencer_vals, commitment_vals, results_dict = set_initial_values()
+    start = timer()
+    log(influencer_vals=influencer_vals, commitment_vals=commitment_vals, is_start=True)
+    for n_influencer in influencer_vals:
         results_dict[str(n_influencer)] = {}
         for commitment_pair in commitment_vals:
             all_simulations, all_commitments, squeeze_triggered = run_x_simulations(n_simulations,
@@ -493,10 +508,12 @@ if __name__ == '__main__':
                                                                                     commitment_vals=commitment_pair)
 
             results_dict[str(n_influencer)][str(tuple(commitment_pair))] = [all_simulations, all_commitments]
-        statistics_title = "../data/" + str(influnecer_vals) + "_influencers_statistics.csv"
+        statistics_title = "../data/" + str(influencer_vals) + "_influencers_statistics.csv"
         try:
             statistics_dataframe = extract_statistics(all_simulations, all_commitments, squeeze_triggered)
             statistics_dataframe.to_csv(statistics_title)
         except ValueError as e:
             print(e)
     json.dump(results_dict, open("results_dict.josn", "w"))  # save the dictionary
+    end = timer()
+    log(is_start=False, elapsed_time=end-start)
