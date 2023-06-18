@@ -1,10 +1,12 @@
 import math
+import random
 from datetime import datetime
 import seaborn as sns
 sns.set_style("darkgrid")
 import matplotlib.pyplot as plt
-import scipy.stats as st
+import pandas as pd
 import numpy as np
+
 
 
 def print_current_time():
@@ -70,6 +72,11 @@ def calculate_gamma(S, K, r, volatility, T):
     gamma = pdf / (S * volatility * np.sqrt(T))
     return gamma
 
+def calculate_percentage_change(data):
+    series = pd.Series(data)
+    percentage_change = series.pct_change()
+    return percentage_change.tolist()
+
 
 def gamma_variation(K, r, volatility, T):
     all_gammas = []
@@ -93,6 +100,24 @@ def plot_gamma_variation(all_gammas, stock_prices):
     plt.savefig("../images/variation_of_gamma")
     plt.show()
 
+
+def probably(chance):
+    """
+    Function to return True / False based on given proability
+    :param chance: has to be in [0,1] interval
+    e.g. we want 10% probability --> probably(0.1)
+    :return:
+    """
+    return random.random() < chance
+
+
+def convert_seconds_to_time(seconds):
+    seconds = seconds % (24 * 3600)
+    hour = seconds // 3600
+    seconds %= 3600
+    minutes = seconds // 60
+    seconds %= 60
+    return "%d:%02d:%02d" % (hour, minutes, seconds)
 
 if __name__ == '__main__':
     all_gammas, stock_prices = gamma_variation(K=60, r=0.05, volatility=0.2, T=0.19) # 0.19 = fraction 10 weeks of a year

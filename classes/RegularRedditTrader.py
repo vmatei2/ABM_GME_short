@@ -2,17 +2,23 @@ import random
 from classes.RedditInvestorTypes import RedditInvestorTypes
 from classes.RedditTrader import RedditTrader
 import numpy as np
+from helpers.calculations_helpers import probably
 
 
 class RegularRedditTrader(RedditTrader):
     """
     Child class of "RedditTradder" parent class implementing the behaviour of such agents in the market and inheriting the common properties of the reddit trader
     """
-    def __init__(self, id, neighbours_ids, commitment=None, investor_type=None, commitment_scaler=None):
+
+    def __init__(self, id, neighbours_ids, commitment, investor_type=None, commitment_scaler=None, d=None):
         demand = 0  # an agent's initial demand
-        if commitment is None:
-            commitment = random.uniform(0.3, 0.5)  # normal random distribution with mean = 0 and std deviation = 1
-        self.d = random.uniform(0.1, 0.3)  # threshold for difference in commitment to be too high - or confidence
+        commitment = random.uniform(commitment[0], commitment[1])  # if we pass in the commitment, we want to
+        # randomly choose from lower/upper band
+        if d is not None:
+            self.d = 0.3
+        else:
+            self.d = 0  # random.uniform(0.3, 0.6)  # threshold for difference in commitment to be too high - or
+            # confidence
         # interval value - random choice rather than set values as all agents will be slightly different,
         # hence we want thought processes to be heterogeneous
         self.b = random.uniform(-1, 1)  # gives the strength of the force calculated as simply (
@@ -28,7 +34,7 @@ class RegularRedditTrader(RedditTrader):
         self.post_halting_decisions['over 0.5 commitment'] = 0
         self.post_halting_decisions['long-term'] = 0
         self.post_halting_decisions['short-term-price-go-up'] = 0
-        self.fundamental_price = random.uniform(10, 50)
+        self.fundamental_price = 10  # used to be random.uniform, however fixating to see difference, remove unnecessary complexity
         super().__init__(id, neighbours_ids, demand, commitment, investor_type)
 
     def update_commitment(self, agents, miu):
@@ -51,24 +57,28 @@ class RegularRedditTrader(RedditTrader):
         neighbour_choice_id = random.choice(self.neighbours_ids)  # randomly pick one neighbour for the interaction
         neighbour = agents[neighbour_choice_id]
         neighbour_commitment_value = 0
+        # if probably(0.001): # with a 10% probability, each agent randomly decreases his commitment to 0.2 and exits the function
+        #     self.commitment = 0.2
+        #     return
         for id in self.neighbours_ids:
             neighbour_commitment_value += agents[id].commitment
         average_neighbour_commitment = neighbour_commitment_value / len(self.neighbours_ids)
-        if abs(neighbour.commitment - self.commitment) >= self.d:
+        if neighbour.commitment - self.commitment >= self.d:
             # this happens in the case when the difference in commitment between the agent and its neighbours is too
             # big - therefore we do not update opinion at this time point
             pass
         else:
 
             # otherwise, let's update this agent's opinion (being influenced)
-            updated_commitment = average_neighbour_commitment + miu * abs(
-                self.commitment - average_neighbour_commitment)
+            updated_commitment = self.commitment + miu * (average_neighbour_commitment - self.commitment)
             if neighbour.investor_type == RedditInvestorTypes.FANATICAL:
                 # fanatical / influential traders do not update their opinion
                 pass
             else:
-                neighbour.commitment = self.commitment + miu * abs(self.commitment - neighbour.commitment)
+                # pass
+                neighbour.commitment = neighbour.commitment + miu * (self.commitment - neighbour.commitment)
             neighbour.commitment = min(neighbour.commitment, 1)
+            updated_commitment = updated_commitment * 0.995  # multiply commitment by a small factor so it decreases exponentially in the scenario with no influencers
             self.commitment = min(updated_commitment, 1)
 
     def act_if_trading_halted(self, current_price, price_history, white_noise):
@@ -79,7 +89,8 @@ class RegularRedditTrader(RedditTrader):
                 self.decision_based_on_personal_strategy(current_price, price_history, white_noise)
 
         if not self.has_trading_been_halted:
-            current_demand = self.demand / (1 / self.commitment)  # demand becomes a function of the agent's current
+            # if 0.5 as multiplier, then we halfen the demand
+            current_demand = 0  # 0.05 * self.demand  # self.demand / (1 / 0.5 * self.commitment)  # demand becomes a function of the agent's current
             # commitmemnt
             self.demand = -current_demand
             self.has_trading_been_halted = True
@@ -92,9 +103,10 @@ class RegularRedditTrader(RedditTrader):
             else:
                 self.demand -= self.commitment_scaler * self.commitment
         elif self.investor_type == RedditInvestorTypes.LONGTERM:
-            expected_price = self.compute_price_expectation_fundamentalist(current_price, price_history, white_noise)  # introduce fundamentalist pricing formula calculation here
+            expected_price = self.compute_price_expectation_fundamentalist(current_price, price_history,
+                                                                           white_noise)  # introduce fundamentalist pricing formula calculation here
             if expected_price < current_price:
-                self.demand = -self.commitment * self.commitment_scaler
+                self.demand -= self.commitment * self.commitment_scaler
             elif expected_price > current_price:
                 self.demand += self.commitment * self.commitment_scaler
 
@@ -105,7 +117,7 @@ class RegularRedditTrader(RedditTrader):
             return
         if self.bought_option:  # not doing anything if we have bought an option already
             return
-        if self.commitment > 0.6 and average_network_commitment > 0.624:
+        if self.commitment > 0.6 and average_network_commitment > 0.55:
             self.demand = 100 * self.commitment  # buys options
             self.bought_option = True
             return
@@ -126,7 +138,7 @@ class RegularRedditTrader(RedditTrader):
         """
         # below if statement considers whether the agent is simply looking for a quick profit, get in-get out or
         # believe in GME
-        rolling_average_window_length = 15
+        rolling_average_window_length = 5
         rolling_average = self.compute_rolling_average(price_history, rolling_average_window_length)
         expected_price = current_price + self.b * (current_price - rolling_average) + white_noise
         self.expected_price = expected_price

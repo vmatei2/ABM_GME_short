@@ -1,14 +1,18 @@
 import datetime
+import json
+import pickle
 import random
 import networkx as nx
-import numpy as np
-import matplotlib.pyplot as plt
+from timeit import default_timer as timer
+import pandas as pd
+import os
 import seaborn as sns
 import yfinance as yf
-
+import logging
+from helpers.calculations_helpers import convert_seconds_to_time
 from classes.RedditInvestorTypes import RedditInvestorTypes
 from classes.SensitivityAnalysis import calculate_rmse, plot_sens_analysis_results, write_results_dict_to_file
-from helpers.calculations_helpers import split_commitment_into_groups, print_current_time
+from helpers.calculations_helpers import split_commitment_into_groups, print_current_time, rescale_array
 from helpers.stylized_facts import *
 from helpers.network_helpers import get_sorted_degree_values, gather_commitment_values, \
     create_network_from_agent_dictionary
@@ -19,7 +23,9 @@ from classes.InstitutionalInvestor import InstitutionalInvestor
 from classes.MarketEnvironment import MarketEnvironment
 from helpers.plotting_helpers import plot_all_commitments, plot_commitment_into_groups, \
     simple_line_plot, visualise_network, get_price_history, scale_and_plot, plot_institutional_investors_decisions, \
-    plot_demand_dictionary, barplot_options_bought, select_closing_prices
+    plot_demand_dictionary, barplot_options_bought, select_closing_prices, plot_hedge_funds_involvment, stacked_plots, \
+    two_y_axis_plots, plot_results_analysis, extract_3d_plot_values, extract_prices_fixed_commitment, \
+    extract_commitment_fixed_infl, create_3d_plot, plot_normalized_commitment_price_evolution
 
 
 def store_commitment_values_split_into_groups(commitment_this_round, trading_day, df_data):
@@ -33,7 +39,8 @@ def store_commitment_values_split_into_groups(commitment_this_round, trading_day
 
 class SimulationClass:
     def __init__(self, time_steps, N_agents, N_institutional_investors, m, market_environment, miu,
-                 commitment_scaler, volume_threshold, fundamental_price_inst_inv, lambda_parameter):
+                 commitment_scaler, volume_threshold, fundamental_price_inst_inv, lambda_parameter, n_influencers,
+                 commitment, d_parameter=None):
         self.N_agents = int(N_agents)  # number of participating retail traders in the simulation
         self.N_institutional_investors = int(N_institutional_investors)
         self.m = m  # number of edges to attach from a new node to existing nodes
@@ -45,20 +52,22 @@ class SimulationClass:
         self.volume_threshold = volume_threshold
         self.lambda_parameter = lambda_parameter
         self.fundamental_price_inst_inv = fundamental_price_inst_inv
-        self.social_media_agents, self.average_degree = self.create_initial_network()  # the initial network of social media agents,
+        self.social_media_agents, self.average_degree = self.create_initial_network(n_influencers, commitment,
+                                                                                    d_parameter, )  # the initial network of social media agents,
         # we already have a few central nodes network is set to increase in size and add new agents throughout the
         # simulation
         self.institutional_investors = self.create_institutional_investors()
         self.trading_halted = False
 
-    def create_initial_network(self):
+    def create_initial_network(self, n_influencers, commitment, d=None):
         barabasi_albert_network = nx.barabasi_albert_graph(n=self.N_agents, m=self.m, seed=2)
         sorted_node_degree_pairs = get_sorted_degree_values(barabasi_albert_network)
         social_media_agents = {}
         for i, node_id_degree_pair in enumerate(sorted_node_degree_pairs):
             node_id = node_id_degree_pair[0]
             node_neighbours = list(barabasi_albert_network.neighbors(node_id))
-            if i < 5:  # defining 5 largest nodes as being the influential ones in the network
+            print(n_influencers)
+            if i < n_influencers:  # defining 5 largest nodes as being the influential ones in the network
                 agent = InfluentialRedditUser(id=node_id, neighbours_ids=node_neighbours,
                                               market_first_price=self.market_environment.initial_price,
                                               investor_type=RedditInvestorTypes.FANATICAL)
@@ -67,7 +76,7 @@ class SimulationClass:
                 investor_type_probabilities = [0.5, 0.5]
                 agent = RegularRedditTrader(id=node_id, neighbours_ids=node_neighbours,
                                             investor_type=random.choices(investor_type, investor_type_probabilities)[0],
-                                            commitment_scaler=self.commitment_scaler)
+                                            commitment_scaler=self.commitment_scaler, d=d, commitment=commitment)
             social_media_agents[node_id] = agent
         degree_values = [v for k, v in sorted_node_degree_pairs]
         average_degree = sum(degree_values) / barabasi_albert_network.number_of_nodes()
@@ -85,7 +94,7 @@ class SimulationClass:
     def create_institutional_investors(self):
         institutional_investors = {}
         for i in range(self.N_institutional_investors):
-            institutional_investors[i] = InstitutionalInvestor(i, demand=-200,
+            institutional_investors[i] = InstitutionalInvestor(i, demand=-1,
                                                                fundamental_price=self.fundamental_price_inst_inv,
                                                                lambda_parameter=self.lambda_parameter)
         return institutional_investors
@@ -104,6 +113,7 @@ class SimulationClass:
             if week % 2 != 0:
                 i += 1  # only increase row number after visualising the network
         fig.delaxes(axs[i, 1])
+        fig.delaxes(axs[i, 0])
         plt.savefig("agent_network_evolution")
         plt.show()
 
@@ -120,7 +130,6 @@ class SimulationClass:
         # users in the network
 
     def add_new_agents_to_network(self, average_network_commitment):
-
         #  adding new agents to the network
         new_neighbours = []
         possible_neighbors = list(self.social_media_agents.keys())
@@ -138,9 +147,9 @@ class SimulationClass:
             self.social_media_agents[new_id] = new_agent
 
     def market_interactions(self, average_network_commitment, threshold, institutional_inv_decision_dict, trading_day):
-        if self.market_environment.date.weekday() in [5, 6]:  # Saturday or Sunday:
-            self.market_environment.update_day()
-            return
+        # if self.market_environment.date.weekday() in [5, 6]:  # Saturday or Sunday:
+        #     self.market_environment.update_day()
+        #     return
         white_noise = random.uniform(-1, 1)
         participating_agents = self.market_environment.select_participating_agents(average_network_commitment,
                                                                                    self.social_media_agents)
@@ -173,6 +182,8 @@ class SimulationClass:
         all_commitments_each_round = []
         commitment_changes = []
         volume_history = []
+        hf_involved_dict = {'involved': [],
+                            'closed': []}  # dictionary used for plotting the evolution of hedge funds participaitng in the market, and how they close their positions
         options_bought_history = []
         demand_dict = {'retail': [], 'institutional': []}
         hedge_fund_decision_dict = {}
@@ -180,8 +191,17 @@ class SimulationClass:
         for i in range(self.tau):
             self.update_agent_commitment()
             if i % np.int(self.N_agents / 2) == 0:
+                #  self.tau defined as half of the agents times the number of time steps
+                #  at each time step, a randomly chosen subset of half of the agents gets their opinion updated
+                # once this happens, we start calculating price/decisions/averages etc. as one time step has passed
+                investors_still_involved = 0
+                for key, investor in self.institutional_investors.items():
+                    if investor.still_involed:
+                        investors_still_involved += 1
                 average_network_commitment = calculate_average_commitment(self.social_media_agents)
                 average_commitment_history.append(average_network_commitment)
+                hf_involved_dict['involved'].append(investors_still_involved)
+                hf_involved_dict['closed'].append(len(self.institutional_investors) - investors_still_involved)
                 commitment_this_round = gather_commitment_values(self.social_media_agents)
                 all_commitments_each_round.append(commitment_this_round)
                 if len(average_commitment_history) > 1:
@@ -213,15 +233,16 @@ class SimulationClass:
                 trading_day += 1
                 print("Average Network Commitment: ", average_network_commitment)
                 print_current_time()
-                if volume >= self.volume_threshold * self.N_agents and halt_trading:
+                if volume >= (self.volume_threshold * self.N_agents) and halt_trading:
                     agent_ids_to_be_deleted = self.halt_trading(commitment_threshold=0.65,
-                                                                commitment_lower_upper=[0.12, 0.2])
+                                                                commitment_lower_upper=[0.2, 0.2])
                     print("Trading halted")
                 print()
-
+        print("Final pcgt volume is: ")
+        print(volume_history[-1])
         self.run_all_plots(self.market_environment, all_commitments_each_round, average_commitment_history,
                            commitment_changes, hedge_fund_decision_dict, demand_dict, df_data,
-                           options_bought_history, agent_network_evolution_dict, gme_copy)
+                           options_bought_history, agent_network_evolution_dict, hf_involved_dict, gme_copy)
         simulated_price = list(self.market_environment.simulation_history.values())
 
         return simulated_price, average_commitment_history, hedge_fund_decision_dict
@@ -229,7 +250,7 @@ class SimulationClass:
     def run_all_plots(self, market_environment, all_commitments_each_round, average_commitment_history,
                       commitment_changes, hedge_fund_decision_dict,
                       demand_dict, df_data, options_bought_history,
-                      agent_network_evolution_dict, gme_copy):
+                      agent_network_evolution_dict, hf_involved_dict, gme_copy):
         ### PLOTTING FUNCTIONS
         plot_all_commitments(all_commitments_each_round, self.N_agents, average_commitment_history,
                              "Evolution of all agent commitments")
@@ -237,41 +258,52 @@ class SimulationClass:
         network_evolution_threshold = 0.6
         # self.plot_agent_network_evolution(agent_network_evolution_dict, network_evolution_threshold)
 
+        two_y_axis_plots(y1=average_commitment_history, y2=hf_involved_dict['involved'], xlabel='Simulation Day',
+                         ylabel1='Average Commitment', ylabel2='Hedge Funds Involved', title='Average Commitment '
+                                                                                             'Evolution and Hedge Fund'
+                                                                                             ' Participation')
+
         simple_line_plot(average_commitment_history, "Trading Day", "Average Commitment",
                          "Average Commitment Evolution")
-        simple_line_plot(commitment_changes, "Trading Week", "Change in commitment", "Percentage Changes in Average "
-                                                                                     "Commitment")
+        # simple_line_plot(commitment_changes, "Trading Week", "Change in commitment", "Percentage Changes in Average "
+        #                                                                              "Commitment")
 
-        plot_institutional_investors_decisions(hedge_fund_decision_dict, market_environment.simulation_history.keys())
+        plot_demand_dictionary(demand_dict, market_environment, average_commitment_history,
+                               hf_involved_dict['involved'])
 
-        plot_demand_dictionary(demand_dict, market_environment.simulation_history.keys())
+        grouped_commitment = plot_commitment_into_groups(df_data,
+                                                         title="Evolution of agent commitments in the network through each 20 days")
 
-        plot_commitment_into_groups(df_data, title="Evolution of agent commitments in the network through each 20 days")
-
+        stacked_plots(df_data, market_environment)
+        plot_normalized_commitment_price_evolution(average_commitment_history, market_environment)
         market_environment.plot_price_history("Price evolution during simulation")
+        plot_hedge_funds_involvment(hf_involved_dict)
 
         if gme_copy is not None:
             plot_simulation_against_real_values(market_environment.simulation_history.values(), gme_copy)
 
-        observe_fat_tails_returns_distribution(list(market_environment.simulation_history.values()))
 
-        observe_volatility_clustering(list(market_environment.simulation_history.values()))
-
-        observe_autocorrelation_abs_returns(list(market_environment.simulation_history.values()))
-
-        observe_antileverage_effect(list(market_environment.simulation_history.values()))
-
-        extract_weekend_data_effect(market_environment.simulation_history)
-
-
-def start_simulation(miu=0.17, commitment_scaler=1.5, n_agents=10000,
-                     n_institutional_investors=200, fundamental_price_inst_inv=1,
-                     volume_threshold=0.97, lambda_parameter=1.75, time_steps=100):
+def start_simulation(miu=0.5, commitment_scaler=1.5, n_agents=10000,
+                     n_institutional_investors=2000, fundamental_price_inst_inv=0.1,
+                     volume_threshold=0.93, lambda_parameter=1.75, time_steps=160, n_influencers=15, d_parameter=0.6,
+                     commitment_vals=(0.3, 0.6)):
     gme = yf.Ticker("GME")
-    gme_price_history = get_price_history(gme, "2020-11-15", "2020-12-08")
+
+    gme_price_history_path = '../data/gme_price_history.csv'
+    gme_empirical_data_simulation_path = '../data/gme_empirical_data_simulation'
+    if os.path.exists(gme_price_history_path) and os.path.exists(gme_empirical_data_simulation_path):
+        # if the path exists, then load in the CSVs
+        gme_price_history = pd.read_csv("../data/gme_price_history.csv")
+        gme_empirical_data_simulation = pd.read_csv('../data/gme_empirical_data_simulation')
+    else:
+        gme_price_history = get_price_history(gme, "2020-11-15", "2020-12-08")
+        # gme_price_history.to_csv("../data/gme_price_history.csv", index=False)
+        gme_empirical_data_simulation = get_price_history(gme, "2020-11-15", "2021-02-07")
+        # gme_empirical_data_simulation.to_csv("../data/gme_empirical_data_simulation", index=False)
+
     gme_price_history = select_closing_prices(gme_price_history)
-    gme_empirical_data_simulation = get_price_history(gme, "2020-11-15", "2021-02-07")
     gme_empirical_data_simulation = select_closing_prices(gme_empirical_data_simulation)
+
     start_date = datetime.datetime(2020, 12, 7)
     market_environment = MarketEnvironment(initial_price=16.35, name="GME Market Environment",
                                            price_history=gme_price_history, start_date=start_date)
@@ -281,7 +313,8 @@ def start_simulation(miu=0.17, commitment_scaler=1.5, n_agents=10000,
                                  market_environment=market_environment, miu=miu,
                                  commitment_scaler=commitment_scaler, volume_threshold=volume_threshold,
                                  fundamental_price_inst_inv=fundamental_price_inst_inv,
-                                 lambda_parameter=lambda_parameter)
+                                 lambda_parameter=lambda_parameter, n_influencers=n_influencers,
+                                 d_parameter=d_parameter, commitment=commitment_vals)
     halt_trading = True
     prices, average_commitment_history, hf_decision_dict = simulation.run_simulation(halt_trading=halt_trading)
     return prices, market_environment, simulation, average_commitment_history, hf_decision_dict
@@ -310,7 +343,7 @@ def sensitivty_analyis_mu_theta():
     Calling the run function for this specific sensitivity analysis work and setting up all the prerequisites
     :return:
     """
-    rmse_dict = {}  # key = Run, Value = [0-RMSE, 1-Miu, 2-commitment_scaler]
+    rmse_dict = {}  # key = Run, Value = [0-RMSE,  1-Miu, 2-commitment_scaler]
     price_dict = {}
     i = 0
     print("Start")
@@ -377,6 +410,7 @@ def one_factor_at_a_time_sensitivity_analysis(n_reddit_agents_list, n_inst_inves
             results_dict[iteration] = {}
             results_dict[iteration]["N_agents"] = simulation_object.N_agents
             results_dict[iteration]["N_inst_investors"] = simulation_object.N_institutional_investors
+            object.N_institutional_investors
             results_dict[iteration]["fundamental_price_inst_inv"] = simulation_object.fundamental_price_inst_inv
             results_dict[iteration]["commitment_scaler"] = simulation_object.commitment_scaler
             results_dict[iteration]["volume_threshold"] = simulation_object.volume_threshold
@@ -391,7 +425,7 @@ def one_factor_at_a_time_sensitivity_analysis(n_reddit_agents_list, n_inst_inves
     return results_dict
 
 
-def run_x_simulations(n_simulations):
+def run_x_simulations(n_simulations, d_parameters, n_influencers, commitment_vals):
     """
     Main function to run x number of simulations, and store simulation prices time series array of each simulation
     start_simulation can take in model parameter values, otherwise these are set to base values
@@ -399,13 +433,87 @@ def run_x_simulations(n_simulations):
     :return:
     """
     simulation_prices = []
+    simulation_commitments = []
+    squeeze_triggered = []
     for i in range(n_simulations):
-        prices, market_env, sim_obj, avg_commitment_history, hf_decision_dict = start_simulation()
+        prices, market_env, sim_obj, avg_commitment_history, hf_decision_dict = start_simulation(
+            d_parameter=d_parameters[i], n_influencers=n_influencers, commitment_vals=commitment_vals)
         simulation_prices.append(prices)
-    return simulation_prices
+        simulation_commitments.append(avg_commitment_history)
+        squeeze_triggered.append(check_squeeze_triggered(prices))
+    return simulation_prices, simulation_commitments, squeeze_triggered
+
+
+def check_squeeze_triggered(simulation_prices):
+    max_price = max(simulation_prices)
+    return True if max_price > 250 else False
+
+
+def extract_statistics(simulation_values, commitment_values, squeezes_triggered):
+    """
+    :param simulation_values: a list of lists - each list contains float values representing prices at all points in the simulation
+    :return: dataframe containing calculated metrics
+    mean / median - mean is the average value of the data set and is sensitive to outliers, while the median is the middle value and more resistant to outliers
+    mean / median - mean is the average value of the data set and is sensitive to outliers, while the median is the middle value and more resistant to outliers
+    standard deviation - this gives us a measure of the volatility of the stock price
+    min, max
+    """
+    min_vals = [np.min(sim) for sim in simulation_values]
+    max_vals = [np.max(sim) for sim in simulation_values]
+    mean_vals = [np.mean(sim) for sim in simulation_values]
+    median_vals = [np.median(sim) for sim in simulation_values]
+    std_vals = [np.std(sim) for sim in simulation_values]
+    max_com = [np.max(sim) for sim in commitment_values]
+    statistics = [min_vals, max_vals, mean_vals, median_vals, std_vals, max_com, squeezes_triggered]
+    cols = ['Min', 'Max', 'Mean', 'Median', 'Standard Deviation', 'Maximum Average Commitment', 'Squeeze triggered?']
+    assert len(statistics) == len(cols), "Lengths of the lists are different"
+    stats_df = pd.DataFrame(data=statistics, columns=cols).T  # transpose the dataframe
+    # so the lists in statistics are presented column-wise rather than row-wise
+    return stats_df
+
+
+def set_initial_values():
+    influencer_vals = [6, 8, 10, 12, 14, 16, 18, 20, 22, 24]
+    commitment_vals = [[0.1, 0.2], [0.1, 0.3], [0.2, 0.3], [0.2, 0.4], [0.3, 0.4], [0.3, 0.5], [0.4, 0.5], [0.4, 0.6], [0.5, 0.6], [0.5, 0.7]]
+    results_dict = {}
+    logging.basicConfig(filename='../logs/info.log', encoding='utf-8', level=logging.DEBUG)
+    return influencer_vals, commitment_vals, results_dict
+
+
+def log(influencer_vals=None, commitment_vals=None, is_start=None, elapsed_time=None):
+    if is_start:
+        logging.info('Start time: ' + datetime.datetime.now().strftime('%d/%m/%Y %H:%M:%S'))
+        logging.info('Influencer vals' + str(influencer_vals))
+        logging.info('Commitment vals' + str(commitment_vals))
+    else:
+        elapsed_time = convert_seconds_to_time(elapsed_time)
+        logging.info('End time: ' + datetime.datetime.now().strftime('%d/%m/%Y %H:%M:%S'))
+        logging.info('Elapsed time: ' + elapsed_time)
+        logging.info(' ')  # add final space
 
 
 if __name__ == '__main__':
     sns.set_style("darkgrid")
     n_simulations = 1
-    run_x_simulations(n_simulations)
+    d_parameters = np.linspace(0.3, 0.8, n_simulations)
+    influencer_vals, commitment_vals, results_dict = set_initial_values()
+    start = timer()
+    log(influencer_vals=influencer_vals, commitment_vals=commitment_vals, is_start=True)
+    for n_influencer in influencer_vals:
+        results_dict[str(n_influencer)] = {}
+        for commitment_pair in commitment_vals:
+            all_simulations, all_commitments, squeeze_triggered = run_x_simulations(n_simulations,
+                                                                                    d_parameters=d_parameters,
+                                                                                    n_influencers=n_influencer,
+                                                                                    commitment_vals=commitment_pair)
+
+            results_dict[str(n_influencer)][str(tuple(commitment_pair))] = [all_simulations, all_commitments]
+        statistics_title = "../data/" + str(influencer_vals) + "_influencers_statistics.csv"
+        try:
+            statistics_dataframe = extract_statistics(all_simulations, all_commitments, squeeze_triggered)
+            statistics_dataframe.to_csv(statistics_title)
+        except ValueError as e:
+            print(e)
+    json.dump(results_dict, open("results_dict.josn", "w"))  # save the dictionary
+    end = timer()
+    log(is_start=False, elapsed_time=end-start)

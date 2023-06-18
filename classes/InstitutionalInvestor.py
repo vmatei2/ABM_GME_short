@@ -21,6 +21,7 @@ class InstitutionalInvestor:
         self.fundamental_price = fundamental_price
         self.risk_loving = self.assign_risk_type()
         self.lambda_parameter = lambda_parameter
+        self.still_involed = True
         self.alpha, self.betta = self.assign_risk_variables()
 
     def make_decision(self, current_price, price_history):
@@ -30,14 +31,13 @@ class InstitutionalInvestor:
         :return:
         """
         short_gme = self.utility_function(current_price, price_history)
-        if short_gme:
-            if self.demand != 0:
-                self.demand -= self.demand
-            else:
-                self.demand = -1  # start shorting again after closing position
-
-        else:
-            self.demand = 0
+        multiplier = 0.2  # parameter to multiply hf opinion when updating in face of risk
+        if (short_gme and self.still_involed):
+            updated_value = self.demand - (multiplier * abs(self.demand))
+            self.demand = updated_value
+        elif (current_price > 10):
+            self.still_involed = False
+            self.demand = 0  # closes position, so should no longer influence the market
         return short_gme
 
     def utility_function(self, current_price, price_history):
@@ -53,20 +53,20 @@ class InstitutionalInvestor:
         :param price_history: extracting previous price from this
         :return:
         """
-        p_gain = 0.8  # use in dissertation "such that p_gain + p_loss = 1 "
-        p_loss = 0.2
+        p_gain = 0.9  # use in dissertation "such that p_gain + p_loss = 1 "
+        p_loss = 0.1
         fundamentalist_weight = 1
         chartist_weight = 2.55
         noise_weight = 1
-        added_noise = random.uniform(0, 1)
+        added_noise = random.uniform(0, 0.001)
         expected_price_chartist = self.compute_expected_price(fundamentalist_weight=fundamentalist_weight,
                                                               chartist_weight=chartist_weight,
                                                               noise_weight=noise_weight, current_price=current_price,
                                                               price_history=price_history, added_noise=added_noise)
 
         fundamentalist_weight = 2
-        chartist_weight = 0.9
-        noise_weight = 1
+        chartist_weight = 1
+        noise_weight = 0
         expected_price_fundamentalist = self.compute_expected_price(fundamentalist_weight, chartist_weight,
                                                                     noise_weight,
                                                                     current_price, price_history, added_noise)
@@ -79,6 +79,9 @@ class InstitutionalInvestor:
         V_gain = check_and_convert_imaginary_number(V_gain)
 
         should_gamble = V_gain > V_loss
+
+        if not should_gamble:
+            break_here = 0;
 
         return should_gamble
 
@@ -135,7 +138,7 @@ class InstitutionalInvestor:
 
     def assign_risk_type(self):
         is_risk_loving = [False, True]
-        probabilities = [0.33, 0.67]
+        probabilities = [0, 1]
         risk_type = random.choices(is_risk_loving, probabilities)
         return risk_type
 
